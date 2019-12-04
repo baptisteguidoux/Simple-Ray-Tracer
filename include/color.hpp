@@ -1,4 +1,4 @@
-/* \file tuple.hpp
+/* \file color.hpp
  */
 
 #ifndef COLOR_H
@@ -19,6 +19,8 @@ namespace color {
     /* Color constructor
      */
     Color(const float r, const float g, const float b);
+
+    Color() = default;
   };
 
   /* \fn bool operator==(const Color& first, const Color& second)

@@ -216,12 +216,12 @@ namespace math {
 #endif
 
 
-#ifndef RAY_MATH_STATIC_CONSTANTS
-#define RAY_MATH_STATIC_CONSTANTS
+#ifndef RAY_MATH_CONSTANTS
+#define RAY_MATH__CONSTANTS
 
 namespace math {
 
-  const double EPSILON = 0.00001; /*<! Our epsilon value */
+  const double EPSILON = 0.00001; /*<! For floating point values comparison */
 }
 
 #endif
