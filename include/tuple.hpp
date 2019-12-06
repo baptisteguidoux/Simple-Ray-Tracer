@@ -51,6 +51,10 @@ namespace math {
      */
     Tuple(double x_, double y_, double z_, double w_);
 
+    /* Tuple default constructor (0 for each component)
+     */    
+    Tuple() = default;
+
     /* \fn double& operator[](const size_t i)
      * Access elements of the Tuple using an index
      * \param i index of the element
@@ -217,11 +221,11 @@ namespace math {
 
 
 #ifndef RAY_MATH_CONSTANTS
-#define RAY_MATH__CONSTANTS
+#define RAY_MATH_CONSTANTS
 
 namespace math {
 
-  const double EPSILON = 0.00001; /*<! For floating point values comparison */
+  const static double EPSILON = 0.00001; /*<! For floating point values comparison */
 }
 
 #endif
