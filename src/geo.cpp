@@ -2,6 +2,8 @@
 #include <algorithm>
 #include <cmath>
 #include <utility>
+#include <vector>
+#include <optional>
 
 #include "geo.hpp"
 #include "ray.hpp"
@@ -47,15 +49,15 @@ namespace geo {
   //   return material.pattern->pattern_at(object_point);
   // }
 
-  // bool operator==(const Shape& first, const Shape& second) {
+  bool operator==(const Shape& first, const Shape& second) {
 
-  //   return (first.transform == second.transform) && (first.material == second.material);
-  // }
+    return (first.transform == second.transform);// && (first.material == second.material);
+  }
 
-  // bool operator!=(const Shape& first, const Shape& second) {
+  bool operator!=(const Shape& first, const Shape& second) {
 
-  //   return ! (first == second);
-  // }
+    return ! (first == second);
+  }
 
   TestShape::~TestShape() {};
 
@@ -115,25 +117,27 @@ namespace geo {
   //   this->material.refractive_index = 1.5;
   // }
 
-  // Intersections Plane::local_intersects(const ray::Ray& local_ray) {
+  Plane::~Plane() {};
 
-  //   // If a ray is parallel to a Plane, it won't intersect
-  //   // We would consider the same if the ray is coplanar to the Plane, even if it actually intersects infinitely with the Plane
-  //   // To determine if a ray is parallel, we need to find if it's purely in the space xz, no slope in y
-  //   if (std::abs(local_ray.direction.y) < math::EPSILON)
-  //     return Intersections();
+  Intersections Plane::local_intersects(const ray::Ray& local_ray) {
 
-  //   auto t = - local_ray.origin.y / local_ray.direction.y; // Always assuming the Plane is in xz space only
+    // If a ray is parallel to a Plane, it won't intersect
+    // We would consider the same if the ray is coplanar to the Plane, even if it actually intersects infinitely with the Plane
+    // To determine if a ray is parallel, we need to find if it's purely in the space xz, no slope in y
+    if (std::abs(local_ray.direction.y) < math::EPSILON)
+      return Intersections();
+
+    auto t = - local_ray.origin.y / local_ray.direction.y; // Always assuming the Plane is in xz space only
     
-  //   return Intersections {Intersection(t, std::make_shared<Plane>(*this))};
-  // }
+    return Intersections {Intersection(t, std::make_shared<Plane>(*this))};
+  }
 
-  // math::Tuple Plane::local_normal_at(const math::Tuple& local_point) const {
+  math::Tuple Plane::local_normal_at(const math::Tuple& local_point) const {
 
-  //   static const math::Tuple default_normal = math::Vector(0, 1, 0);
+    static const math::Tuple default_normal = math::Vector(0, 1, 0);
 
-  //   return default_normal;
-  // }
+    return default_normal;
+  }
 
   // Intersections Cube::local_intersects(const ray::Ray& local_ray) {
 
@@ -216,12 +220,12 @@ namespace geo {
   //   return math::Vector(local_point.x, 0, local_point.z);
   // }  
 
-  // math::Tuple reflect(const math::Tuple& vec, const math::Tuple& normal) {
+  math::Tuple reflect(const math::Tuple& vec, const math::Tuple& normal) {
   
-  //   // The velocity vec is reflected around the normal
+    // The velocity vec is reflected around the normal
   
-  //   return vec - normal * 2 * math::dot(vec, normal);
-  // }  
+    return vec - normal * 2 * math::dot(vec, normal);
+  }  
 
   // std::pair<double, double> check_axis(const double origin, const double direction) {
 
@@ -249,50 +253,49 @@ namespace geo {
 
   Intersection::Intersection(const float t_, std::shared_ptr<geo::Shape> geo) :
     t {t_}, geometry {geo} {}
+
+  Intersection& Intersection::operator=(const Intersection& source) {
+
+    t = source.t;
+    geometry = source.geometry;
+
+    return *this;
+  }
+
+  std::optional<Intersection> hit(const Intersections& intersections) {
+    //std::sort(intersections.begin(), intersections.end(), [&](const Intersection& first, const Intersection& second) {return first.t < second.t;});
+    // The hit is the lowest nonegative intersection
+  
+    // First filter out the intersection with negative t values;
+    Intersections nonneg_integers;
+    // std::back_inserter(nonneg_integers) and not nonneg_integers.begin():
+    // copy_if does not do a push_back, it just copy the value on the position where the destination iterator is and then increments the iterator
+    // --> can have seg faults
+    std::copy_if(intersections.begin(), intersections.end(), std::back_inserter(nonneg_integers), [&](const Intersection& inter) {return inter.t >= 0;});
+  
+    if (nonneg_integers.size()) {
+      auto res = std::min_element(nonneg_integers.begin(), nonneg_integers.end(),
+				  [&](const Intersection& first, const Intersection& second) {return first.t < second.t;});
+      return *res;
+    }
+  
+    return {}; // ie std::nullopt
+  }  
+
+  bool operator==(const Intersection& first, const Intersection& second) {
+
+    return (first.t == second.t) && (*first.geometry == *second.geometry);
+  }
+
+  bool operator!=(const Intersection& first, const Intersection& second) {
+
+    return ! (first == second);
+  }  
   
 }
 
 // namespace inter {
 
-//   Intersection::Intersection(const double t_, geo::ShapePtr geo) : t{t_}, geometry{geo} {}
-
-//   Intersection& Intersection::operator=(const Intersection& source) {
-
-//     t = source.t;
-//     geometry = source.geometry;
-
-//     return *this;
-//   }
-
-//   bool operator==(const Intersection& first, const Intersection& second) {
-
-//     return (first.t == second.t) && (*first.geometry == *second.geometry);
-//   }
-
-//   bool operator!=(const Intersection& first, const Intersection& second) {
-
-//     return ! (first == second);
-//   }
-
-//   std::optional<Intersection> hit(const Intersections& intersections) {
-//     //std::sort(intersections.begin(), intersections.end(), [&](const Intersection& first, const Intersection& second) {return first.t < second.t;});
-//     // The hit is the lowest nonegative intersection
-  
-//     // First filter out the intersection with negative t values;
-//     Intersections nonneg_integers;
-//     // std::back_inserter(nonneg_integers) and not nonneg_integers.begin():
-//     // copy_if does not do a push_back, it just copy the value on the position where the destination iterator is and then increments the iterator
-//     // --> can have seg faults
-//     std::copy_if(intersections.begin(), intersections.end(), std::back_inserter(nonneg_integers), [&](const Intersection& inter) {return inter.t >= 0;});
-  
-//     if (nonneg_integers.size()) {
-//       auto res = std::min_element(nonneg_integers.begin(), nonneg_integers.end(),
-// 				  [&](const Intersection& first, const Intersection& second) {return first.t < second.t;});
-//       return *res;
-//     }
-  
-//     return {}; // ie std::nullopt
-//   }
 
 //   float Computations::schlick() const {
 

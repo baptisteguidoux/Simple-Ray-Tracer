@@ -5,6 +5,7 @@
 #define GEO_H
 
 #include <vector>
+#include <optional>
 
 #include "ray.hpp"
 #include "tuple.hpp"
@@ -61,6 +62,22 @@ namespace geo {
     virtual math::Tuple local_normal_at(const math::Tuple& local_point) const = 0;
     
   };
+  
+  /* \fn bool operator==(const Shape& first, const Shape& second)
+   * \brief Compares the equality of two Shape
+   * \param first a Shape
+   * \param second another Shape
+   * \return true if the two Shape are equal, false otherwise
+   */  
+  bool operator==(const Shape& first, const Shape& second);
+
+  /* \fn bool operator!=(const Shape& first, const Shape& second)
+   * \brief Compares the unequality of two Shape
+   * \param first a Shape
+   * \param second another Shape
+   * \return true if the two Shape are not equal, false otherwise
+   */   
+  bool operator!=(const Shape& first, const Shape& second);
 
   /* \class TestShape
    */  
@@ -86,7 +103,24 @@ namespace geo {
 
     math::Tuple local_normal_at(const math::Tuple& local_point) const override;
   };
+
+  class Plane : public Shape {
+  public:
+
+    ~Plane() override;
+    
+    Intersections local_intersects(const ray::Ray& local_ray) override;
+
+    math::Tuple local_normal_at(const math::Tuple& local_point) const override;
+  };
   
+  /* \fn math::Tuple reflect(const math::Tuple& vec, const math::Tuple& normal)
+   * Reflects the vector around the normal
+   * \param the vector to reflect
+   * \parm the normal vector
+   * \return a Tuple, the reflected vector
+   */ 
+  math::Tuple reflect(const math::Tuple& vec, const math::Tuple& normal);
   
   /* \struct Intersection
    */
@@ -100,8 +134,36 @@ namespace geo {
      * \param geo the object that's been intersected
      */   
     Intersection(const float t_, std::shared_ptr<geo::Shape> geo);
-    
+
+    /* \fn Intersection& operator=(const Intersection& source)
+     * \param source the Intersection to copied, the source
+     * \return Intersection copy destination
+     */       
+    Intersection& operator=(const Intersection& source);
+
   };
+  /* \fn std::optional<Intersection> hit(const Intersections& intersections)
+   * Find the hit among all the Intersections, if there is any. The hit is the lowest nonegative intersection.
+   * \param the Intersections to look at
+   * \return an optional Intersection
+   */
+  std::optional<Intersection> hit(const Intersections& intersections);
+
+  /* \fn bool operator==(const Intersection& first, const Intersection& second)
+   * \brief Compares the equality of two Intersection
+   * \param first an Intersection
+   * \param second another Intersection
+   * \return true if the two Intersection are equal, false otherwise
+   */
+  bool operator==(const Intersection& first, const Intersection& second);
+
+  /* \fn bool operator!=(const Intersection& first, const Intersection& second)
+   * \brief Compares the unequality of two Intersection
+   * \param first an Intersection
+   * \param second another Intersection
+   * \return true if the two Intersection are not equal, false otherwise
+   */  
+  bool operator!=(const Intersection& first, const Intersection& second);
 
 }
 
