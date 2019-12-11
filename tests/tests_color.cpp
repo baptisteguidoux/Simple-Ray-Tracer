@@ -50,3 +50,10 @@ TEST(ColorTest, ColorMult) {
   color::Color color2(0.9, 1, 0.1);
   ASSERT_TRUE(color1 * color2 == color::Color(0.9, 0.2, 0.04));
 }
+
+TEST(ColorTest, BlackAndWhite) {
+
+  EXPECT_EQ(color::BLACK, color::Color(0, 0, 0));
+  EXPECT_EQ(color::WHITE, color::Color(1, 1, 1));
+}
+

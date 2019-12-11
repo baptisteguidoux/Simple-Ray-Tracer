@@ -83,3 +83,17 @@ namespace color {
 
 #endif
 
+
+#ifndef COLOR_STATIC_CONSTANTS_H
+#define COLOR_STATIC_CONSTANTS_H
+
+namespace color {
+
+  static const Color BLACK(0, 0, 0);
+  static const Color WHITE(1, 1, 1);
+
+}
+
+
+#endif
+
