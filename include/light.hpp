@@ -48,7 +48,7 @@ namespace light {
   bool operator!=(const PointLight& first, const PointLight& second);
 
   /* \fn color::Color lighting(std::shared_ptr<geo::Shape> object, const PointLight light, const math::Tuple& position, const math::Tuple& eye_vector, const math::Tuple& normal_vector, const bool in_shadow)
-   * Calculate the Color of the Shape's Material at the given position
+   * \brief Calculates the Color of the Shape's Material at the given position
    * \param object lit Shape
    * \param light the scene's light
    * \param position the position of the point on the object
