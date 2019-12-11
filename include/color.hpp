@@ -12,6 +12,7 @@ namespace color {
    * Just red, green and blue
    */
   struct Color {
+    
     float red;
     float green;
     float blue;

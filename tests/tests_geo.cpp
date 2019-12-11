@@ -8,7 +8,7 @@
 #include "geo.hpp"
 #include "tuple.hpp"
 #include "matrix.hpp"
-
+#include "material.hpp"
 
 TEST(IntersectionTest, IntersectionDataStructure) {
 
@@ -245,7 +245,6 @@ TEST(GeoTest, IntersectsPlane) {
   EXPECT_EQ(*(ixs[0].geometry), *plane);
 }
 
-
 TEST(GeoTest, BaseReflection){
 
   // Reflect a vector at 45 degrees
@@ -261,5 +260,18 @@ TEST(GeoTest, BaseReflection){
 
   ref = geo::reflect(vec, normal);
   EXPECT_EQ(ref, math::Vector(1.0, 0.0, 0.0));
+}
+
+TEST(GeoTest, ShapeMaterial) {
+
+  // The default material
+  auto test_shape = std::make_shared<geo::TestShape>();
+  EXPECT_EQ(test_shape->material, material::Material());
+
+  // A Shape can be assigned a material
+  auto m = material::Material();
+  m.ambient = 1;
+  test_shape->material = m;
+  EXPECT_EQ(test_shape->material, m);
 }
 

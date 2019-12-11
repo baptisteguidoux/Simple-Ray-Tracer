@@ -10,6 +10,7 @@
 #include "ray.hpp"
 #include "tuple.hpp"
 #include "matrix.hpp"
+#include "material.hpp"
 
 
 /* \namespace geo
@@ -32,6 +33,7 @@ namespace geo {
     virtual ~Shape() = 0;
 
     math::Matrix transform = math::IDENTITY_MATRIX; /*!< default transform*/
+    material::Material material = material::Material();
 
     /* \fn Intersections intersects(const ray::Ray& ray)
      * Computes the Intersections of the Ray and Shape, calls local_intersects
