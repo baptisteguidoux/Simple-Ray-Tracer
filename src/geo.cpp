@@ -51,7 +51,7 @@ namespace geo {
 
   bool operator==(const Shape& first, const Shape& second) {
 
-    return (first.transform == second.transform);// && (first.material == second.material);
+    return (first.transform == second.transform) && (first.material == second.material);
   }
 
   bool operator!=(const Shape& first, const Shape& second) {

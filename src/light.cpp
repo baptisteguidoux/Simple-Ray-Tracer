@@ -9,7 +9,9 @@
 
 namespace light {
   
-  PointLight::PointLight(const math::Tuple& pos, const color::Color& int_) : position{pos}, intensity {int_} {}
+  PointLight::PointLight(const math::Tuple& pos, const color::Color& int_) : position{pos}, intensity{int_} {}
+
+  PointLight::PointLight() : position{math::Point(0, 0, 0)}, intensity{color::BLACK} {}
 
   bool operator==(const PointLight& first, const PointLight& second) {
 

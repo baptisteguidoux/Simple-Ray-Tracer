@@ -29,7 +29,9 @@ namespace light {
      */
     PointLight(const math::Tuple& pos, const color::Color& int_);
 
-    PointLight() = default;
+    /* PointLight constructor
+     */    
+    PointLight();
     
   };
 
