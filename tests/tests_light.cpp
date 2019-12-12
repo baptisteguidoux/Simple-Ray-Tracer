@@ -21,6 +21,11 @@ TEST(LightTest, PointLightConstructor) {
   auto light = light::PointLight(position, intensity);
   EXPECT_EQ(light.position, position);
   EXPECT_EQ(light.intensity, intensity);
+
+  // Default PointLight
+  auto light2 = light::PointLight();
+  EXPECT_EQ(light2.position, math::Point(0, 0, 0));
+  EXPECT_EQ(light2.intensity, color::Color(0, 0, 0));
 }
 
 TEST(LightTest, PointLightEquality) {

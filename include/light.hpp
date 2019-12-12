@@ -28,6 +28,8 @@ namespace light {
      * \param int_ PointLight's color & intensity
      */
     PointLight(const math::Tuple& pos, const color::Color& int_);
+
+    PointLight() = default;
     
   };
 
