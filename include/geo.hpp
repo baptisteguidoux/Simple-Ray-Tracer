@@ -138,6 +138,8 @@ namespace geo {
      */   
     Intersection(const float t_, std::shared_ptr<geo::Shape> geo);
 
+    Intersection() = default;
+
     /* \fn Intersection& operator=(const Intersection& source)
      * \param source the Intersection to copied, the source
      * \return Intersection copy destination

@@ -23,7 +23,7 @@ namespace material {
     float specular = 0.9;
     float shininess = 200;
     bool cast_shadow = true;
-    
+
   };
 
   /* \fn bool operator==(const Material& first, const Material& second);

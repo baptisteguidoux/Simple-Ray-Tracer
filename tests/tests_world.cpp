@@ -1,4 +1,5 @@
 #include <memory>
+#include <cmath>
 
 #include <gtest/gtest.h>
 
@@ -107,26 +108,6 @@ TEST(WorldTest, ShadeHit) {
   EXPECT_EQ(col, color::Color(0.1, 0.1, 0.1));
 }
 
-TEST(WorldTest, IsShadowedFunction) {
-
-  // There is no shadow when nothing is collinear with point and light
-  auto w = world::build_default_world();
-  auto p = math::Point(0, 10, 0);
-  EXPECT_FALSE(w.is_point_shadowed(p));
-
-  // There is shadow when an object is between the point and the light
-  p = math::Point(10, -10, 10);
-  EXPECT_TRUE(w.is_point_shadowed(p));
-
-  // There is no shadow when an object is behind the light
-  p = math::Point(-20, 20, -20);
-  EXPECT_FALSE(w.is_point_shadowed(p));
-
-  // The same
-  p = math::Point(-2, 2, -2);
-  EXPECT_FALSE(w.is_point_shadowed(p));
-}
-
 TEST(WorldTest, ColorAt) {
 
   // Black when the ray miss
@@ -153,5 +134,40 @@ TEST(WorldTest, ColorAt) {
 
   col = wrld.color_at(r);
   EXPECT_EQ(col, inner->material.color);
+}
+
+TEST(WorldTest, IsShadowedFunction) {
+
+  // There is no shadow when nothing is collinear with point and light
+  auto w = world::build_default_world();
+  auto p = math::Point(0, 10, 0);
+  EXPECT_FALSE(w.is_point_shadowed(p));
+
+  // There is shadow when an object is between the point and the light
+  p = math::Point(10, -10, 10);
+  EXPECT_TRUE(w.is_point_shadowed(p));
+
+  // There is no shadow when an object is behind the light
+  p = math::Point(-20, 20, -20);
+  EXPECT_FALSE(w.is_point_shadowed(p));
+
+  // The same
+  p = math::Point(-2, 2, -2);
+  EXPECT_FALSE(w.is_point_shadowed(p));
+}
+
+TEST(WorldTest, IsShadowedFunctionMaterialDoesNotCastShadow) {
+
+  auto w = world::World();
+  w.light = light::PointLight(math::Point(-10, 5, 0), color::Color(1, 1, 1));
+  auto plane = std::make_shared<geo::Plane>();
+  plane->transform = math::rotation_z(M_PI / 2);
+  w.objects.push_back(plane);
+  
+  auto point = math::Point(20, 0, 0);
+  EXPECT_TRUE(w.is_point_shadowed(point));
+
+  w.objects[0]->material.cast_shadow = false;
+  EXPECT_FALSE(w.is_point_shadowed(point));
 }
 

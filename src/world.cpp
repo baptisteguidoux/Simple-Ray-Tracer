@@ -61,13 +61,13 @@ namespace world {
     
     auto shadow_ray = ray::Ray(point, point_light_direction);
     auto intersections = intersects(shadow_ray);
-    // Keep only the `intersections_with_objects_casting_shadows`, to avoid creating shadow under water for instance
-    //auto intersections_with_objects_casting_shadows = geo::Intersections(intersections.size());
-    geo::Intersections intersections_with_objects_casting_shadows = intersections;
-    //std::copy(intersections.begin(), intersections.end(), std::back_inserter(intersections_with_objects_casting_shadows));
-    // std::copy_if(intersections.begin(), intersections.end(), intersections_with_objects_casting_shadows.begin(),
-    // 		 [&](const geo::Intersection& ix) {return ix.geometry->material.cast_shadow == true;});  
     
+    // Keep only the `intersections_with_objects_casting_shadows`, to avoid creating shadow under water for instance
+    geo::Intersections intersections_with_objects_casting_shadows;
+    for (const auto& inter : intersections)
+      if (inter.geometry->material.cast_shadow)
+    	intersections_with_objects_casting_shadows.push_back(inter);
+
     if (intersections_with_objects_casting_shadows.size() == 0)
       return false;
     
@@ -75,7 +75,6 @@ namespace world {
 
     // There is a hit, and it happens between the point and the light
     if (hit != std::nullopt && hit->t < point_light_magnitude)
-      // No intersection, no shadow
       return true;
 
     // No hit, no shadow
