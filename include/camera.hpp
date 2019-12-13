@@ -49,8 +49,28 @@ namespace camera {
      * \return the rendered World
      */    
     canvas::Canvas render(const world::World& wrld) const;
-    
+
+ 
   };
+
+  /* \fn canvas::Canvas render_partial(const World& wrld, const int from_y, const int to_y) const
+   * \brief Use the Camera to render a vertical fraction of the final image of the given world
+   * \param cam Camera
+   * \param wrld World to render
+   * \param from_y start of the vertical fraction
+   * \param to_y end of the vertical fraction
+   * \return the partillay rendered World image
+   */     
+  canvas::Canvas render_partial(const Camera& cam, const world::World& wrld, const int from_y, const int to_y);
+      
+  /* \fn canvas::Canvas render_threaded(const Camera& cam, const world::World& wrld)
+   * \brief Use the Camera to render an image of the given world using several threads
+   * \param cam Camera
+   * \param wrld World to render
+   * \return the rendered World image
+   */
+  canvas::Canvas render_threaded(const Camera& cam, const world::World& wrld);
+
 }
 
 #endif

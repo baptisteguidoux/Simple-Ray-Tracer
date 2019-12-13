@@ -21,9 +21,9 @@ namespace canvas {
 
     int width;
     int height;
-    const int maximum_color_value = 255;
+    static const int maximum_color_value;
     std::vector<std::vector<color::Color>> pixels;
-    const static int ppm_line_max_chars = 70;
+    static const int ppm_line_max_chars;
 
     /* Canvas constructor
      */    

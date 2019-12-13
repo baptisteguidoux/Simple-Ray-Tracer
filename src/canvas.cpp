@@ -12,7 +12,10 @@
 
 
 namespace canvas {
-
+  
+  const int Canvas::maximum_color_value = 255;
+  const int Canvas::ppm_line_max_chars = 70;
+  
   Canvas::Canvas(int w, int h) : width {w}, height {h} {
     pixels = std::vector<std::vector<color::Color>>(height, std::vector<color::Color>(width, color::Color()));
   }

@@ -67,3 +67,30 @@ TEST(CameraTest, CameraRender) {
   EXPECT_EQ(image.get_pixel(5, 5), color::Color(0.38066, 0.47583, 0.2855));
 }
 
+TEST(CameraTest, CameraRenderPartial)  {
+
+  // Rendering a world with a camera
+  auto w = world::build_default_world();
+  auto cam = camera::Camera(11, 11, M_PI / 2);
+  auto from = math::Point(0, 0, -5);
+  auto to = math::Point(0, 0, 0);
+  auto up = math::Vector(0, 1, 0);
+  cam.transform = math::view_transform(from, to, up);
+  auto image = render_partial(cam, w, 5, 11);
+  EXPECT_EQ(image.get_pixel(5, 0), color::Color(0.38066, 0.47583, 0.2855));
+
+}
+
+TEST(CameraTest, CameraRenderThreaded) {
+
+  // Rendering a world with a camera
+  auto w = world::build_default_world();
+  auto cam = camera::Camera(11, 11, M_PI / 2);
+  auto from = math::Point(0, 0, -5);
+  auto to = math::Point(0, 0, 0);
+  auto up = math::Vector(0, 1, 0);
+  cam.transform = math::view_transform(from, to, up);
+  auto image = camera::render_threaded(cam, w);
+  EXPECT_EQ(image.get_pixel(5, 5), color::Color(0.38066, 0.47583, 0.2855));
+}
+
