@@ -275,3 +275,51 @@ TEST(GeoTest, ShapeMaterial) {
   EXPECT_EQ(test_shape->material, m);
 }
 
+TEST(GeoTest, PrepareComputations) {
+
+  // Precompute the state of an intersection
+  auto r = ray::Ray(math::Point(0.0, 0.0, -5.0), math::Vector(0.0, 0.0, 1.0));
+  auto shape = std::make_shared<geo::Sphere>();
+  auto i = geo::Intersection(4.0, shape);
+
+  auto comps = geo::prepare_computations(i, r);
+  EXPECT_EQ(comps.t, i.t);
+  EXPECT_EQ(comps.geometry, i.geometry);
+  EXPECT_EQ(comps.point, math::Point(0.0, 0.0, -1.0));
+  EXPECT_EQ(comps.eye_vector, math::Vector(0.0, 0.0, -1.0));
+  EXPECT_EQ(comps.normal_vector, math::Vector(0.0, 0.0, -1.0));
+}
+
+TEST(GeoTest, InsideObjectIntersection) {
+
+  // The hit, when an intersection occurs on the outside
+  auto r = ray::Ray(math::Point(0.0, 0.0, -5.0), math::Vector(0.0, 0.0, 1.0));
+  auto shape = std::make_shared<geo::Sphere>();
+  auto ix = geo::Intersection(4, shape);
+
+  auto comps = geo::prepare_computations(ix, r);
+  EXPECT_FALSE(comps.inside);
+
+  // The hit, when an intersection occurs on the inside
+  r = ray::Ray(math::Point(0.0, 0.0, 0.0), math::Vector(0.0, 0.0, 1.0));
+  ix = geo::Intersection(1.0, shape);
+  comps = geo::prepare_computations(ix, r);
+  EXPECT_EQ(comps.point, math::Point(0.0, 0.0, 1.0));
+  EXPECT_EQ(comps.eye_vector, math::Vector(0.0, 0.0, -1.0));
+  EXPECT_TRUE(comps.inside);
+  // normal is "inverted"
+  EXPECT_EQ(comps.normal_vector, math::Vector(0.0, 0.0, -1.0));
+}
+
+TEST(GeoTest, OverPoint) {
+
+  // The hit should offset the point
+  auto r = ray::Ray(math::Point(0, 0, -5), math::Vector(0, 0, 1));
+  auto shape = std::make_shared<geo::Sphere>();
+  shape->transform = math::translation(0, 0, 1);
+  auto ix = geo::Intersection(5, shape);
+  auto comps = geo::prepare_computations(ix, r);
+  EXPECT_TRUE(comps.over_point.z < - math::EPSILON / 2);
+  EXPECT_TRUE(comps.point.z > comps.over_point.z);
+}
+

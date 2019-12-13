@@ -15,6 +15,7 @@ TEST(MaterialTest, Constructor) {
   EXPECT_TRUE(math::almost_equal(m.diffuse, 0.9));
   EXPECT_TRUE(math::almost_equal(m.specular, 0.9));
   EXPECT_TRUE(math::almost_equal(m.shininess, 200));
+  EXPECT_TRUE(m.cast_shadow);
 }
 
 TEST(MaterialTest, EqualityComparison) {

@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <optional>
+#include <memory>
 
 #include "ray.hpp"
 #include "tuple.hpp"
@@ -167,6 +168,33 @@ namespace geo {
    */  
   bool operator!=(const Intersection& first, const Intersection& second);
 
+  
+  /*! \struct Computations
+   *  \brief Store some precomputed values relative to an intersection
+   */
+  struct Computations {
+
+    double t;
+    std::shared_ptr<geo::Shape> geometry;
+    math::Tuple point;
+    math::Tuple eye_vector;
+    math::Tuple normal_vector;
+    bool inside; /*!< true if the intersection occured into an object*/
+    math::Point over_point = math::Point(0, 0, 0); /*!< Adjust the point slightly above the norrmal to prevent self-shadowing and acne due to float rounding errors*/
+    
+    /*! Computations' constuctor
+     */
+    Computations() = default;
+  };  
+
+  /*! \fn Computations prepare_computations(const inter::Intersection& ixs, const ray::Ray r)
+   *  \param ixs an Intersection
+   *  \param r a Ray
+   *  \return a Computations
+   */
+  Computations prepare_computations(const Intersection& ixs, const ray::Ray r);
+  //Computations prepare_computations(const Intersection& ix, const ray::Ray r, const Intersections& ixs);
+  
 }
 
 #endif

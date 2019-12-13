@@ -69,3 +69,61 @@ TEST(WorldTest, WorldIntersects) {
   EXPECT_EQ(xs[3].t, 6);
 }
 
+TEST(WorldTest, ShadeHit) {
+
+  // Shading an intersection
+  auto wrld = world::build_default_world();
+  auto r = ray::Ray(math::Point(0.0, 0.0, -5.0), math::Vector(0.0, 0.0, 1.0));
+  auto shape = wrld.objects.at(0);
+  auto ixs = geo::Intersection(4.0, shape);
+  
+  auto comps = geo::prepare_computations(ixs, r);
+  auto col = wrld.shade_hit(comps);
+  EXPECT_EQ(col, color::Color(0.38066, 0.47583, 0.2855));
+
+  // Shading an intersection from the inside
+  wrld.light = light::PointLight(math::Point(0.0, 0.25, 0.0), color::Color(1, 1, 1));
+  r = ray::Ray(math::Point(0.0, 0.0, 0.0), math::Vector(0.0, 0.0, 1.0));
+  shape = wrld.objects.at(1);
+  ixs = geo::Intersection(0.5, shape);
+
+  comps = prepare_computations(ixs, r);
+  col = wrld.shade_hit(comps);
+  EXPECT_EQ(col, color::Color(0.90498, 0.90498, 0.90498));
+
+  // Shading an intersection in shadow
+  // sphere 2 is in shadow of sphere 1, so the only reflection is the ambient
+  wrld = world::World();
+  wrld.light = light::PointLight(math::Point(0, 0, -10), color::Color(1, 1, 1));
+  auto s1 = std::make_shared<geo::Sphere>();
+  wrld.objects.push_back(s1);
+  auto s2 = std::make_shared<geo::Sphere>();
+  s2->transform = math::translation(0, 0, 10);
+  wrld.objects.push_back(s2);
+  r = ray::Ray(math::Point(0, 0, 5), math::Vector(0, 0, 1));
+  ixs = geo::Intersection(4, s2);
+  comps = prepare_computations(ixs, r);
+  col = wrld.shade_hit(comps);
+  EXPECT_EQ(col, color::Color(0.1, 0.1, 0.1));
+}
+
+TEST(WorldTest, IsShadowedFunction) {
+
+  // There is no shadow when nothing is collinear with point and light
+  auto w = world::build_default_world();
+  auto p = math::Point(0, 10, 0);
+  EXPECT_FALSE(w.is_point_shadowed(p));
+
+  // There is shadow when an object is between the point and the light
+  p = math::Point(10, -10, 10);
+  EXPECT_TRUE(w.is_point_shadowed(p));
+
+  // There is no shadow when an object is behind the light
+  p = math::Point(-20, 20, -20);
+  EXPECT_FALSE(w.is_point_shadowed(p));
+
+  // The same
+  p = math::Point(-2, 2, -2);
+  EXPECT_FALSE(w.is_point_shadowed(p));
+}
+

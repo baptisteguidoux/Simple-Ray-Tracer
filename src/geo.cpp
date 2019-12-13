@@ -4,6 +4,7 @@
 #include <utility>
 #include <vector>
 #include <optional>
+#include <memory>
 
 #include "geo.hpp"
 #include "ray.hpp"
@@ -292,8 +293,6 @@ namespace geo {
     return ! (first == second);
   }  
   
-}
-
 // namespace inter {
 
 
@@ -318,69 +317,96 @@ namespace geo {
 //     // Schlick's approximation
 //     auto r0 = pow((n1 - n2) / (n1 + n2), 2);
 //     return r0 + (1 - r0) * pow((1 - cos), 5);
-//   }
 
-//   Computations prepare_computations(const Intersection& ix, const ray::Ray r, const Intersections& ixs) {
+  
+  Computations prepare_computations(const Intersection& ixs, const ray::Ray r) {
 
-//     auto comps = Computations();
+    auto comps = Computations();
 
-//     // Copy the intersection's properties for convenience
-//     comps.t = ix.t;
-//     comps.geometry = ix.geometry;
+    // Copy the intersection's properties for convenience
+    comps.t = ixs.t;
+    comps.geometry = ixs.geometry;
     
-//     // Precompute useful values
-//     comps.point = ray::position(r, comps.t);
-//     comps.eye_vector = -r.direction;
-//     comps.normal_vector = comps.geometry->normal_at(comps.point);
+    // Precompute useful values
+    comps.point = r.position(comps.t);
+    comps.eye_vector = -r.direction;
+    comps.normal_vector = comps.geometry->normal_at(comps.point);
 
-//     // Find if the normal points away from the eye vector, ie intersection occured inside object
-//     if (math::dot(comps.eye_vector, comps.normal_vector) < 0) {
-//       comps.inside = true;
-//       comps.normal_vector = -comps.normal_vector;
-//     } else
-//       comps.inside = false;
+    // Find if the normal points away from the eye vector, ie intersection occured inside object
+    if (math::dot(comps.eye_vector, comps.normal_vector) < 0) {
+      comps.inside = true;
+      comps.normal_vector = -comps.normal_vector;
+    } else
+      comps.inside = false;
 
-//     // Reflect the ray around object's normal
-//     comps.reflect_vector = geo::reflect(r.direction, comps.normal_vector);
+    // Bump the point in direction of the normal
+    comps.over_point = comps.point + comps.normal_vector * math::EPSILON;
     
-//     // Bump the point in direction of the normal
-//     comps.over_point = comps.point + comps.normal_vector * math::EPSILON;
-//     comps.under_point = comps.point - comps.normal_vector * math::EPSILON;
+    return comps;
+  }
+  
+
+  // Computations prepare_computations(const Intersection& ix, const ray::Ray r, const Intersections& ixs) {
+
+  //   auto comps = Computations();
+
+  //   // Copy the intersection's properties for convenience
+  //   comps.t = ix.t;
+  //   comps.geometry = ix.geometry;
     
-//     auto containers = std::vector<geo::ShapePtr>(); // will contain objects encountered but not (yet) exited
+  //   // Precompute useful values
+  //   comps.point = r.position(comps.t);
+  //   comps.eye_vector = -r.direction;
+  //   comps.normal_vector = comps.geometry->normal_at(comps.point);
 
-//     for (const auto& ix_ : ixs) {
+  //   // Find if the normal points away from the eye vector, ie intersection occured inside object
+  //   if (math::dot(comps.eye_vector, comps.normal_vector) < 0) {
+  //     comps.inside = true;
+  //     comps.normal_vector = -comps.normal_vector;
+  //   } else
+  //     comps.inside = false;
 
-//       // If the intersection is the hit, ie the given intersection
-//       if (ix_ == ix) {
-// 	if (containers.size() == 0)
-// 	  comps.n1 = 1.0;
-// 	else
-// 	  comps.n1 = containers.at(containers.size() - 1)->material.refractive_index;
-//       }
+  //   // Reflect the ray around object's normal
+  //   // comps.reflect_vector = geo::reflect(r.direction, comps.normal_vector);
+    
+  //   // Bump the point in direction of the normal
+  //   //comps.over_point = comps.point + comps.normal_vector * math::EPSILON;
+  //   //comps.under_point = comps.point - comps.normal_vector * math::EPSILON;
+    
+  //   auto containers = std::vector<std::shared_ptr<geo::Shape>>(); // will contain objects encountered but not (yet) exited
 
-//       // If the intersection object already in containers
-//       const auto shpp = std::find_if(containers.begin(), containers.end(), [&](const geo::ShapePtr shp) {return *shp.get() == *ix_.geometry.get();});
-//       if (shpp != containers.end())
-// 	// Then intersection is leaving the object, erase it from `containers`
-// 	containers.erase(containers.begin() + std::distance(containers.begin(), shpp));
-//       else
-// 	// intersection is entering object
-// 	containers.push_back(ix_.geometry);
+  //   // for (const auto& ix_ : ixs) {
 
-//       // If the intersection is the hit
-//       if (ix_ == ix) {
-// 	if (containers.size() == 0)
-// 	  comps.n2 = 1.0;
-// 	else
-// 	  comps.n2 = containers.at(containers.size() - 1)->material.refractive_index;
-// 	// terminate the loop
-// 	break;
-//       }
-//     }
+  //   //   // If the intersection is the hit, ie the given intersection
+  //   //   if (ix_ == ix) {
+  //   // 	if (containers.size() == 0)
+  //   // 	  comps.n1 = 1.0;
+  //   // 	else
+  //   // 	  comps.n1 = containers.at(containers.size() - 1)->material.refractive_index;
+  //   //   }
 
-//     return comps;
-//   }
+  //   //   // If the intersection object already in containers
+  //   //   const auto shpp = std::find_if(containers.begin(), containers.end(), [&](const geo::ShapePtr shp) {return *shp.get() == *ix_.geometry.get();});
+  //   //   if (shpp != containers.end())
+  //   // 	// Then intersection is leaving the object, erase it from `containers`
+  //   // 	containers.erase(containers.begin() + std::distance(containers.begin(), shpp));
+  //   //   else
+  //   // 	// intersection is entering object
+  //   // 	containers.push_back(ix_.geometry);
 
-// }
+  //   //   // If the intersection is the hit
+  //   //   if (ix_ == ix) {
+  //   // 	if (containers.size() == 0)
+  //   // 	  comps.n2 = 1.0;
+  //   // 	else
+  //   // 	  comps.n2 = containers.at(containers.size() - 1)->material.refractive_index;
+  //   // 	// terminate the loop
+  //   // 	break;
+  //   //   }
+  //   // }
+
+  //   return comps;
+  // }
+
+}
 

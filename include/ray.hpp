@@ -41,6 +41,13 @@ namespace ray {
      * \return a new, transformed, Ray
      */
     Ray transform(const math::Matrix& matrix) const;
+
+    /*! \fn math::Tuple position(const float time)
+     *  \brief Compute ray's position after a certain amount of time
+     *  \param time Amount of time
+     *  \return A point, the new position of the ray after time has passed
+     */
+    math::Tuple position(const float time);      
     
   };
 

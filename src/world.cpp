@@ -56,32 +56,34 @@ namespace world {
     return result;
   }
 
-  // bool World::is_point_shadowed(const math::Tuple& point) const {
+  bool World::is_point_shadowed(const math::Tuple& point) const {
 
-  //   auto point_light_vec = light->position - point;
-  //   auto point_light_magnitude = math::magnitude(point_light_vec);
-  //   auto point_light_direction = math::normalize(point_light_vec);
+    auto point_light_vec = light->position - point;
+    auto point_light_magnitude = math::magnitude(point_light_vec);
+    auto point_light_direction = math::normalize(point_light_vec);
     
-  //   auto shadow_ray = ray::Ray(point, point_light_direction);
-  //   auto intersections = intersects(shadow_ray);
-  //   // Keep only the `intersections_with_objects_casting_shadows`, to avoid creating shadow under water for instance
-  //   auto intersections_with_objects_casting_shadows = inter::Intersections(intersections.size());
-  //   std::copy(intersections.begin(), intersections.end(), std::back_inserter(intersections_with_objects_casting_shadows));
-  //   // std::copy_if(intersections.begin(), intersections.end(), intersections_with_objects_casting_shadows.begin(),
-  //   // 		 [&](const inter::Intersection& ix) {return ix.geometry->material.cast_shadow == true;});    
-  //   // if (intersections_with_objects_casting_shadows.size() == 0)
-  //   //   return false;
+    auto shadow_ray = ray::Ray(point, point_light_direction);
+    auto intersections = intersects(shadow_ray);
+    // Keep only the `intersections_with_objects_casting_shadows`, to avoid creating shadow under water for instance
+    //auto intersections_with_objects_casting_shadows = geo::Intersections(intersections.size());
+    geo::Intersections intersections_with_objects_casting_shadows = intersections;
+    //std::copy(intersections.begin(), intersections.end(), std::back_inserter(intersections_with_objects_casting_shadows));
+    // std::copy_if(intersections.begin(), intersections.end(), intersections_with_objects_casting_shadows.begin(),
+    // 		 [&](const geo::Intersection& ix) {return ix.geometry->material.cast_shadow == true;});  
     
-  //   auto hit = inter::hit(intersections_with_objects_casting_shadows); // the hit is never negative, nothing to worry about intersections before the point
+    if (intersections_with_objects_casting_shadows.size() == 0)
+      return false;
+    
+    auto hit = geo::hit(intersections_with_objects_casting_shadows); // the hit is never negative, nothing to worry about intersections before the point
 
-  //   // There is a hit, and it happens between the point and the light
-  //   if (hit != std::nullopt && hit->t < point_light_magnitude)
-  //     // No intersection, no shadow
-  //     return true;
+    // There is a hit, and it happens between the point and the light
+    if (hit != std::nullopt && hit->t < point_light_magnitude)
+      // No intersection, no shadow
+      return true;
 
-  //   // No hit, no shadow
-  //   return false;
-  // }
+    // No hit, no shadow
+    return false;
+  }
 
   // color::Color World::color_at(const ray::Ray& ry, const int remaining) const {
 
@@ -99,28 +101,30 @@ namespace world {
   //   return this->shade_hit(comps, remaining);
   // }
 
-  // color::Color World::shade_hit(const inter::Computations& comps, const int remaining) const {
+  color::Color World::shade_hit(const geo::Computations& comps) const {
 
-  //   bool is_shadowed = this->is_point_shadowed(comps.over_point);
+    bool is_shadowed = is_point_shadowed(comps.over_point);
 
-  //   // If we want several lights, we should iterate over lights and sum the resulting Color
-  //   auto surface = light::lighting(comps.geometry,
-  // 				   *light, // std::optional
-  // 				   comps.over_point, // ensure we are just above the surface, not below (floating point rounding errors...)
-  // 				   comps.eye_vector,
-  // 				   comps.normal_vector,
-  // 				   is_shadowed);
+    // If we want several lights, we should iterate over lights and sum the resulting Color
+    auto surface = light::lighting(comps.geometry,
+  				   *light, // std::optional
+  				   comps.over_point, // ensure we are just above the surface, not below (floating point rounding errors...)
+  				   comps.eye_vector,
+  				   comps.normal_vector,
+  				   is_shadowed);
     
-  //   auto reflected = this->reflected_color(comps, remaining);
-  //   auto refracted = this->refracted_color(comps, remaining);
+    //auto reflected = reflected_color(comps, remaining);
+    //auto refracted = refracted_color(comps, remaining);
     
-  //   // If the surface's material is both reflective and refractive, use the Schlick approximation to get the reflectance
-  //   if (comps.geometry->material.reflective > 0 && comps.geometry->material.transparency > 0) {
-  //     auto reflectance = comps.schlick();
-  //     return surface + reflected * reflectance + refracted * (1 - reflectance);
-  //   } else
-  // 	return surface + reflected + refracted;
-  // }
+    // // If the surface's material is both reflective and refractive, use the Schlick approximation to get the reflectance
+    // if (comps.geometry->material.reflective > 0 && comps.geometry->material.transparency > 0) {
+    //   auto reflectance = comps.schlick();
+    //   return surface + reflected * reflectance + refracted * (1 - reflectance);
+    // } else
+    // 	return surface + reflected + refracted;
+
+    return surface;
+  }
 
   // color::Color World::reflected_color(const inter::Computations& comps, const int remaining) const {
     
