@@ -170,59 +170,6 @@ namespace world {
   //   return this->color_at(refracted_ray, remaining - 1) * comps.geometry->material.transparency;
   // }
   
-  // Camera::Camera(const int h, const int v, const double fov) : hsize {h}, vsize {v}, field_of_view {fov} {
-        
-  //   // Determine pixel size
-  //   // determine width of the half canvas
-  //   double half_view = tan(field_of_view / 2.0);
-  //   double aspect_ratio = static_cast<double>(hsize) / static_cast<double>(vsize);
-  //   // wether it's a vertical or horizontal canvas
-  //   if (aspect_ratio >= 1) {
-  //     half_width = half_view;
-  //     half_height = half_view / aspect_ratio;
-  //   } else {
-  //     half_width = half_view * aspect_ratio;
-  //     half_height = half_view;
-  //   }
-
-  //   // full width of the canvas by the horizontal size of the canvas
-  //   pixel_size = (half_width * 2.0) / hsize;
-  // }
-  
-  // ray::Ray ray_for_pixel(const Camera& camera, const int px, const int py) {
-
-  //   // Offset from the edge of the canvas to the pixel center
-  //   auto xoffset = (px + 0.5) * camera.pixel_size;
-  //   auto yoffset = (py + 0.5) * camera.pixel_size;
-
-  //   // the untransformed coordinates of the pixel in world space
-  //   // the camera looks toward -z
-  //   auto world_x = camera.half_width - xoffset;
-  //   auto world_y = camera.half_height - yoffset;
-
-  //   // using the camera matrix, transform the canvas point and origin
-  //   auto pixel = math::inverse(camera.transform) * math::Point(world_x, world_y, -1);
-  //   auto origin = math::inverse(camera.transform) * math::Point(0, 0, 0);
-  //   // compute ray's direction vector
-  //   auto direction = math::normalize(pixel - origin);
-
-  //   return ray::Ray(origin, direction);
-  // }
-
-  // canvas::Canvas render(const Camera& camera, const World& wrld) {
-
-  //   auto image = canvas::Canvas(camera.hsize, camera.vsize);
-
-  //   for (int y = 0; y < camera.vsize; y++)
-  //     for (int x = 0; x < camera.hsize; x++) {
-  // 	auto ry = ray_for_pixel(camera, x, y);
-  // 	auto col = wrld.color_at(ry);
-  // 	image.write_pixel(x, y, col);
-  //     }
-
-  //   return image;
-  // }  
-  
   // canvas::Canvas render_partial(const Camera& camera, const World& wrld, const int from_y, const int to_y) {
 
   //   auto image = canvas::Canvas(camera.hsize, to_y - from_y);
