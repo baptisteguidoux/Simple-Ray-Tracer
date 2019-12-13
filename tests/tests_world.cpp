@@ -127,3 +127,31 @@ TEST(WorldTest, IsShadowedFunction) {
   EXPECT_FALSE(w.is_point_shadowed(p));
 }
 
+TEST(WorldTest, ColorAt) {
+
+  // Black when the ray miss
+  auto wrld = world::build_default_world();
+  auto r = ray::Ray(math::Point(0.0, 0.0, -5.0), math::Vector(0.0, 1.0, 0.0));
+
+  auto col = wrld.color_at(r);
+  EXPECT_EQ(col, color::Color(0, 0, 0));
+
+  // The color when a ray hits
+  r = ray::Ray(math::Point(0.0, 0.0, -5.0), math::Vector(0.0, 0.0, 1.0));
+
+  col = wrld.color_at(r);
+  EXPECT_EQ(col, color::Color(0.38066, 0.47583, 0.2855));
+
+  // The color with an intersection behind the ray
+  wrld = world::build_default_world();
+  auto& outer = wrld.objects.at(0); // first object
+  outer->material.ambient = 1;
+   //second object
+  auto& inner = wrld.objects.at(1);
+  inner->material.ambient = 1;
+  r = ray::Ray(math::Point(0.0, 0.0, 0.75), math::Vector(0.0, 0.0, -1.0));
+
+  col = wrld.color_at(r);
+  EXPECT_EQ(col, inner->material.color);
+}
+

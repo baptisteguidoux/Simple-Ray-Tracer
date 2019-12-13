@@ -85,22 +85,6 @@ namespace world {
     return false;
   }
 
-  // color::Color World::color_at(const ray::Ray& ry, const int remaining) const {
-
-  //   // find the Intersections of the Ray and the World
-  //   auto ixs = intersects(ry);
-  //   // find the hit from the Intersections
-  //   auto ht = inter::hit(ixs);
-  //   // If no hit return black
-  //   if (ht == std::nullopt)
-  //     return color::BLACK;
-    
-  //   // Precompute the necessary values
-  //   auto comps = prepare_computations(*ht, ry, ixs);
-
-  //   return this->shade_hit(comps, remaining);
-  // }
-
   color::Color World::shade_hit(const geo::Computations& comps) const {
 
     bool is_shadowed = is_point_shadowed(comps.over_point);
@@ -125,6 +109,22 @@ namespace world {
 
     return surface;
   }
+
+  color::Color World::color_at(const ray::Ray& ry) const { //, const int remaining
+
+    // find the Intersections of the Ray and the World
+    auto ixs = intersects(ry);
+    // find the hit from the Intersections
+    auto ht = geo::hit(ixs);
+    // If no hit return black
+    if (ht == std::nullopt)
+      return color::BLACK;
+    
+    // Precompute the necessary values
+    auto comps = geo::prepare_computations(*ht, ry);//, ixs);
+
+    return shade_hit(comps);//, remaining);
+  }  
 
   // color::Color World::reflected_color(const inter::Computations& comps, const int remaining) const {
     
