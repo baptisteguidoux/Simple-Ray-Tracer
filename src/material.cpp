@@ -1,6 +1,7 @@
 
 #include "material.hpp"
 
+
 namespace material {
 
   bool operator==(const Material& first, const Material& second) {
@@ -21,3 +22,4 @@ namespace material {
   }
   
 }
+

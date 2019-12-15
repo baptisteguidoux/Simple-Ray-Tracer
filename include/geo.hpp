@@ -63,6 +63,13 @@ namespace geo {
      * \return a Tuple, the normal Vector (local space)
      */     
     virtual math::Tuple local_normal_at(const math::Tuple& local_point) const = 0;
+
+    /* \fn color::Color pattern_at(const math::Tuple& world_point) const
+     * \brief Use this on Shape with a Pattern, to retrive the Color at the given Point
+     * \param world_point Point in world coordinates 
+     * \return the Color of the Pattern at the given Point
+     */
+    color::Color pattern_at(const math::Tuple& world_point) const;
     
   };
   

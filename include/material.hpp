@@ -4,8 +4,10 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 
+#include <memory>
 
 #include "color.hpp"
+#include "pattern.hpp"
 
 
 /* \namespace material
@@ -23,7 +25,7 @@ namespace material {
     float specular = 0.9;
     float shininess = 200;
     bool cast_shadow = true;
-
+    std::shared_ptr<pattern::Pattern> pattern;
   };
 
   /* \fn bool operator==(const Material& first, const Material& second);

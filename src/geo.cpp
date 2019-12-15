@@ -43,12 +43,12 @@ namespace geo {
     return math::normalize(world_normal);
   }
 
-  // color::Color Shape::pattern_at(const math::Tuple& world_point) const {
+  color::Color Shape::pattern_at(const math::Tuple& world_point) const {
 
-  //   auto object_point = math::inverse(transform) * world_point;
+    auto object_point = math::inverse(transform) * world_point;
 
-  //   return material.pattern->pattern_at(object_point);
-  // }
+    return material.pattern->pattern_at(object_point);
+  }
 
   bool operator==(const Shape& first, const Shape& second) {
 
