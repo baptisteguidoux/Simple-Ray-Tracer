@@ -28,11 +28,10 @@ namespace light {
 
     // Use material or pattern as color    
     auto color = color::Color();
-    // if (object->material.pattern != std::nullopt)
-    //   color = object->material.pattern->stripe_at(position);
-    // else
-    //   color = object->material.color;
-    color = object->material.color; // TO REPLACE WITH ABOVE WHEN PATTERN
+    if (object->material.pattern != nullptr)
+      color = object->material.pattern->pattern_at(position);
+    else
+      color = object->material.color;
     
     // Combine the surface color with the light
     color::Color effective_color = color * light.intensity;
