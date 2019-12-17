@@ -171,22 +171,25 @@ namespace pattern {
     return (*sub_pattern1 == *cast_other.sub_pattern1) && (*sub_pattern2 == *cast_other.sub_pattern2);
   }
     
-  // PerturbedPattern::PerturbedPattern(const std::shared_ptr<Pattern>& sb) : sub_pattern {sb} {}
+  PerturbedPattern::PerturbedPattern(const std::shared_ptr<Pattern>& sb) : sub_pattern {sb} {}
 
-  // color::Color PerturbedPattern::local_pattern_at(const math::Tuple& pattern_point) const {
+  PerturbedPattern::~PerturbedPattern() {};
+  
+  color::Color PerturbedPattern::local_pattern_at(const math::Tuple& pattern_point) const {
 
-  //   // Value between -1 and 1
-  //   const auto noise_value = noise.Evaluate(pattern_point.x, pattern_point.y, pattern_point.z);
-  //   // Jitter between 0 and 20%
-  //   const auto jitter = math::map(noise_value, -1, 1, 0.8, 1.2);
+    // Value between -1 and 1
+    const auto noise_value = noise.Evaluate(pattern_point.x, pattern_point.y, pattern_point.z);
+    // Jitter between 0 and 20%
+    const auto jitter = math::map(noise_value, -1, 1, 0.8, 1.2);
     
-  //   return sub_pattern->local_pattern_at(pattern_point * jitter);
-  // }
+    return sub_pattern->local_pattern_at(pattern_point * jitter);
+  }
 
-  // bool PerturbedPattern::local_equality_predicate(const Pattern& other) const {
+  bool PerturbedPattern::local_equality_predicate(const Pattern& other) const {
 
-  //   const auto& cast_other = static_cast<const PerturbedPattern&>(other);
+    const auto& cast_other = static_cast<const PerturbedPattern&>(other);
 
-  //   return (sub_pattern == cast_other.sub_pattern);
-  // }
+    return (sub_pattern == cast_other.sub_pattern);
+  }
+
 }

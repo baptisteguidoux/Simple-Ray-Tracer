@@ -284,3 +284,28 @@ TEST(PatternTest, BlendedPattern) {
   EXPECT_NE(*pattern, *pattern2);  
 }
 
+TEST(PatternTest, PerturbedPattern) {
+
+  // A PerturbedPattern derives from class Pattern
+  auto sub_pattern = std::make_shared<pattern::TestPattern>();
+  auto pattern = std::make_shared<pattern::PerturbedPattern>(sub_pattern);
+  EXPECT_NE(static_cast<pattern::Pattern*>(pattern.get()), nullptr);
+
+  // A PerturbedPattern just jitter the given point before passing to a "true" Pattern
+  // Since TestPattern.local_pattern_at returns a Color(r,g,b) for a Point(x, y, z) where each component is equal to its counterpart
+  // simply test returned Color values are different from Point
+  auto point = math::Point(0.1, 0.35, 0.82);
+  auto col = pattern->pattern_at(point);
+  EXPECT_FALSE(math::almost_equal(point.x, col.red));
+  EXPECT_FALSE(math::almost_equal(point.y, col.green));
+  EXPECT_FALSE(math::almost_equal(point.z, col.blue));
+
+  // PerturbedPattern equality
+  auto sub_pattern2 = std::make_shared<pattern::StripePattern>(color::WHITE, color::BLACK);
+  auto pattern2 = std::make_shared<pattern::PerturbedPattern>(sub_pattern2);
+  auto pattern3 = std::make_shared<pattern::PerturbedPattern>(sub_pattern2);
+  EXPECT_EQ(*pattern2, *pattern3);
+  pattern3->sub_pattern = std::make_shared<pattern::RadialGradientPattern>(color::WHITE, color::BLACK);
+  EXPECT_NE(*pattern, *pattern2);
+}
+

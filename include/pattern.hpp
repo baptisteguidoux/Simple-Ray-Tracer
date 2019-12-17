@@ -4,6 +4,8 @@
 
 #include <memory>
 
+#include "noise.hpp"
+
 #include "matrix.hpp"
 #include "color.hpp"
 
@@ -61,6 +63,8 @@ namespace pattern {
 
   };
 
+  /* \class TestPattern
+   */   
   class TestPattern : public Pattern {
   public:
     ~TestPattern() override;
@@ -71,6 +75,8 @@ namespace pattern {
     
   };
 
+  /* \class StripePattern
+   */ 
   class StripePattern : public Pattern {
   public:
     color::Color a;
@@ -86,6 +92,9 @@ namespace pattern {
     
   };
 
+  /* \class GradientPattern
+   * linearly interpolates between colors
+   */   
   class GradientPattern : public Pattern {
   public:
     color::Color start_color;
@@ -101,6 +110,8 @@ namespace pattern {
     
   };
 
+  /* \class RingPattern
+   */  
   class RingPattern : public Pattern {
   public:
     color::Color a;
@@ -115,7 +126,9 @@ namespace pattern {
     bool local_equality_predicate(const Pattern& other) const override;
     
   };
-  
+
+  /* \class CheckerPattern
+   */  
   class CheckerPattern : public Pattern {
   public:
     color::Color a;
@@ -131,6 +144,9 @@ namespace pattern {
     
   };
 
+  /* \class RadialGradientPattern
+   * radial interpolation between colors
+   */  
   class RadialGradientPattern : public Pattern {
   public:
     color::Color start_color;
@@ -146,6 +162,9 @@ namespace pattern {
     
   };
 
+  /* \class NestedPattern
+   * alternates between two patterns, like a checker
+   */  
   class NestedPattern : public Pattern {
   public:
     std::shared_ptr<Pattern> sub_pattern1;
@@ -161,6 +180,9 @@ namespace pattern {
     
   };
 
+  /* \class BlendedPattern
+   * adds two Pattern
+   */  
   class BlendedPattern : public Pattern {
   public:
     std::shared_ptr<Pattern> sub_pattern1;
@@ -169,6 +191,24 @@ namespace pattern {
     BlendedPattern(const std::shared_ptr<Pattern>& sb1, const std::shared_ptr<Pattern>& sb2);
 
     ~BlendedPattern() override;
+
+    color::Color local_pattern_at(const math::Tuple& pattern_point) const override;
+
+    bool local_equality_predicate(const Pattern& other) const override;
+    
+  };
+
+  /* \class PerturbedPattern
+   * a sub Pattern is transformed using OpenSimplex noise
+   */  
+  class PerturbedPattern : public Pattern {
+  public:
+    std::shared_ptr<Pattern> sub_pattern;
+    noise::OpenSimplexNoise noise;
+    
+    PerturbedPattern(const std::shared_ptr<Pattern>& sb);
+
+    ~PerturbedPattern() override;
 
     color::Color local_pattern_at(const math::Tuple& pattern_point) const override;
 
