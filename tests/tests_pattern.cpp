@@ -1,5 +1,6 @@
 
-#include "memory"
+#include <memory>
+#include <cmath>
 
 #include <gtest/gtest.h>
 
@@ -154,5 +155,132 @@ TEST(PatternTest, StripePatternAtWithTransformations) {
   object->material.pattern = pattern;
   c = object->pattern_at(math::Point(2.5, 0, 0));
   EXPECT_EQ(c, color::WHITE);
+}
+
+TEST(PatternTest, GradientPattern) {
+
+  // A GradientPattern derives from class Pattern
+  auto pattern = std::make_shared<pattern::GradientPattern>(color::WHITE, color::BLACK);
+  EXPECT_NE(static_cast<pattern::Pattern*>(pattern.get()), nullptr);
+
+  // A GradientPattern linearly interpolates between colors
+  pattern = std::make_shared<pattern::GradientPattern>(color::WHITE, color::BLACK);
+  EXPECT_EQ(pattern->pattern_at(math::Point(0.25, 0, 0)), color::Color(0.75, 0.75, 0.75));
+  EXPECT_EQ(pattern->pattern_at(math::Point(0.5, 0, 0)), color::Color(0.5, 0.5, 0.5));
+  EXPECT_EQ(pattern->pattern_at(math::Point(0.75, 0, 0)), color::Color(0.25, 0.25, 0.25));
+
+  // GradientPattern equality
+  auto pattern2 = std::make_shared<pattern::GradientPattern>(color::WHITE, color::BLACK);
+  EXPECT_EQ(*pattern, *pattern2);
+  pattern2->end_color = color::Color(1, 0, 0);
+  EXPECT_NE(*pattern, *pattern2);
+}
+
+TEST(PatternTest, RingPattern) {
+
+  // A RingPattern derives from class Pattern
+  auto pattern = std::make_shared<pattern::RingPattern>(color::WHITE, color::BLACK);
+  EXPECT_NE(dynamic_cast<pattern::Pattern*>(pattern.get()), nullptr);
+
+  // A ring should extend in both x and z
+  EXPECT_EQ(pattern->pattern_at(math::Point(0, 0, 0)), color::WHITE);
+  EXPECT_EQ(pattern->pattern_at(math::Point(1, 0, 0)), color::BLACK);
+  EXPECT_EQ(pattern->pattern_at(math::Point(0, 0, 1)), color::BLACK);
+  EXPECT_EQ(pattern->pattern_at(math::Point(sqrt(2) / 2 + 0.001, 0, sqrt(2) / 2 + 0.001)), color::BLACK);
+
+  //RingPattern equality
+  auto pattern2 = std::make_shared<pattern::RingPattern>(color::WHITE, color::BLACK);
+  EXPECT_EQ(*pattern, *pattern2);
+  pattern2->a = color::Color(1, 0, 0);
+  EXPECT_NE(*pattern, *pattern2);
+}
+
+TEST(PatternTest, CheckerPattern) {
+
+  // A CheckerPattern derives from class Pattern
+  auto pattern = std::make_shared<pattern::CheckerPattern>(color::WHITE, color::BLACK);
+  EXPECT_NE(dynamic_cast<pattern::Pattern*>(pattern.get()), nullptr);
+
+  // Checkers should repeat in x
+  EXPECT_EQ(pattern->pattern_at(math::Point(0, 0, 0)), color::WHITE);
+  EXPECT_EQ(pattern->pattern_at(math::Point(0.99, 0, 0)), color::WHITE);
+  EXPECT_EQ(pattern->pattern_at(math::Point(1.01, 0, 0)), color::BLACK);
+
+  // Checkers should repeat in y
+  EXPECT_EQ(pattern->pattern_at(math::Point(0, 0, 0)), color::WHITE);
+  EXPECT_EQ(pattern->pattern_at(math::Point(0, 0.99, 0)), color::WHITE);
+  EXPECT_EQ(pattern->pattern_at(math::Point(0, 1.01, 0)), color::BLACK);
+
+  // Checkers should repeat in z
+  EXPECT_EQ(pattern->pattern_at(math::Point(0, 0, 0)), color::WHITE);
+  EXPECT_EQ(pattern->pattern_at(math::Point(0, 0, 0.99)), color::WHITE);
+  EXPECT_EQ(pattern->pattern_at(math::Point(0, 0, 1.01)), color::BLACK);  
+}
+
+TEST(PatternTest, RadialGradientPattern) {
+
+  // A RadialGradientPattern derives from class Pattern
+  auto pattern = std::make_shared<pattern::RadialGradientPattern>(color::WHITE, color::BLACK);
+  EXPECT_NE(static_cast<pattern::Pattern*>(pattern.get()), nullptr);
+
+  // A RadialGradientPattern linearly interpolates between colors
+  pattern = std::make_shared<pattern::RadialGradientPattern>(color::WHITE, color::BLACK);
+  EXPECT_EQ(pattern->pattern_at(math::Point(0.25, 0, 0)), color::Color(0.96922, 0.96922, 0.96922));
+  EXPECT_EQ(pattern->pattern_at(math::Point(0.5, 0, 0)), color::Color(0.88196, 0.88196, 0.88196));
+  EXPECT_EQ(pattern->pattern_at(math::Point(0.75, 0, 0)), color::Color(0.75, 0.75, 0.75));
+
+  // RadialGradientPattern equality
+  auto pattern2 = std::make_shared<pattern::RadialGradientPattern>(color::WHITE, color::BLACK);
+  EXPECT_EQ(*pattern, *pattern2);
+  pattern2->end_color = color::Color(1, 0, 0);
+  EXPECT_NE(*pattern, *pattern2);
+}
+
+TEST(PatternTest, NestedPattern) {
+
+  // A NestedPattern derives from class Pattern
+  auto sub_pattern1 = std::make_shared<pattern::StripePattern>(color::WHITE, color::BLACK);
+  auto sub_pattern2 = std::make_shared<pattern::StripePattern>(color::Color(1, 0, 0), color::Color(0, 1, 0));
+  auto pattern = std::make_shared<pattern::NestedPattern>(sub_pattern1, sub_pattern2);
+  EXPECT_NE(static_cast<pattern::Pattern*>(pattern.get()), nullptr);
+
+  // A NestedPattern alternates between two patterns like a checker
+  EXPECT_EQ(pattern->pattern_at(math::Point(0, 0, 0)), pattern->sub_pattern1->pattern_at(math::Point(0, 0, 0)));
+  EXPECT_EQ(pattern->pattern_at(math::Point(0.9, 0, 0.9)), pattern->sub_pattern1->pattern_at(math::Point(0, 0, 0)));
+  EXPECT_EQ(pattern->pattern_at(math::Point(0, 0.9, 0)), pattern->sub_pattern1->pattern_at(math::Point(0, 0, 0)));
+  EXPECT_EQ(pattern->pattern_at(math::Point(1.1, 0, 0)), pattern->sub_pattern2->pattern_at(math::Point(1.1, 0, 0)));
+  EXPECT_EQ(pattern->pattern_at(math::Point(0, 0, 1.1)), pattern->sub_pattern2->pattern_at(math::Point(0, 0, 1.1)));
+  EXPECT_EQ(pattern->pattern_at(math::Point(0, 1.1, 0)), pattern->sub_pattern2->pattern_at(math::Point(0, 1.1, 0)));
+
+  // NestedPattern equality
+  auto pattern2 = std::make_shared<pattern::NestedPattern>(sub_pattern1, sub_pattern2);
+  EXPECT_EQ(*pattern, *pattern2);
+  pattern2->sub_pattern1 = std::make_shared<pattern::RadialGradientPattern>(color::WHITE, color::BLACK);
+  EXPECT_NE(*pattern, *pattern2);				       
+}
+
+TEST(PatternTest, BlendedPattern) {
+
+  // A BlendedPattern derives from class Pattern
+  auto sub_pattern1 = std::make_shared<pattern::StripePattern>(color::WHITE, color::BLACK);
+  auto sub_pattern2 = std::make_shared<pattern::RingPattern>(color::Color(1, 0, 0), color::Color(0, 1, 0));
+  auto pattern = std::make_shared<pattern::BlendedPattern>(sub_pattern1, sub_pattern2);
+  EXPECT_NE(static_cast<pattern::Pattern*>(pattern.get()), nullptr);
+
+  // A BlendedPattern adds two Pattern
+  EXPECT_EQ(pattern->pattern_at(math::Point(0, 0, 0)),
+	    pattern->sub_pattern1->pattern_at(math::Point(0, 0, 0)) + pattern->sub_pattern2->pattern_at(math::Point(0, 0, 0)));
+  EXPECT_EQ(pattern->pattern_at(math::Point(1, 0, 0)),
+	    pattern->sub_pattern1->pattern_at(math::Point(1, 0, 0)) + pattern->sub_pattern2->pattern_at(math::Point(1, 0, 0)));
+  EXPECT_EQ(pattern->pattern_at(math::Point(0, 1, 0)),
+	    pattern->sub_pattern1->pattern_at(math::Point(0, 1, 0)) + pattern->sub_pattern2->pattern_at(math::Point(0, 1, 0)));
+  EXPECT_EQ(pattern->pattern_at(math::Point(0, 0, 1)),
+	    pattern->sub_pattern1->pattern_at(math::Point(0, 0, 1)) + pattern->sub_pattern2->pattern_at(math::Point(0, 0, 1)));    
+
+  // BlendedPattern equality
+  auto pattern2 = std::make_shared<pattern::BlendedPattern>(sub_pattern1, sub_pattern2);
+  EXPECT_EQ(*pattern, *pattern2);
+  pattern2->sub_pattern1 = std::make_shared<pattern::RadialGradientPattern>(color::WHITE, color::BLACK);
+  EXPECT_NE(*pattern, *pattern2);  
 }
 

@@ -2,6 +2,8 @@
 #ifndef PATTERN_H
 #define PATTERN_H
 
+#include <memory>
+
 #include "matrix.hpp"
 #include "color.hpp"
 
@@ -84,6 +86,96 @@ namespace pattern {
     
   };
 
+  class GradientPattern : public Pattern {
+  public:
+    color::Color start_color;
+    color::Color end_color;
+    
+    GradientPattern(const color::Color& start, const color::Color& end);
+
+    ~GradientPattern() override;
+
+    color::Color local_pattern_at(const math::Tuple& pattern_point) const override;
+
+    bool local_equality_predicate(const Pattern& other) const override;
+    
+  };
+
+  class RingPattern : public Pattern {
+  public:
+    color::Color a;
+    color::Color b;
+    
+    RingPattern(const color::Color& a_, const color::Color& b_);
+
+    ~RingPattern() override;
+
+    color::Color local_pattern_at(const math::Tuple& pattern_point) const override;
+
+    bool local_equality_predicate(const Pattern& other) const override;
+    
+  };
+  
+  class CheckerPattern : public Pattern {
+  public:
+    color::Color a;
+    color::Color b;
+    
+    CheckerPattern(const color::Color& a_, const color::Color& b_);
+
+    ~CheckerPattern() override;
+
+    color::Color local_pattern_at(const math::Tuple& pattern_point) const override;
+
+    bool local_equality_predicate(const Pattern& other) const override;
+    
+  };
+
+  class RadialGradientPattern : public Pattern {
+  public:
+    color::Color start_color;
+    color::Color end_color;
+    
+    RadialGradientPattern(const color::Color& start, const color::Color& end);
+
+    ~RadialGradientPattern() override;
+
+    color::Color local_pattern_at(const math::Tuple& pattern_point) const override;
+
+    bool local_equality_predicate(const Pattern& other) const override;
+    
+  };
+
+  class NestedPattern : public Pattern {
+  public:
+    std::shared_ptr<Pattern> sub_pattern1;
+    std::shared_ptr<Pattern> sub_pattern2;
+    
+    NestedPattern(const std::shared_ptr<Pattern>& sb1, const std::shared_ptr<Pattern>& sb2);
+
+    ~NestedPattern() override;
+
+    color::Color local_pattern_at(const math::Tuple& pattern_point) const override;
+
+    bool local_equality_predicate(const Pattern& other) const override;
+    
+  };
+
+  class BlendedPattern : public Pattern {
+  public:
+    std::shared_ptr<Pattern> sub_pattern1;
+    std::shared_ptr<Pattern> sub_pattern2;
+    
+    BlendedPattern(const std::shared_ptr<Pattern>& sb1, const std::shared_ptr<Pattern>& sb2);
+
+    ~BlendedPattern() override;
+
+    color::Color local_pattern_at(const math::Tuple& pattern_point) const override;
+
+    bool local_equality_predicate(const Pattern& other) const override;
+    
+  };  
+  
 }
 
 #endif 
