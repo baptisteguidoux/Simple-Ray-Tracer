@@ -31,3 +31,18 @@ TEST(MaterialTest, EqualityComparison) {
   EXPECT_NE(m, m3);
 }
 
+TEST(MaterialTest, Reflective) {
+
+  // A Material has a member variable reflective
+  auto mat = material::Material();
+  // Its value for the default Material is 0
+  EXPECT_EQ(mat.reflective, 0.0);
+}
+
+TEST(MaterialTest, CastShadow){
+
+  // A Material has a member variable `cast_shadow` that defaults to true
+  auto mat = material::Material();
+  EXPECT_TRUE(mat.cast_shadow);
+}
+

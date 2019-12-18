@@ -171,3 +171,85 @@ TEST(WorldTest, IsShadowedFunctionMaterialDoesNotCastShadow) {
   EXPECT_FALSE(w.is_point_shadowed(point));
 }
 
+TEST(WorldTest, ReflectedColor) {
+
+  // The reflected color for a non reflective material
+  auto w = world::build_default_world();
+  // ray starts inside the default world spheres
+  auto r = ray::Ray(math::Point(0, 0, 0), math::Vector(0, 0, 1));
+  // inner sphere
+  auto& shape = w.objects.at(1);
+  // guarantee any reflection will have something to reflect...
+  shape->material.ambient = 1; 
+  auto i = geo::Intersection(1, shape);
+  auto comps = geo::prepare_computations(i, r);
+  auto col = w.reflected_color(comps);
+  // ... but the inner sphere is not reflective
+  EXPECT_EQ(col, color::BLACK);
+
+  // The reflected color for a reflective material
+  w = world::build_default_world();
+  // Add a (semi) reflective plane below the spheres of the default scene
+  auto shape2 = std::make_shared<geo::Plane>();
+  shape2->material.reflective = 0.5;
+  shape2->transform = math::translation(0, -1, 0);
+  w.objects.push_back(shape2);
+  r = ray::Ray(math::Point(0, 0, -3), math::Vector(0, -sqrt(2) / 2, sqrt(2) / 2));
+  i = geo::Intersection(sqrt(2), shape2);
+  comps = geo::prepare_computations(i, r);
+  col = w.reflected_color(comps);
+  EXPECT_EQ(col, color::Color(0.19033, 0.23791, 0.14274));
+}
+
+TEST(WorldTest, ShadeHitWithReflect) {
+
+  // Shade hit with a reflective material
+  auto w = world::build_default_world();
+  // ray starts inside the default world spheres
+  // inner sphere
+  auto shape = std::make_shared<geo::Plane>();
+  shape->material.reflective = 0.5;
+  shape->transform = math::translation(0, -1, 0);
+  w.objects.push_back(shape);
+  auto r = ray::Ray(math::Point(0, 0, -3), math::Vector(0, -sqrt(2) / 2, sqrt(2) / 2));
+  auto i = geo::Intersection(sqrt(2), shape);
+  auto comps = geo::prepare_computations(i, r);
+  auto col = w.shade_hit(comps);
+  EXPECT_EQ(col, color::Color(0.87676, 0.92434, 0.82917));
+}
+
+TEST(WorldTest, ReflectionAvoidInfiniteRecursion) {
+
+  // Handles infinite recursion
+  // Place two reflective planes face to face
+  auto w = world::World();
+  w.light = light::PointLight(math::Point(0, 0, 0), color::Color(1, 1, 1));
+  auto lower = std::make_shared<geo::Plane>();
+  lower->material.reflective = 1;
+  lower->transform = math::translation(0, -1, 0);
+  w.objects.push_back(lower);
+  auto upper = std::make_shared<geo::Plane>();
+  upper->material.reflective = 1;
+  upper->transform = math::translation(0, 1, 0);
+  w.objects.push_back(upper);
+  auto r = ray::Ray(math::Point(0, 0, 0), math::Vector(0, 1, 0));
+  // Test no segfault (infinite recursion --> core dumped)
+  EXPECT_EXIT((w.color_at(r), exit(0)), ::testing::ExitedWithCode(0), ".*");
+}
+
+TEST(WorldTest, ReflectionLimitRecursion) {
+
+  auto w = world::build_default_world();
+  // ray starts inside the default world spheres
+  // inner sphere
+  auto shape = std::make_shared<geo::Plane>();
+  shape->material.reflective = 0.5;
+  shape->transform = math::translation(0, -1, 0);
+  w.objects.push_back(shape);
+  auto r = ray::Ray(math::Point(0, 0, -3), math::Vector(0, -sqrt(2) / 2, sqrt(2) / 2));
+  auto i = geo::Intersection(sqrt(2), shape);
+  auto comps = geo::prepare_computations(i, r);
+  auto col = w.reflected_color(comps, 0); //no recursive call remaining
+  EXPECT_EQ(col, color::BLACK);
+}
+

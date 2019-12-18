@@ -26,6 +26,7 @@ namespace material {
     float shininess = 200;
     bool cast_shadow = true;
     std::shared_ptr<pattern::Pattern> pattern;
+    float reflective = 0;
   };
 
   /* \fn bool operator==(const Material& first, const Material& second);

@@ -10,6 +10,7 @@
 #include "matrix.hpp"
 #include "material.hpp"
 
+
 TEST(IntersectionTest, IntersectionDataStructure) {
 
   // For the moment, an Intersection will only contain two things:
@@ -321,5 +322,15 @@ TEST(GeoTest, OverPoint) {
   auto comps = geo::prepare_computations(ix, r);
   EXPECT_TRUE(comps.over_point.z < - math::EPSILON / 2);
   EXPECT_TRUE(comps.point.z > comps.over_point.z);
+}
+
+TEST(GeoTest, ReflectionPrepareComputations) {
+
+  // prepare_computations precomputes the reflect_vector
+  auto shape = std::make_shared<geo::Plane>();
+  auto r = ray::Ray(math::Point(0, 1, -1), math::Vector(0, -sqrt(2) / 2, sqrt(2) / 2));
+  auto i = geo::Intersection(sqrt(2), shape);
+  auto comps = geo::prepare_computations(i, r);
+  EXPECT_EQ(comps.reflect_vector, math::Vector(0, sqrt(2) / 2, sqrt(2) / 2)); // reflect vector bounces on the plane at 45
 }
 

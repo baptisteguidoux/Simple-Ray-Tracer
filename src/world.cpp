@@ -81,7 +81,7 @@ namespace world {
     return false;
   }
 
-  color::Color World::shade_hit(const geo::Computations& comps) const {
+  color::Color World::shade_hit(const geo::Computations& comps, const int remaining) const {
 
     bool is_shadowed = is_point_shadowed(comps.over_point);
 
@@ -93,7 +93,7 @@ namespace world {
   				   comps.normal_vector,
   				   is_shadowed);
     
-    //auto reflected = reflected_color(comps, remaining);
+    auto reflected = reflected_color(comps, remaining);
     //auto refracted = refracted_color(comps, remaining);
     
     // // If the surface's material is both reflective and refractive, use the Schlick approximation to get the reflectance
@@ -103,10 +103,10 @@ namespace world {
     // } else
     // 	return surface + reflected + refracted;
 
-    return surface;
+    return surface + reflected;
   }
 
-  color::Color World::color_at(const ray::Ray& ry) const { //, const int remaining
+  color::Color World::color_at(const ray::Ray& ry, const int remaining) const {
 
     // find the Intersections of the Ray and the World
     auto ixs = intersects(ry);
@@ -119,22 +119,22 @@ namespace world {
     // Precompute the necessary values
     auto comps = geo::prepare_computations(*ht, ry);//, ixs);
 
-    return shade_hit(comps);//, remaining);
+    return shade_hit(comps, remaining);
   }  
 
-  // color::Color World::reflected_color(const inter::Computations& comps, const int remaining) const {
+  color::Color World::reflected_color(const geo::Computations& comps, const int remaining) const {
+     
+    if (remaining <= 0)
+      return color::BLACK;
     
-  //   if (remaining <= 0)
-  //     return color::BLACK;
-    
-  //   if (comps.geometry->material.reflective == 0)
-  //     return color::BLACK;
+    if (comps.geometry->material.reflective == 0)
+      return color::BLACK;
 
-  //   // use over_point, else risk intersect surface we reflect from
-  //   auto reflect_ray = ray::Ray(comps.over_point, comps.reflect_vector);
+    // use over_point, else risk intersect surface we reflect from
+    auto reflect_ray = ray::Ray(comps.over_point, comps.reflect_vector);
 
-  //   return color_at(reflect_ray, remaining - 1) * comps.geometry->material.reflective;
-  // }
+    return color_at(reflect_ray, remaining - 1) * comps.geometry->material.reflective;
+  }
 
   // color::Color World::refracted_color(const inter::Computations& comps, const int remaining) const {
 

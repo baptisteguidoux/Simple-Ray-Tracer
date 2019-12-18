@@ -189,8 +189,8 @@ namespace geo {
     math::Tuple eye_vector;
     math::Tuple normal_vector;
     bool inside; /*!< true if the intersection occured into an object*/
-    math::Point over_point = math::Point(0, 0, 0); /*!< Adjust the point slightly above the norrmal to prevent self-shadowing and acne due to float rounding errors*/
-    
+    math::Tuple over_point = math::Point(0, 0, 0); /*!< Adjust the point slightly above the norrmal to prevent self-shadowing and acne due to float rounding errors*/
+    math::Tuple reflect_vector;
     /*! Computations' constuctor
      */
     Computations() = default;

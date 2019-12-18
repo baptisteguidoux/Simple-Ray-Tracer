@@ -338,7 +338,9 @@ namespace geo {
       comps.normal_vector = -comps.normal_vector;
     } else
       comps.inside = false;
-
+    
+    // Reflect the ray around object's normal
+    comps.reflect_vector = reflect(r.direction, comps.normal_vector);
     // Bump the point in direction of the normal
     comps.over_point = comps.point + comps.normal_vector * math::EPSILON;
     

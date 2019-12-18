@@ -50,16 +50,26 @@ namespace world {
     /* \fn color::Color shade_hit(const geo::Computations& comps, const int remaining) const
      * \brief Find the color at the point, in the World
      * \param comps the Conputations containing the point
+     * \param remaining to avoid infinite recursion
      * \return the Color at the point
      */
-    color::Color shade_hit(const geo::Computations& comps) const; // , const int remaining
+    color::Color shade_hit(const geo::Computations& comps, const int remaining = 5) const;
 
-    /* \fn color::Color color_at(const ray::Ray& ry) const
+    /* \fn color::Color color_at(const ray::Ray& ry, const int remaining) const
      * \brief Wrapper func: check if the Ray intersects, prepare the Computations and calls shade_hit
      * \param ry cast Ray
+     * \param remaining to avoid infinite recursion
      * \return the Color for the Ray
      */    
-    color::Color color_at(const ray::Ray& ry) const; // , const int remaining
+    color::Color color_at(const ray::Ray& ry, const int remaining = 5) const;
+
+    /* \fn color::Color reflected_color(const geo::Computations& comps, const int remaining = 5) const
+     * \brief Computes the amount of reflected color
+     * \params comps Computations
+     * \param remaining  to avoid infinite recursion
+     * \return the reflected Color
+     */    
+    color::Color reflected_color(const geo::Computations& comps, const int remaining = 5) const;
 
   };
 
