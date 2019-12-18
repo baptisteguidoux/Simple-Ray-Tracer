@@ -94,16 +94,14 @@ namespace world {
   				   is_shadowed);
     
     auto reflected = reflected_color(comps, remaining);
-    //auto refracted = refracted_color(comps, remaining);
+    auto refracted = refracted_color(comps, remaining);
     
-    // // If the surface's material is both reflective and refractive, use the Schlick approximation to get the reflectance
-    // if (comps.geometry->material.reflective > 0 && comps.geometry->material.transparency > 0) {
-    //   auto reflectance = comps.schlick();
-    //   return surface + reflected * reflectance + refracted * (1 - reflectance);
-    // } else
-    // 	return surface + reflected + refracted;
-
-    return surface + reflected;
+    // If the surface's material is both reflective and refractive, use the Schlick approximation to get the reflectance
+    if (comps.geometry->material.reflective > 0 && comps.geometry->material.transparency > 0) {
+      auto reflectance = comps.schlick();
+      return surface + reflected * reflectance + refracted * (1 - reflectance);
+    } else
+      return surface + reflected + refracted;
   }
 
   color::Color World::color_at(const ray::Ray& ry, const int remaining) const {
@@ -136,35 +134,34 @@ namespace world {
     return color_at(reflect_ray, remaining - 1) * comps.geometry->material.reflective;
   }
 
-  // color::Color World::refracted_color(const inter::Computations& comps, const int remaining) const {
+  color::Color World::refracted_color(const geo::Computations& comps, const int remaining) const {
 
-  //   if (remaining <= 0)
-  //     return color::BLACK;
+    if (remaining <= 0)
+      return color::BLACK;
     
-  //   if (comps.geometry->material.transparency == 0)
-  //     return color::BLACK;
+    if (comps.geometry->material.transparency == 0)
+      return color::BLACK;
 
-  //   // Deal with total internal reflection, when a ray will reflect off a surface instead of passing through.
-  //   // It happens when the light is going to penetrate a new medium with an acute angle, and that old medidum refractive index > new medidum refractive index
-  //   // Using Shell's Law that describes the relantionship between angle of incoming ray and angle of refracted ray
-  //   auto n_ratio = comps.n1 / comps.n2;
-  //   // ie cos(thetai)
-  //   auto cos_i = math::dot(comps.eye_vector, comps.normal_vector);
-  //   // ie sin(thetat)^2
-  //   auto sin2_t = pow(n_ratio, 2) * (1 - pow(cos_i, 2));
-  //   if(sin2_t > 1)
-  //     return color::BLACK;
+    // Deal with total internal reflection, when a ray will reflect off a surface instead of passing through.
+    // It happens when the light is going to penetrate a new medium with an acute angle, and that old medidum refractive index > new medidum refractive index
+    // Using Shell's Law that describes the relantionship between angle of incoming ray and angle of refracted ray
+    auto n_ratio = comps.n1 / comps.n2;
+    // ie cos(thetai)
+    auto cos_i = math::dot(comps.eye_vector, comps.normal_vector);
+    // ie sin(thetat)^2
+    auto sin2_t = pow(n_ratio, 2) * (1 - pow(cos_i, 2));
+    if(sin2_t > 1)
+      return color::BLACK;
 
-  //   // cos(theta t)
-  //   auto cos_t = sqrt(1 - sin2_t);
-  //   // direction of the refracted ray
-  //   auto direction = comps.normal_vector * (n_ratio * cos_i - cos_t) - comps.eye_vector * n_ratio;
+    // cos(theta t)
+    auto cos_t = sqrt(1 - sin2_t);
+    // direction of the refracted ray
+    auto direction = comps.normal_vector * (n_ratio * cos_i - cos_t) - comps.eye_vector * n_ratio;
 
-  //   auto refracted_ray = ray::Ray(comps.under_point, direction);
+    auto refracted_ray = ray::Ray(comps.under_point, direction);
 
-  //   // multiply by the transparency value to account for opacity
-  //   return this->color_at(refracted_ray, remaining - 1) * comps.geometry->material.transparency;
-  // }  
+    // multiply by the transparency value to account for opacity
+    return this->color_at(refracted_ray, remaining - 1) * comps.geometry->material.transparency;
+  }  
 }
-
 

@@ -3,6 +3,7 @@
 
 #include "tuple.hpp"
 #include "material.hpp"
+#include "geo.hpp"
 
 
 TEST(MaterialTest, Constructor) {
@@ -46,3 +47,22 @@ TEST(MaterialTest, CastShadow){
   EXPECT_TRUE(mat.cast_shadow);
 }
 
+TEST(MaterialTest, RefrationMembers) {
+
+  // Transparency and refractive index for the default material
+  auto m = material::Material();
+  EXPECT_TRUE(math::almost_equal(m.transparency, 0)); // all material opaque by default
+  EXPECT_TRUE(math::almost_equal(m.refractive_index, 1)); // vacuum refractive index
+
+  // Helper constructor
+  auto s = geo::GlassSphere();
+  EXPECT_EQ(s.transform, math::IDENTITY_MATRIX);
+  EXPECT_EQ(s.material.transparency, 1.0);
+  EXPECT_EQ(s.material.refractive_index, 1.5);
+
+  // Like a Sphere
+  auto s2 = geo::Sphere();
+  s2.material.transparency = 1.0;
+  s2.material.refractive_index = 1.5;
+  EXPECT_EQ(s, s2);
+}

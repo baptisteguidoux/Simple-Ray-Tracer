@@ -27,6 +27,8 @@ namespace material {
     bool cast_shadow = true;
     std::shared_ptr<pattern::Pattern> pattern;
     float reflective = 0;
+    float transparency = 0;
+    float refractive_index = 1;
   };
 
   /* \fn bool operator==(const Material& first, const Material& second);

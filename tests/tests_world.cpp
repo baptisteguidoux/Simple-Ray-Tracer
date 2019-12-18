@@ -253,3 +253,112 @@ TEST(WorldTest, ReflectionLimitRecursion) {
   EXPECT_EQ(col, color::BLACK);
 }
 
+TEST(WorldTest, RefractionOpaqueObject) {
+
+  // The refracted color with an opaque surface is black
+  auto w = world::build_default_world();
+  const auto& s = w.objects.at(0);
+  auto r = ray::Ray(math::Point(0, 0, -5), math::Vector(0, 0, 1));
+  auto xs = geo::Intersections {geo::Intersection(4, s), geo::Intersection(6, s)};
+  auto comps = geo::prepare_computations(xs[0], r, xs);
+  auto c = w.refracted_color(comps, 5);
+  EXPECT_EQ(c, color::BLACK);
+}
+
+TEST(WorldTest, RefractionMaxRecursionLimit) {
+
+  // If refracted_color is invoked with no more remaining calls, the color is black
+  auto w = world::build_default_world();
+  const auto& s = w.objects.at(0);
+  s->material.transparency = 1;
+  s->material.refractive_index = 1.5;
+  auto r = ray::Ray(math::Point(0, 0, -5), math::Vector(0, 0, 1));
+  auto xs = geo::Intersections {geo::Intersection(4, s), geo::Intersection(6, s)};
+  auto comps = geo::prepare_computations(xs[0], r, xs);
+  auto c = w.refracted_color(comps, 0);
+  EXPECT_EQ(c, color::BLACK);
+}
+
+TEST(WorldTest, RefractionTotalInternalReflection) {
+
+  // The refracted color under total internal reflection is black
+  auto w = world::build_default_world();
+  const auto& s = w.objects.at(0);
+  s->material.transparency = 1;
+  s->material.refractive_index = 1.5;
+  auto r = ray::Ray(math::Point(0, 0, sqrt(2) / 2), math::Vector(0, 1, 0));
+  auto xs = geo::Intersections {geo::Intersection(-sqrt(2)/2, s), geo::Intersection(sqrt(2)/2, s)};
+  // the ray originates from inside the sphere
+  auto comps = geo::prepare_computations(xs[1], r, xs);
+  auto c = w.refracted_color(comps);
+  EXPECT_EQ(c, color::BLACK);
+}
+
+TEST(WorldTest, RefractionRefractedColor) {
+
+  // The refracted color when the ray is refracted
+  auto w = world::build_default_world();
+  auto& obj1 = w.objects.at(0);
+  obj1->material.ambient = 1;
+  obj1->material.pattern = std::make_shared<pattern::TestPattern>();
+  // interior sphere is glasssy
+  auto& obj2 = w.objects.at(1);
+  obj2->material.transparency = 1;
+  obj2->material.refractive_index = 1.5;
+  auto r = ray::Ray(math::Point(0, 0, 0.1), math::Vector(0, 1, 0));
+  auto xs = geo::Intersections{geo::Intersection(-0.9899, obj1),
+			       geo::Intersection(-0.4899, obj2),
+			       geo::Intersection(0.4899, obj2),
+			       geo::Intersection(0.9899, obj1)};
+  auto comps = geo::prepare_computations(xs[2], r, xs);
+  auto c = w.refracted_color(comps);
+  EXPECT_EQ(c, color::Color(0, 0.99888, 0.04722));
+}
+
+TEST(WorldTest, RefractionShadeHit) {
+
+  // shade_hit with the default world, a semi transparent floor and a sphere below
+  auto w = world::build_default_world();
+  auto floor = std::make_shared<geo::Plane>();
+  floor->transform = math::translation(0, -1, 0);
+  floor->material.transparency = 0.5;
+  floor->material.refractive_index = 1.5;
+  w.objects.push_back(floor);
+
+  auto ball = std::make_shared<geo::Sphere>();
+  ball->material.color = color::Color(1, 0, 0);
+  ball->material.ambient = 0.5;
+  ball->transform = math::translation(0, -3.5, -0.5);
+  w.objects.push_back(ball);
+  
+  auto r = ray::Ray(math::Point(0, 0, -3), math::Vector(0, -sqrt(2)/2, sqrt(2)/2));
+  auto xs = geo::Intersections{geo::Intersection(sqrt(2), floor)};
+  auto comps = geo::prepare_computations(xs[0], r, xs);
+  auto col = w.shade_hit(comps);
+  EXPECT_EQ(col, color::Color(0.93642, 0.68642, 0.68642));
+}
+
+TEST(WorldTest, FresnelEffectShadeHit) {
+
+  // ShadeHit with a reflective transparent material
+  auto w = world::build_default_world();
+  auto r = ray::Ray(math::Point(0, 0, -3), math::Vector(0, -sqrt(2)/2, sqrt(2)/2));  
+  auto floor = std::make_shared<geo::Plane>();
+  floor->transform = math::translation(0, -1, 0);
+  floor->material.reflective = 0.5;
+  floor->material.transparency = 0.5;
+  floor->material.refractive_index = 1.5;
+  w.objects.push_back(floor);
+
+  auto ball = std::make_shared<geo::Sphere>();
+  ball->material.color = color::Color(1, 0, 0);
+  ball->material.ambient = 0.5;
+  ball->transform = math::translation(0, -3.5, -0.5);
+  w.objects.push_back(ball);
+
+  auto xs = geo::Intersections{geo::Intersection(sqrt(2), floor)};
+  auto comps = geo::prepare_computations(xs[0], r, xs);
+  auto col = w.shade_hit(comps);
+  EXPECT_EQ(col, color::Color(0.93391, 0.69643, 0.69243));
+}
+

@@ -71,6 +71,14 @@ namespace world {
      */    
     color::Color reflected_color(const geo::Computations& comps, const int remaining = 5) const;
 
+    /* \fn color::Color refracted_color(const geo::Computations& comps, const int remaining = 5) cons
+     * \brief Computes the amount of refracted Color
+     * \params comps Computations
+     * \param remaining to avoid infinite recursion
+     * \return the refracted Color
+     */
+    color::Color refracted_color(const geo::Computations& comps, const int remaining = 5) const;
+
   };
 
   /* \fn World build_default_world()

@@ -11,7 +11,7 @@
 #include "material.hpp"
 
 
-TEST(IntersectionTest, IntersectionDataStructure) {
+TEST(GeoTest, IntersectionDataStructure) {
 
   // For the moment, an Intersection will only contain two things:
   // the t value of the intersection, and the object that was intersected
@@ -332,5 +332,87 @@ TEST(GeoTest, ReflectionPrepareComputations) {
   auto i = geo::Intersection(sqrt(2), shape);
   auto comps = geo::prepare_computations(i, r);
   EXPECT_EQ(comps.reflect_vector, math::Vector(0, sqrt(2) / 2, sqrt(2) / 2)); // reflect vector bounces on the plane at 45
+}
+TEST(GeoTest, RefractionN1AndN2) {
+
+  // Finding n1 and n2 at different intersections
+  auto a = std::make_shared<geo::GlassSphere>();
+  a->transform = math::scaling(2, 2, 2);
+  a->material.refractive_index = 1.5;
+
+  auto b = std::make_shared<geo::GlassSphere>();
+  b->transform = math::translation(0, 0, -0.25);
+  b->material.refractive_index = 2.0;
+
+  auto c = std::make_shared<geo::GlassSphere>();
+  c->transform = math::translation(0, 0, 0.25);
+  c->material.refractive_index = 2.5;
+
+  auto r = ray::Ray(math::Point(0, 0, -4), math::Vector(0, 0, 1));
+  auto xs = geo::Intersections {geo::Intersection(2, a),
+				  geo::Intersection(2.75, b),
+				  geo::Intersection(3.25, c),
+				  geo::Intersection(4.75, b),
+				  geo::Intersection(5.25, c),
+				  geo::Intersection(6, a),
+  };
+
+  std::vector<double> n1_results {1.0, 1.5, 2.0, 2.5, 2.5, 1.5};
+
+  std::vector<double> n2_results {1.5, 2.0, 2.5, 2.5, 1.5, 1.0};
+  
+  for (auto i = 0; i < 6; i++) {
+    auto comps = geo::prepare_computations(xs.at(i), r, xs);
+    EXPECT_EQ(comps.n1, n1_results.at(i));
+    EXPECT_EQ(comps.n2, n2_results.at(i));
+  }
+}
+
+TEST(GeoTest, ComputationsUnderPoint) {
+
+  // Computes under_point, which lies beneath intersected surface
+  auto r = ray::Ray(math::Point(0, 0, -5), math::Vector(0, 0, 1));
+  auto s = std::make_shared<geo::GlassSphere>();
+  s->transform = math::translation(0, 0, 1);
+  auto i = geo::Intersection(5, s);
+  auto xs = geo::Intersections {i};
+  auto comps = geo::prepare_computations(i, r, xs);
+
+  EXPECT_GT(comps.under_point.z, math::EPSILON / 2);
+  EXPECT_LT(comps.point.z, comps.under_point.z);
+}
+
+TEST(GeoTest, FresnelEffectTotalInternalReflection) {
+
+  // The Schlick approximation under total internal reflection
+  auto shape = std::make_shared<geo::GlassSphere>();
+  auto r = ray::Ray(math::Point(0, 0, sqrt(2)/2), math::Vector(0, 1, 0));
+  auto xs = geo::Intersections{geo::Intersection(-sqrt(2)/2, shape), geo::Intersection(sqrt(2)/2, shape)};
+  auto comps = geo::prepare_computations(xs[1], r, xs);
+  auto reflectance = comps.schlick();
+  EXPECT_EQ(reflectance, 1);
+}
+
+TEST(GeoTest, FresnelEffectPerpendicularRayReflectance) {
+
+  // The Schlick approximation with a perpendicular ray is small
+  auto shape = std::make_shared<geo::GlassSphere>();
+  auto r = ray::Ray(math::Point(0, 0, 0), math::Vector(0, 1, 0));
+  auto xs = geo::Intersections{geo::Intersection(-1, shape), geo::Intersection(1, shape)};
+  auto comps = geo::prepare_computations(xs[1], r, xs);
+  auto reflectance = comps.schlick();
+  EXPECT_TRUE(math::almost_equal(reflectance, 0.04));
+}
+
+TEST(GeoTest, FresnelEffectSmallAngleAndN1GTN2) {
+
+  // like looking across a lake to the far shore
+  // The Schlick approximation with small angle and n2 > n1
+  auto shape = std::make_shared<geo::GlassSphere>();
+  auto r = ray::Ray(math::Point(0, 0.99, -2), math::Vector(0, 0, 1));
+  auto xs = geo::Intersections{geo::Intersection(1.8589, shape)};
+  auto comps = geo::prepare_computations(xs[0], r, xs);
+  auto reflectance = comps.schlick();
+  EXPECT_TRUE(math::almost_equal(reflectance, 0.48873));
 }
 

@@ -114,6 +114,21 @@ namespace geo {
     math::Tuple local_normal_at(const math::Tuple& local_point) const override;
   };
 
+  /* \class GlassSphere
+   * \brief Sphere with a glassy transparency and refractive index
+   */  
+  class GlassSphere : public Sphere {
+  public:
+
+    GlassSphere();
+
+    ~GlassSphere() override;
+    
+    // Intersections local_intersects(const ray::Ray& local_ray) override;
+
+    // math::Tuple local_normal_at(const math::Tuple& local_point) const override;
+  };
+
   class Plane : public Shape {
   public:
 
@@ -189,20 +204,30 @@ namespace geo {
     math::Tuple eye_vector;
     math::Tuple normal_vector;
     bool inside; /*!< true if the intersection occured into an object*/
-    math::Tuple over_point = math::Point(0, 0, 0); /*!< Adjust the point slightly above the norrmal to prevent self-shadowing and acne due to float rounding errors*/
+    math::Tuple over_point = math::Point(0, 0, 0); /*!< Adjust the point slightly above the normal to prevent self-shadowing and acne due to float rounding errors*/
+    math::Tuple under_point = math::Point(0, 0, 0); 
     math::Tuple reflect_vector;
+    double n1; /*<! refractive index of the material being exited */
+    double n2; /*<! refractive index of the material being entered  */
     /*! Computations' constuctor
      */
     Computations() = default;
+
+    /* \fn float schlick() const
+     * \brief Schlick approximation to Fresnel equaltion to calculate the reflectance
+     * \return schlick approximation
+     */
+    float schlick() const;
   };  
 
   /*! \fn Computations prepare_computations(const inter::Intersection& ixs, const ray::Ray r)
    *  \param ixs an Intersection
    *  \param r a Ray
+   *  \param ixs Intersections
    *  \return a Computations
    */
-  Computations prepare_computations(const Intersection& ixs, const ray::Ray r);
-  //Computations prepare_computations(const Intersection& ix, const ray::Ray r, const Intersections& ixs);
+  //Computations prepare_computations(const Intersection& ixs, const ray::Ray r);
+  Computations prepare_computations(const Intersection& ix, const ray::Ray r, const Intersections& ixs = Intersections{});
   
 }
 

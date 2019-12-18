@@ -112,11 +112,13 @@ namespace geo {
       return object_point - math::Point(0.0, 0.0, 0.0);
   }
 
-  // GlassSphere::GlassSphere() {
-  //   Sphere();
-  //   this->material.transparency = 1.0;
-  //   this->material.refractive_index = 1.5;
-  // }
+  GlassSphere::GlassSphere() {
+    Sphere();
+    this->material.transparency = 1.0;
+    this->material.refractive_index = 1.5;
+  }
+
+  GlassSphere::~GlassSphere() {};
 
   Plane::~Plane() {};
 
@@ -291,41 +293,38 @@ namespace geo {
   bool operator!=(const Intersection& first, const Intersection& second) {
 
     return ! (first == second);
-  }  
+  }
+
+  float Computations::schlick() const {
+
+    // find cosine of the angle between the eye and normal vectors
+    auto cos = math::dot(eye_vector, normal_vector);
+    // total internal reflection can only occur if n1 > n2
+    if (n1 > n2) {
+	auto n_ratio = n1 / n2;
+	auto sin2_t = pow(n_ratio, 2) * (1 - pow(cos, 2));
+	if (sin2_t > 1)
+	  return 1;
+
+	// compute cosine of theta t
+	auto cos_t = sqrt(1 - sin2_t);
+
+	// when n1 > n2, use cos of theta t instead
+	cos = cos_t;
+      }
+
+    // Schlick's approximation
+    auto r0 = pow((n1 - n2) / (n1 + n2), 2);
+    return r0 + (1 - r0) * pow((1 - cos), 5);
+}
   
-// namespace inter {
-
-
-//   float Computations::schlick() const {
-
-//     // find cosine of the angle between the eye and normal vectors
-//     auto cos = math::dot(eye_vector, normal_vector);
-//     // total internal reflection can only occur if n1 > n2
-//     if (n1 > n2) {
-// 	auto n_ratio = n1 / n2;
-// 	auto sin2_t = pow(n_ratio, 2) * (1 - pow(cos, 2));
-// 	if (sin2_t > 1)
-// 	  return 1;
-
-// 	// compute cosine of theta t
-// 	auto cos_t = sqrt(1 - sin2_t);
-
-// 	// when n1 > n2, use cos of theta t instead
-// 	cos = cos_t;
-//       }
-
-//     // Schlick's approximation
-//     auto r0 = pow((n1 - n2) / (n1 + n2), 2);
-//     return r0 + (1 - r0) * pow((1 - cos), 5);
-
-  
-  Computations prepare_computations(const Intersection& ixs, const ray::Ray r) {
+  Computations prepare_computations(const Intersection& ix, const ray::Ray r, const Intersections& ixs) {
 
     auto comps = Computations();
 
     // Copy the intersection's properties for convenience
-    comps.t = ixs.t;
-    comps.geometry = ixs.geometry;
+    comps.t = ix.t;
+    comps.geometry = ix.geometry;
     
     // Precompute useful values
     comps.point = r.position(comps.t);
@@ -343,72 +342,42 @@ namespace geo {
     comps.reflect_vector = reflect(r.direction, comps.normal_vector);
     // Bump the point in direction of the normal
     comps.over_point = comps.point + comps.normal_vector * math::EPSILON;
+    comps.under_point = comps.point - comps.normal_vector * math::EPSILON;
+
+    auto containers = std::vector<std::shared_ptr<geo::Shape>>(); // will contain objects encountered but not (yet) exited
+
+    for (const auto& ix_ : ixs) {
+
+      // If the intersection is the hit, ie the given intersection
+      if (ix_ == ix) {
+    	if (containers.size() == 0)
+    	  comps.n1 = 1.0;
+    	else
+    	  comps.n1 = containers.at(containers.size() - 1)->material.refractive_index;
+      }
+
+      // If the intersection object already in containers
+      const auto shpp = std::find_if(containers.begin(), containers.end(), [&](const std::shared_ptr<geo::Shape> shp) {return *shp.get() == *ix_.geometry.get();});
+      if (shpp != containers.end())
+    	// Then intersection is leaving the object, erase it from `containers`
+    	containers.erase(containers.begin() + std::distance(containers.begin(), shpp));
+      else
+    	// intersection is entering object
+    	containers.push_back(ix_.geometry);
+
+      // If the intersection is the hit
+      if (ix_ == ix) {
+    	if (containers.size() == 0)
+    	  comps.n2 = 1.0;
+    	else
+    	  comps.n2 = containers.at(containers.size() - 1)->material.refractive_index;
+    	// terminate the loop
+    	break;
+      }
+    }
     
     return comps;
   }
-  
-
-  // Computations prepare_computations(const Intersection& ix, const ray::Ray r, const Intersections& ixs) {
-
-  //   auto comps = Computations();
-
-  //   // Copy the intersection's properties for convenience
-  //   comps.t = ix.t;
-  //   comps.geometry = ix.geometry;
-    
-  //   // Precompute useful values
-  //   comps.point = r.position(comps.t);
-  //   comps.eye_vector = -r.direction;
-  //   comps.normal_vector = comps.geometry->normal_at(comps.point);
-
-  //   // Find if the normal points away from the eye vector, ie intersection occured inside object
-  //   if (math::dot(comps.eye_vector, comps.normal_vector) < 0) {
-  //     comps.inside = true;
-  //     comps.normal_vector = -comps.normal_vector;
-  //   } else
-  //     comps.inside = false;
-
-  //   // Reflect the ray around object's normal
-  //   // comps.reflect_vector = geo::reflect(r.direction, comps.normal_vector);
-    
-  //   // Bump the point in direction of the normal
-  //   //comps.over_point = comps.point + comps.normal_vector * math::EPSILON;
-  //   //comps.under_point = comps.point - comps.normal_vector * math::EPSILON;
-    
-  //   auto containers = std::vector<std::shared_ptr<geo::Shape>>(); // will contain objects encountered but not (yet) exited
-
-  //   // for (const auto& ix_ : ixs) {
-
-  //   //   // If the intersection is the hit, ie the given intersection
-  //   //   if (ix_ == ix) {
-  //   // 	if (containers.size() == 0)
-  //   // 	  comps.n1 = 1.0;
-  //   // 	else
-  //   // 	  comps.n1 = containers.at(containers.size() - 1)->material.refractive_index;
-  //   //   }
-
-  //   //   // If the intersection object already in containers
-  //   //   const auto shpp = std::find_if(containers.begin(), containers.end(), [&](const geo::ShapePtr shp) {return *shp.get() == *ix_.geometry.get();});
-  //   //   if (shpp != containers.end())
-  //   // 	// Then intersection is leaving the object, erase it from `containers`
-  //   // 	containers.erase(containers.begin() + std::distance(containers.begin(), shpp));
-  //   //   else
-  //   // 	// intersection is entering object
-  //   // 	containers.push_back(ix_.geometry);
-
-  //   //   // If the intersection is the hit
-  //   //   if (ix_ == ix) {
-  //   // 	if (containers.size() == 0)
-  //   // 	  comps.n2 = 1.0;
-  //   // 	else
-  //   // 	  comps.n2 = containers.at(containers.size() - 1)->material.refractive_index;
-  //   // 	// terminate the loop
-  //   // 	break;
-  //   //   }
-  //   // }
-
-  //   return comps;
-  // }
 
 }
 
