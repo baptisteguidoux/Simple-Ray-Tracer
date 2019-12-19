@@ -7,6 +7,8 @@
 #include <vector>
 #include <optional>
 #include <memory>
+#include <utility>
+#include <cmath>
 
 #include "ray.hpp"
 #include "tuple.hpp"
@@ -104,6 +106,8 @@ namespace geo {
 
   };
 
+  /* \class Sphere
+   */  
   class Sphere : public Shape {
   public:
 
@@ -123,12 +127,10 @@ namespace geo {
     GlassSphere();
 
     ~GlassSphere() override;
-    
-    // Intersections local_intersects(const ray::Ray& local_ray) override;
-
-    // math::Tuple local_normal_at(const math::Tuple& local_point) const override;
   };
 
+  /* \class Plane
+   */  
   class Plane : public Shape {
   public:
 
@@ -139,13 +141,48 @@ namespace geo {
     math::Tuple local_normal_at(const math::Tuple& local_point) const override;
   };
   
+  /* \class Cube
+   */
+  class Cube : public Shape {
+  public:
+
+    ~Cube() override;
+    
+    Intersections local_intersects(const ray::Ray& local_ray) override;
+
+    math::Tuple local_normal_at(const math::Tuple& local_point) const override;
+  };
+  
+  /* \class Cylinder
+   */
+  class Cylinder : public Shape {
+  public:
+
+    float minimum = -INFINITY; /*<! minimum value on the y axis (lower bound) (default not truncated)*/
+    float maximum = INFINITY; /*<! maximum value on the y axis (upper bound) (default not truncated)*/
+    
+    ~Cylinder() override;
+    
+    Intersections local_intersects(const ray::Ray& local_ray) override;
+
+    math::Tuple local_normal_at(const math::Tuple& local_point) const override;
+  };
+  
   /* \fn math::Tuple reflect(const math::Tuple& vec, const math::Tuple& normal)
-   * Reflects the vector around the normal
+   * \brief Reflects the vector around the normal
    * \param the vector to reflect
-   * \parm the normal vector
+   * \param the normal vector
    * \return a Tuple, the reflected vector
    */ 
   math::Tuple reflect(const math::Tuple& vec, const math::Tuple& normal);
+
+  /* \fn std::pair<double, double> check_axis(const double origin, const double direction)
+   * \brief helper function to find intersection points in Cube.local_intersects
+   * \param origin ray origin (one axis)
+   * \param direction  ray direction(one axis)
+   * \return a pair, min and max t values
+   */  
+  std::pair<double, double> check_axis(const double origin, const double direction);
   
   /* \struct Intersection
    */
@@ -169,6 +206,7 @@ namespace geo {
     Intersection& operator=(const Intersection& source);
 
   };
+  
   /* \fn std::optional<Intersection> hit(const Intersections& intersections)
    * Find the hit among all the Intersections, if there is any. The hit is the lowest nonegative intersection.
    * \param the Intersections to look at
@@ -209,6 +247,7 @@ namespace geo {
     math::Tuple reflect_vector;
     double n1; /*<! refractive index of the material being exited */
     double n2; /*<! refractive index of the material being entered  */
+    
     /*! Computations' constuctor
      */
     Computations() = default;
@@ -226,7 +265,6 @@ namespace geo {
    *  \param ixs Intersections
    *  \return a Computations
    */
-  //Computations prepare_computations(const Intersection& ixs, const ray::Ray r);
   Computations prepare_computations(const Intersection& ix, const ray::Ray r, const Intersections& ixs = Intersections{});
   
 }

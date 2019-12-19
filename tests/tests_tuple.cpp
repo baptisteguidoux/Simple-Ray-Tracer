@@ -4,6 +4,13 @@
 
 #include "tuple.hpp"
 
+// move elsewhere if other util func
+TEST(UtilsTest, Map) {
+
+  EXPECT_EQ(math::map(20.0, 0, 100.0, 0.0, 1000.0), 200.0);
+  EXPECT_EQ(math::map(20.0, 0.0, 100.0, 0.0, -1000.0), -200.0);
+  EXPECT_EQ(math::map(20.0, 0.0, 100.0, -1000.0, 0.0), -800.0);
+}
 
 TEST(TupleTest, Subscript) {
   math::Tuple tuple (1, 2, 3, 4);

@@ -142,86 +142,90 @@ namespace geo {
     return default_normal;
   }
 
-  // Intersections Cube::local_intersects(const ray::Ray& local_ray) {
+  Cube::~Cube() {};
 
-  //   auto [xtmin, xtmax] = check_axis(local_ray.origin.x, local_ray.direction.x);
-  //   auto [ytmin, ytmax] = check_axis(local_ray.origin.y, local_ray.direction.y);
-  //   auto [ztmin, ztmax] = check_axis(local_ray.origin.z, local_ray.direction.z);
+  Intersections Cube::local_intersects(const ray::Ray& local_ray) {
 
-  //   // find the value closest to the cube
-  //   //https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection
-  //   auto tmin = std::max(xtmin, std::max(ytmin, ztmin));
-  //   auto tmax = std::min(xtmax, std::min(ytmax, ztmax));
+    auto [xtmin, xtmax] = check_axis(local_ray.origin.x, local_ray.direction.x);
+    auto [ytmin, ytmax] = check_axis(local_ray.origin.y, local_ray.direction.y);
+    auto [ztmin, ztmax] = check_axis(local_ray.origin.z, local_ray.direction.z);
 
-  //   // When the ray misses the cube
-  //   if (tmin > tmax)
-  //     return Intersections {};
+    // find the value closest to the cube
+    //https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection
+    auto tmin = std::max(xtmin, std::max(ytmin, ztmin));
+    auto tmax = std::min(xtmax, std::min(ytmax, ztmax));
+
+    // When the ray misses the cube
+    if (tmin > tmax)
+      return Intersections {};
     
-  //   Intersections ixs {Intersection(tmin, std::make_shared<Cube>(*this))};
-  //   ixs.push_back(Intersection(tmax, std::make_shared<Cube>(*this)));
+    Intersections ixs {Intersection(tmin, std::make_shared<Cube>(*this))};
+    ixs.push_back(Intersection(tmax, std::make_shared<Cube>(*this)));
 		  
-  //   return ixs;
-  // };
+    return ixs;
+  };
   
-  // math::Tuple Cube::local_normal_at(const math::Tuple& local_point) const {
+  math::Tuple Cube::local_normal_at(const math::Tuple& local_point) const {
 
-  //   // Find the component with the highest absolute value,
-  //   // then return a vector pointing in that direction
+    // Find the component with the highest absolute value,
+    // then return a vector pointing in that direction
 
-  //   // Implementation could be optimized
-  //   auto max_component = std::max(std::abs(local_point.x),
-  // 				  std::max(std::abs(local_point.y), std::abs(local_point.z)));
+    // Implementation could be optimized
+    auto max_component = std::max(std::abs(local_point.x),
+  				  std::max(std::abs(local_point.y), std::abs(local_point.z)));
 
-  //   if (max_component == std::abs(local_point.x))
-  //     return math::Vector(local_point.x, 0, 0);
-  //   else if (max_component == std::abs(local_point.y))
-  //     return math::Vector(0, local_point.y, 0);
-  //   else
-  //     return math::Vector(0, 0, local_point.z);
-  // };
+    if (max_component == std::abs(local_point.x))
+      return math::Vector(local_point.x, 0, 0);
+    else if (max_component == std::abs(local_point.y))
+      return math::Vector(0, local_point.y, 0);
+    else
+      return math::Vector(0, 0, local_point.z);
+  };
 
-  // Intersections Cylinder::local_intersects(const ray::Ray& local_ray) {
+  Cylinder::~Cylinder() {};
+  
+  Intersections Cylinder::local_intersects(const ray::Ray& local_ray) {
 
-  //   auto a = pow(local_ray.direction.x, 2) + pow(local_ray.direction.z, 2);
+    auto a = pow(local_ray.direction.x, 2) + pow(local_ray.direction.z, 2);
 
-  //   // ray is parallel to the y axis
-  //   if (math::almost_equal(a, 0))
-  //     return Intersections{};
+    // ray is parallel to the y axis
+    if (math::almost_equal(a, 0))
+      return Intersections{};
 
-  //   auto  b = 2 * local_ray.origin.x * local_ray.direction.x +
-  //             2 * local_ray.origin.z * local_ray.direction.z;
+    auto  b = 2 * local_ray.origin.x * local_ray.direction.x +
+              2 * local_ray.origin.z * local_ray.direction.z;
 
-  //   auto c = pow(local_ray.origin.x, 2) + pow(local_ray.origin.z, 2) - 1;
+    auto c = pow(local_ray.origin.x, 2) + pow(local_ray.origin.z, 2) - 1;
 
-  //   // discriminant
-  //   auto disc = pow(b, 2) - 4 * a * c;
-  //   if (disc < 0)
-  //     return Intersections{};
+    // discriminant
+    auto disc = pow(b, 2) - 4 * a * c;
+    if (disc < 0)
+      return Intersections{};
 
-  //   auto t0 = (-b - sqrt(disc)) / (2 * a);
-  //   auto t1 = (-b + sqrt(disc)) / (2 * a);
-  //   if (t0 > t1)
-  //     std::swap(t0, t1);
+    auto t0 = (-b - sqrt(disc)) / (2 * a);
+    auto t1 = (-b + sqrt(disc)) / (2 * a);
+    if (t0 > t1)
+      std::swap(t0, t1);
 
-  //   Intersections xs;
+    Intersections xs;
 
-  //   // Check if the ray is above the minimum
-  //   auto y0 = local_ray.origin.y + t0 * local_ray.direction.y;
-  //   if (minimum < y0 && y0 < maximum)
-  //     xs.push_back(Intersection(t0, std::make_shared<geo::Cylinder>(*this)));
+    // Check if the ray is above the minimum
+    auto y0 = local_ray.origin.y + t0 * local_ray.direction.y;
+    if (minimum < y0 && y0 < maximum)
+      xs.push_back(Intersection(t0, std::make_shared<geo::Cylinder>(*this)));
 
-  //   // Check if the ray is below the maximum
-  //   auto y1 = local_ray.origin.y + t1 * local_ray.direction.y;
-  //   if (minimum < y1 && y1 < maximum)
-  //     xs.push_back(Intersection(t1, std::make_shared<geo::Cylinder>(*this)));
+    // Check if the ray is below the maximum
+    auto y1 = local_ray.origin.y + t1 * local_ray.direction.y;
+    if (minimum < y1 && y1 < maximum)
+      xs.push_back(Intersection(t1, std::make_shared<geo::Cylinder>(*this)));
     
-  //   return xs;
-  // }
+    return xs;
+  }
   
-  // math::Tuple Cylinder::local_normal_at(const math::Tuple& local_point) const {
+  math::Tuple Cylinder::local_normal_at(const math::Tuple& local_point) const {
 
-  //   return math::Vector(local_point.x, 0, local_point.z);
-  // }  
+    return math::Vector(local_point.x, 0, local_point.z);
+  }  
 
   math::Tuple reflect(const math::Tuple& vec, const math::Tuple& normal) {
   
@@ -230,29 +234,28 @@ namespace geo {
     return vec - normal * 2 * math::dot(vec, normal);
   }  
 
-  // std::pair<double, double> check_axis(const double origin, const double direction) {
+  std::pair<double, double> check_axis(const double origin, const double direction) {
 
-  //   // each pair of planes is offset 1 unit in opposing direction
-  //   double tmin_numerator = -1 - origin;
-  //   double tmax_numerator = 1 - origin;
+    // each pair of planes is offset 1 unit in opposing direction
+    double tmin_numerator = -1 - origin;
+    double tmax_numerator = 1 - origin;
 
-  //   double tmin, tmax;
+    double tmin, tmax;
 
-  //   // to avoid dividing by zero
-  //   if (std::abs(direction) >= math::EPSILON) {
-  //     tmin = tmin_numerator / direction;
-  //     tmax = tmax_numerator / direction;
-  //   } else {
-  //     tmin = tmin_numerator * INFINITY;
-  //     tmax = tmax_numerator * INFINITY;
-  //   }
+    // to avoid dividing by zero
+    if (std::abs(direction) >= math::EPSILON) {
+      tmin = tmin_numerator / direction;
+      tmax = tmax_numerator / direction;
+    } else {
+      tmin = tmin_numerator * INFINITY;
+      tmax = tmax_numerator * INFINITY;
+    }
 
-  //   if (tmin > tmax)
-  //     return std::make_pair(tmax, tmin);
+    if (tmin > tmax)
+      return std::make_pair(tmax, tmin);
 
-  //   return std::make_pair(tmin, tmax);
-  // }
-
+    return std::make_pair(tmin, tmax);
+  }
 
   Intersection::Intersection(const float t_, std::shared_ptr<geo::Shape> geo) :
     t {t_}, geometry {geo} {}
@@ -337,13 +340,14 @@ namespace geo {
       comps.normal_vector = -comps.normal_vector;
     } else
       comps.inside = false;
-    
+
     // Reflect the ray around object's normal
-    comps.reflect_vector = reflect(r.direction, comps.normal_vector);
-    // Bump the point in direction of the normal
+    comps.reflect_vector = geo::reflect(r.direction, comps.normal_vector);
+    
+    //Bump the point in direction of the normal
     comps.over_point = comps.point + comps.normal_vector * math::EPSILON;
     comps.under_point = comps.point - comps.normal_vector * math::EPSILON;
-
+    
     auto containers = std::vector<std::shared_ptr<geo::Shape>>(); // will contain objects encountered but not (yet) exited
 
     for (const auto& ix_ : ixs) {
@@ -375,6 +379,7 @@ namespace geo {
     	break;
       }
     }
+    
     
     return comps;
   }

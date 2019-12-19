@@ -115,7 +115,7 @@ namespace world {
       return color::BLACK;
     
     // Precompute the necessary values
-    auto comps = geo::prepare_computations(*ht, ry);//, ixs);
+    auto comps = geo::prepare_computations(*ht, ry, ixs);
 
     return shade_hit(comps, remaining);
   }  

@@ -246,6 +246,215 @@ TEST(GeoTest, IntersectsPlane) {
   EXPECT_EQ(*(ixs[0].geometry), *plane);
 }
 
+TEST(GeoTest, RayIntersectsCube) {
+
+  // Rays intersect with Cube
+  struct TestInput {
+    math::Point origin;
+    math::Vector direction;
+    int t1;
+    int t2;
+
+    TestInput(const math::Point& o, const math::Vector& d, const int t1_, const int t2_) :
+      origin {o}, direction {d}, t1 {t1_}, t2 {t2_} {}
+  };
+
+  std::vector<TestInput> inputs{
+    TestInput(math::Point(5, 0.5, 0), math::Vector(-1, 0, 0), 4, 6), // +x
+    TestInput(math::Point(-5, 0.5, 0), math::Vector(1, 0, 0), 4, 6), // -x
+    TestInput(math::Point(0.5, 5, 0), math::Vector(0, -1, 0), 4, 6), // +y
+    TestInput(math::Point(0.5, -5, 0), math::Vector(0, 1, 0), 4, 6), // -y
+    TestInput(math::Point(0.5, 0, 5), math::Vector(0, 0, -1), 4, 6), // +z
+    TestInput(math::Point(0.5, 0, -5), math::Vector(0, 0, 1), 4, 6), // -z
+    TestInput(math::Point(0, 0.5, 0), math::Vector(0, 0, 1), -1, 1), // ray from inside the cube
+  };
+
+  auto cube = std::make_shared<geo::Cube>();
+
+  for (const auto& input: inputs) {
+    auto r = ray::Ray(input.origin, input.direction);
+    auto xs = cube->local_intersects(r);
+    EXPECT_EQ(xs.size(), 2);
+    EXPECT_EQ(xs.at(0).t, input.t1);
+    EXPECT_EQ(xs.at(1).t, input.t2);
+  }
+  
+}
+
+TEST(GeoTest, RayDoesNotIntersectsCube) {
+
+  struct TestInput {
+    math::Point origin;
+    math::Vector direction;
+
+    TestInput(const math::Point& o, const math::Vector& d) : origin {o}, direction {d} {}
+  };
+
+  std::vector<TestInput> inputs {
+    TestInput(math::Point(-2, 0, 0), math::Vector(0.2673, 0.5345, 0.8018)),
+    TestInput(math::Point(0, -2, 0), math::Vector(0.8018, 0.2673, 0.5345)),
+    TestInput(math::Point(0, 0, -2), math::Vector(0.5345, 0.8018, 0.2673)),
+    TestInput(math::Point(2, 0, 2), math::Vector(0, 0, -1)),
+    TestInput(math::Point(0, 2, 2), math::Vector(0, -1, 0)),
+    TestInput(math::Point(2, 2, 0), math::Vector(-1, 0, 0)),
+  };
+ 
+  // Rays do not intersect with Cube
+  auto c = std::make_shared<geo::Cube>();
+
+  for (const auto& input : inputs) {
+    const auto r = ray::Ray(input.origin, input.direction);
+    const auto xs = c->local_intersects(r);
+    EXPECT_EQ(xs.size(), 0);
+  }
+  
+}
+
+TEST(GeoTest, NormalOnCube) {
+
+  struct TestInput {
+    math::Point point;
+    math::Vector normal;
+
+    TestInput(const math::Point& p, const math::Vector& n) : point {p}, normal {n} {}
+  };
+
+  std::vector<TestInput> inputs {
+    TestInput(math::Point(1, 0.5, -0.8), math::Vector(1, 0, 0)),
+    TestInput(math::Point(-1, -0.2, 0.9), math::Vector(-1, 0, 0)),
+    TestInput(math::Point(-0.4, 1, -0.1), math::Vector(0, 1, 0)),
+    TestInput(math::Point(0.3, -1, -0.7), math::Vector(0, -1, 0)),
+    TestInput(math::Point(-0.6, 0.3, 1), math::Vector(0, 0, 1)),
+    TestInput(math::Point(0.4, 0.4, -1), math::Vector(0, 0, -1)),
+    TestInput(math::Point(1, 1, 1), math::Vector(1, 0, 0)),
+    TestInput(math::Point(-1, -1, -1), math::Vector(-1, 0, 0)),
+      
+  };  
+  // The normal on the surface of a cube
+  auto c = std::make_shared<geo::Cube>();
+  
+  for (const auto& input : inputs){
+    auto p = input.point;
+    auto normal = c->local_normal_at(p);
+    EXPECT_EQ(normal, input.normal);
+  }
+ 
+}
+
+TEST(GeoTest, CylinderRayMisses) {
+
+  // A ray misses a cylinder
+  
+  struct TestInput {
+    math::Point origin;
+    math::Vector direction;
+
+    TestInput(const math::Point& o, const math::Vector& d) : origin {o}, direction {d} {}
+  };
+
+  std::vector<TestInput> inputs {
+    TestInput(math::Point(1, 0, 0), math::Vector(0, 1, 0)),
+    TestInput(math::Point(0, 0, 0), math::Vector(0, 1, 0)),
+    TestInput(math::Point(0, 0, -5), math::Vector(1, 1, 1)),
+      };
+
+  auto cyl = std::make_shared<geo::Cylinder>();
+  for (const auto& input : inputs) {
+    auto dir = math::normalize(input.direction);
+    auto r = ray::Ray(input.origin, dir);
+    auto xs = cyl->local_intersects(r);
+    EXPECT_EQ(xs.size(), 0);
+  }
+
+}
+
+TEST(GeoTest, CylinderRayHits) {
+
+  // A ray hits a cylinder
+
+    struct TestInput {
+    math::Point origin;
+    math::Vector direction;
+    double t1;
+    double t2;
+
+      TestInput(const math::Point& o, const math::Vector& d, const double t1_, const double  t2_) :
+	origin {o}, direction {d}, t1 {t1_}, t2 {t2_ } {}
+  };
+
+  std::vector<TestInput> inputs {
+    // hits the tangent
+    TestInput(math::Point(1, 0, -5), math::Vector(0, 0, 1),  5, 5),
+    // hits perpendiculary
+    TestInput(math::Point(0, 0, -5), math::Vector(0, 0, 1), 4, 6),
+    // strikes at an angles
+    TestInput(math::Point(0.5, 0, -5), math::Vector(0.1, 1, 1), 6.80798, 7.08872),
+  };
+
+  auto cyl = std::make_shared<geo::Cylinder>();
+  for (const auto& input : inputs) {
+    auto dir = math::normalize(input.direction);
+    auto r = ray::Ray(input.origin, dir);
+    auto xs = cyl->local_intersects(r);
+    EXPECT_EQ(xs.size(), 2);
+    EXPECT_TRUE(math::almost_equal(xs[0].t, input.t1));
+    EXPECT_TRUE(math::almost_equal(xs[1].t, input.t2));
+  }
+}
+
+TEST(GeoTest, CylinderNormalVector) {
+
+  // Normal vector on a cylinder
+  auto cyl = std::make_shared<geo::Cylinder>();
+  
+  EXPECT_EQ(cyl->local_normal_at(math::Point(1, 0, 0)), math::Vector(1, 0, 0));
+  EXPECT_EQ(cyl->local_normal_at(math::Point(0, 5, -1)), math::Vector(0, 0, -1));
+  EXPECT_EQ(cyl->local_normal_at(math::Point(0, -2, 1)), math::Vector(0, 0, 1));
+  EXPECT_EQ(cyl->local_normal_at(math::Point(-1, -1, 0)), math::Vector(-1, 0, 0));
+}
+
+TEST(GeoTest, CylinderMaximumMinimumBounds) {
+
+  // The default minimum and maximum for a cylinder
+  auto cyl = geo::Cylinder();
+  EXPECT_EQ(cyl.minimum, -INFINITY);
+  EXPECT_EQ(cyl.maximum, INFINITY);
+}
+
+TEST(GeoTest, CylinderIntersectingTruncatedCylinder) {
+
+  // Intersecting a constrained cylinder
+  auto cyl = geo::Cylinder();
+  cyl.minimum = 1;
+  cyl.maximum = 2;
+
+  struct TestInput {
+    math::Point origin;
+    math::Vector direction;
+    int count;
+
+    TestInput(const math::Point& o, const math::Vector& d, const int c) :
+        origin {o}, direction {d}, count {c} {}
+  };
+
+  std::vector<TestInput> inputs {
+    TestInput(math::Point(0, 1.5, 0), math::Vector(0.1, 1, 0), 0),
+    TestInput(math::Point(0, 3, -5), math::Vector(0, 0, 1), 0),
+    TestInput(math::Point(0, 0, -5), math::Vector(0, 0, 1), 0),
+    TestInput(math::Point(0, 2, -5), math::Vector(0, 0, 1), 0),
+    TestInput(math::Point(0, 1, -5), math::Vector(0, 0, 1), 0),
+    TestInput(math::Point(0, 1.5, -2), math::Vector(0, 0, 1), 2),
+  };
+
+  for (const auto& input : inputs) {
+    auto direction = math::normalize(input.direction);
+    auto r = ray::Ray(input.origin, direction);
+    auto xs = cyl.local_intersects(r);
+    EXPECT_EQ(xs.size(), input.count);
+  }
+
+}
+
 TEST(GeoTest, BaseReflection){
 
   // Reflect a vector at 45 degrees

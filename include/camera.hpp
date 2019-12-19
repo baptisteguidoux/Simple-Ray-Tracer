@@ -49,7 +49,6 @@ namespace camera {
      * \return the rendered World
      */    
     canvas::Canvas render(const world::World& wrld) const;
-
  
   };
 
