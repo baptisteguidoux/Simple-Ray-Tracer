@@ -45,7 +45,7 @@ namespace pattern {
   
   color::Color StripePattern::local_pattern_at(const math::Tuple& pattern_point) const {
 
-    if (static_cast<int>(floor(pattern_point.x)) % 2 == 0)
+    if (static_cast<int>(std::floor(pattern_point.x)) % 2 == 0)
       return a;
 
     return b;
