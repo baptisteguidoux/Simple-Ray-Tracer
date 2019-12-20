@@ -1,4 +1,4 @@
-/* \file geo.hpp
+/*! \file geo.hpp
  */
 
 #ifndef GEO_H
@@ -16,7 +16,7 @@
 #include "material.hpp"
 
 
-/* \namespace geo
+/*! \namespace geo
  */
 namespace geo {
 
@@ -25,8 +25,8 @@ namespace geo {
   typedef std::vector<Intersection> Intersections;
 
 
-  /* \class Shape
-   * Base class, with some virtual functions
+  /*! \class Shape
+   *  \brief Base class, with some virtual functions
    */
   class Shape {
   public:
@@ -38,60 +38,60 @@ namespace geo {
     math::Matrix transform = math::IDENTITY_MATRIX; /*!< default transform*/
     material::Material material = material::Material();
 
-    /* \fn Intersections intersects(const ray::Ray& ray)
-     * Computes the Intersections of the Ray and Shape, calls local_intersects
-     * \param ray the Ray to intersect with
-     * \return Intersections
+    /*! \fn Intersections intersects(const ray::Ray& ray)
+     *  \brief Computes the Intersections of the Ray and Shape, calls local_intersects
+     *  \param ray the Ray to intersect with
+     *  \return Intersections
      */
     Intersections intersects(const ray::Ray& ray);
 
-    /* \fn virtual Intersections local_intersects(const ray::Ray& local_ray) = 0
-     * Shape dereived classes must implement this function to locally compute the Intersections of the Ray and Shape
-     * \param ray the Ray to intersect with
-     * \return Intersections
+    /*! \fn virtual Intersections local_intersects(const ray::Ray& local_ray) = 0
+     *  \brief Shape dereived classes must implement this function to locally compute the Intersections of the Ray and Shape
+     *  \param ray the Ray to intersect with
+     *  \return Intersections
      */
     virtual Intersections local_intersects(const ray::Ray& local_ray) = 0;
 
-    /* \fn math::Tuple normal_at(const math::Tuple& world_point)
-     * Calculates the normal on the Shape at the given point (in world space)
-     * \param world_point
-     * \return a Tuple, the normal Vector (wolrd space)
+    /*! \fn math::Tuple normal_at(const math::Tuple& world_point)
+     *  \brief Calculates the normal on the Shape at the given point (in world space)
+     *  \param world_point
+     *  \return a Tuple, the normal Vector (wolrd space)
      */    
     math::Tuple normal_at(const math::Tuple& world_point);
 
-    /* \fn virtual math::Tuple local_normal_at(const math::Tuple& local_point) const = 0
-     * Shape dereived classes must implement this function to locally calculate the normal on the Shape
-     * \param local_point the point in local space
-     * \return a Tuple, the normal Vector (local space)
+    /*! \fn virtual math::Tuple local_normal_at(const math::Tuple& local_point) const = 0
+     *  \brief Shape dereived classes must implement this function to locally calculate the normal on the Shape
+     *  \param local_point the point in local space
+     *  \return a Tuple, the normal Vector (local space)
      */     
     virtual math::Tuple local_normal_at(const math::Tuple& local_point) const = 0;
 
-    /* \fn color::Color pattern_at(const math::Tuple& world_point) const
-     * \brief Use this on Shape with a Pattern, to retrive the Color at the given Point
-     * \param world_point Point in world coordinates 
-     * \return the Color of the Pattern at the given Point
+    /*! \fn color::Color pattern_at(const math::Tuple& world_point) const
+     *  \brief Use this on Shape with a Pattern, to retrive the Color at the given Point
+     *  \param world_point Point in world coordinates 
+     *  \return the Color of the Pattern at the given Point
      */
     color::Color pattern_at(const math::Tuple& world_point) const;
     
   };
   
-  /* \fn bool operator==(const Shape& first, const Shape& second)
-   * \brief Compares the equality of two Shape
-   * \param first a Shape
-   * \param second another Shape
-   * \return true if the two Shape are equal, false otherwise
+  /*! \fn bool operator==(const Shape& first, const Shape& second)
+   *  \brief Compares the equality of two Shape
+   *  \param first a Shape
+   *  \param second another Shape
+   *  \return true if the two Shape are equal, false otherwise
    */  
   bool operator==(const Shape& first, const Shape& second);
 
-  /* \fn bool operator!=(const Shape& first, const Shape& second)
-   * \brief Compares the unequality of two Shape
-   * \param first a Shape
-   * \param second another Shape
-   * \return true if the two Shape are not equal, false otherwise
+  /*! \fn bool operator!=(const Shape& first, const Shape& second)
+   *  \brief Compares the unequality of two Shape
+   *  \param first a Shape
+   *  \param second another Shape
+   *  \return true if the two Shape are not equal, false otherwise
    */   
   bool operator!=(const Shape& first, const Shape& second);
 
-  /* \class TestShape
+  /*! \class TestShape
    */  
   class TestShape : public Shape {
   public:
@@ -106,7 +106,7 @@ namespace geo {
 
   };
 
-  /* \class Sphere
+  /*! \class Sphere
    */  
   class Sphere : public Shape {
   public:
@@ -118,8 +118,8 @@ namespace geo {
     math::Tuple local_normal_at(const math::Tuple& local_point) const override;
   };
 
-  /* \class GlassSphere
-   * \brief Sphere with a glassy transparency and refractive index
+  /*! \class GlassSphere
+   *  \brief Sphere with a glassy transparency and refractive index
    */  
   class GlassSphere : public Sphere {
   public:
@@ -129,7 +129,7 @@ namespace geo {
     ~GlassSphere() override;
   };
 
-  /* \class Plane
+  /*! \class Plane
    */  
   class Plane : public Shape {
   public:
@@ -141,7 +141,7 @@ namespace geo {
     math::Tuple local_normal_at(const math::Tuple& local_point) const override;
   };
   
-  /* \class Cube
+  /*! \class Cube
    */
   class Cube : public Shape {
   public:
@@ -153,7 +153,7 @@ namespace geo {
     math::Tuple local_normal_at(const math::Tuple& local_point) const override;
   };
   
-  /* \class Cylinder
+  /*! \class Cylinder
    */
   class Cylinder : public Shape {
   public:
@@ -168,65 +168,65 @@ namespace geo {
     math::Tuple local_normal_at(const math::Tuple& local_point) const override;
   };
   
-  /* \fn math::Tuple reflect(const math::Tuple& vec, const math::Tuple& normal)
-   * \brief Reflects the vector around the normal
-   * \param the vector to reflect
-   * \param the normal vector
-   * \return a Tuple, the reflected vector
+  /*! \fn math::Tuple reflect(const math::Tuple& vec, const math::Tuple& normal)
+   *  \brief Reflects the vector around the normal
+   *  \param the vector to reflect
+   *  \param the normal vector
+   *  \return a Tuple, the reflected vector
    */ 
   math::Tuple reflect(const math::Tuple& vec, const math::Tuple& normal);
 
-  /* \fn std::pair<double, double> check_axis(const double origin, const double direction)
-   * \brief helper function to find intersection points in Cube.local_intersects
-   * \param origin ray origin (one axis)
-   * \param direction  ray direction(one axis)
-   * \return a pair, min and max t values
+  /*! \fn std::pair<double, double> check_axis(const double origin, const double direction)
+   *  \brief helper function to find intersection points in Cube.local_intersects
+   *  \param origin ray origin (one axis)
+   *  \param direction  ray direction(one axis)
+   *  \return a pair, min and max t values
    */  
   std::pair<double, double> check_axis(const double origin, const double direction);
   
-  /* \struct Intersection
+  /*! \struct Intersection
    */
   struct Intersection {
 
     float t;
     std::shared_ptr<geo::Shape> geometry;
 
-    /* Intersection constructor
-     * \param t_ the t value of the intersection, "when" the ray intersects the geo
-     * \param geo the object that's been intersected
+    /*! Intersection constructor
+     *  \param t_ the t value of the intersection, "when" the ray intersects the geo
+     *  \param geo the object that's been intersected
      */   
     Intersection(const float t_, std::shared_ptr<geo::Shape> geo);
 
     Intersection() = default;
 
-    /* \fn Intersection& operator=(const Intersection& source)
-     * \param source the Intersection to copied, the source
-     * \return Intersection copy destination
+    /*! \fn Intersection& operator=(const Intersection& source)
+     *  \param source the Intersection to copied, the source
+     *  \return Intersection copy destination
      */       
     Intersection& operator=(const Intersection& source);
 
   };
   
-  /* \fn std::optional<Intersection> hit(const Intersections& intersections)
-   * Find the hit among all the Intersections, if there is any. The hit is the lowest nonegative intersection.
-   * \param the Intersections to look at
-   * \return an optional Intersection
+  /*! \fn std::optional<Intersection> hit(const Intersections& intersections)
+   *  \brief Find the hit among all the Intersections, if there is any. The hit is the lowest nonegative intersection.
+   *  \param the Intersections to look at
+   *  \return an optional Intersection
    */
   std::optional<Intersection> hit(const Intersections& intersections);
 
-  /* \fn bool operator==(const Intersection& first, const Intersection& second)
-   * \brief Compares the equality of two Intersection
-   * \param first an Intersection
-   * \param second another Intersection
-   * \return true if the two Intersection are equal, false otherwise
+  /*! \fn bool operator==(const Intersection& first, const Intersection& second)
+   *  \brief Compares the equality of two Intersection
+   *  \param first an Intersection
+   *  \param second another Intersection
+   *  \return true if the two Intersection are equal, false otherwise
    */
   bool operator==(const Intersection& first, const Intersection& second);
 
-  /* \fn bool operator!=(const Intersection& first, const Intersection& second)
-   * \brief Compares the unequality of two Intersection
-   * \param first an Intersection
-   * \param second another Intersection
-   * \return true if the two Intersection are not equal, false otherwise
+  /*! \fn bool operator!=(const Intersection& first, const Intersection& second)
+   *  \brief Compares the unequality of two Intersection
+   *  \param first an Intersection
+   *  \param second another Intersection
+   *  \return true if the two Intersection are not equal, false otherwise
    */  
   bool operator!=(const Intersection& first, const Intersection& second);
 
@@ -252,9 +252,9 @@ namespace geo {
      */
     Computations() = default;
 
-    /* \fn float schlick() const
-     * \brief Schlick approximation to Fresnel equaltion to calculate the reflectance
-     * \return schlick approximation
+    /*! \fn float schlick() const
+     *  \brief Schlick approximation to Fresnel equaltion to calculate the reflectance
+     *  \return schlick approximation
      */
     float schlick() const;
   };  

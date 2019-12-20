@@ -1,4 +1,4 @@
-/* \file material.hpp
+/*! \file material.hpp
  */
 
 #ifndef MATERIAL_H
@@ -10,12 +10,12 @@
 #include "pattern.hpp"
 
 
-/* \namespace material
+/*! \namespace material
  */
 namespace material {
 
 
-  /* \struct Material
+  /*! \struct Material
    */  
   struct Material {
 
@@ -31,19 +31,19 @@ namespace material {
     float refractive_index = 1;
   };
 
-  /* \fn bool operator==(const Material& first, const Material& second);
-   * \brief Compares the equality of two Material
-   * \param first a Material
-   * \param second another Material
-   * \return true if the two Material have the same values
+  /*! \fn bool operator==(const Material& first, const Material& second);
+   *  \brief Compares the equality of two Material
+   *  \param first a Material
+   *  \param second another Material
+   *  \return true if the two Material have the same values
    */
   bool operator==(const Material& first, const Material& second);
 
-  /* \fn bool operator!=(const Material& first, const Material& second);
-   * \brief Compares the unequality of two Material
-   * \param first a Material
-   * \param second another Material
-   * \return true if the two Material don't have the same values
+  /*! \fn bool operator!=(const Material& first, const Material& second);
+   *  \brief Compares the unequality of two Material
+   *  \param first a Material
+   *  \param second another Material
+   *  \return true if the two Material don't have the same values
    */  
   bool operator!=(const Material& first, const Material& second);
   
