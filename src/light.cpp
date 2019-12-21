@@ -29,7 +29,7 @@ namespace light {
     // Use material or pattern as color    
     auto color = color::Color();
     if (object->material.pattern != nullptr)
-      color = object->material.pattern->pattern_at(position);
+      color = object->pattern_at(position);
     else
       color = object->material.color;
     
