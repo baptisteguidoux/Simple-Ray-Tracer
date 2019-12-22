@@ -188,9 +188,9 @@ namespace geo {
 
     auto a = pow(local_ray.direction.x, 2) + pow(local_ray.direction.z, 2);
 
-    // ray is parallel to the y axis
+    // ray is parallel to the y axis, just check if it intersects with the Cylinder'caps
     if (math::almost_equal(a, 0))
-      return Intersections{};
+      return intersects_caps(local_ray, Intersections{});
 
     auto  b = 2 * local_ray.origin.x * local_ray.direction.x +
               2 * local_ray.origin.z * local_ray.direction.z;
@@ -219,9 +219,36 @@ namespace geo {
     if (minimum < y1 && y1 < maximum)
       xs.push_back(Intersection(t1, std::make_shared<geo::Cylinder>(*this)));
     
-    return xs;
+    return intersects_caps(local_ray, xs);
   }
+
+  Intersections Cylinder::intersects_caps(const ray::Ray& local_ray, Intersections ixs) const {
+
+    // If the  Cylinder is not closed or the ray has no possibility to intersects the Cylinder
+    if (! closed || math::almost_equal(std::abs(local_ray.direction.y), 0))
+      return ixs;
+
+    // Check for an intersection with the lower cap
+    double t = (minimum - local_ray.origin.y) / local_ray.direction.y;
+    if (check_cap(local_ray, t))
+      ixs.push_back(Intersection(t, std::make_shared<geo::Cylinder>(*this)));
+
+    // Check for an intersection with the upper cap
+    t = (maximum - local_ray.origin.y) / local_ray.direction.y;
+    if (check_cap(local_ray, t))
+      ixs.push_back(Intersection(t, std::make_shared<geo::Cylinder>(*this)));
+
+    return ixs;    
+  }
+
   
+  bool check_cap(const ray::Ray& ray, const double t) {
+    double x = ray.origin.x + t * ray.direction.x;
+    double z = ray.origin.z + t * ray.direction.z;
+
+    return (pow(x, 2) + pow(z, 2)) <= 1; // The radius of the Cylinder is 1
+  }
+
   math::Tuple Cylinder::local_normal_at(const math::Tuple& local_point) const {
 
     return math::Vector(local_point.x, 0, local_point.z);

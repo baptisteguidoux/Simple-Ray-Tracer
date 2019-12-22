@@ -160,12 +160,22 @@ namespace geo {
 
     float minimum = -INFINITY; /*<! minimum value on the y axis (lower bound) (default not truncated)*/
     float maximum = INFINITY; /*<! maximum value on the y axis (upper bound) (default not truncated)*/
-    
+    bool closed = false; /*<! if the cylinder is capped */
+
     ~Cylinder() override;
     
     Intersections local_intersects(const ray::Ray& local_ray) override;
 
     math::Tuple local_normal_at(const math::Tuple& local_point) const override;
+
+    /*! \fn Intersections intersects_caps(const ray::Ray& ray, Intersections ixs) const
+     *  \brief Checks if the Ray intersects with the end caps of the Cylinder
+     *  \param local_ray Ray to check
+     *  \param ixs existing Intersections
+     *  \return The given Intersections + the possible point of intersections with end caps
+     */ 
+    Intersections intersects_caps(const ray::Ray& local_ray, Intersections ixs) const;
+
   };
   
   /*! \fn math::Tuple reflect(const math::Tuple& vec, const math::Tuple& normal)
@@ -183,6 +193,15 @@ namespace geo {
    *  \return a pair, min and max t values
    */  
   std::pair<double, double> check_axis(const double origin, const double direction);
+
+  /*! \fn bool check_cap(const ray::Ray& ray, const double t)
+   *  \biref helper function to Cylinder.intersects_caps, to check if the intersection lies in the Cylinder radius 
+   *  \param ray
+   *  \param t time
+   *  \return true if intersects with cylinder cap
+   */
+  bool check_cap(const ray::Ray& ray, const double t);
+
   
   /*! \struct Intersection
    */

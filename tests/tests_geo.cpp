@@ -455,6 +455,44 @@ TEST(GeoTest, CylinderIntersectingTruncatedCylinder) {
 
 }
 
+TEST(GeoTest, CylinderCloseAttribute) {
+
+  // A cylinder has a closed attribute that defaults to false
+  auto cyl = geo::Cylinder();
+  EXPECT_FALSE(cyl.closed);
+}
+
+TEST(GeoTest, ClosedCylinderIntersection) {
+
+  auto cyl = std::make_shared<geo::Cylinder>();
+  cyl->minimum = 1;
+  cyl->maximum = 2;
+  cyl->closed = true;
+
+  struct TestInput {
+    math::Tuple point;
+    math::Tuple direction;
+    int count;
+
+    TestInput(const math::Tuple& p, const math::Tuple& d, const int c) : point {p}, direction {d}, count {c} {}
+  };
+
+  std::vector<TestInput> test_inputs {
+    TestInput{math::Point(0, 3, 0), math::Vector(0, -1, 0), 2},
+    TestInput{math::Point(0, 3, -2), math::Vector(0, -1, 2), 2},
+    TestInput{math::Point(0, 4, -2), math::Vector(0, -1, 1), 2},
+    TestInput{math::Point(0, 0, -2), math::Vector(0, 1, 2), 2},
+    TestInput{math::Point(0, -1, -2), math::Vector(0, 1, 1), 2},
+  };
+
+  for (const auto& input : test_inputs) {
+    auto dir = math::normalize(input.direction);
+    auto r = ray::Ray(input.point, dir);
+    auto xs = cyl->local_intersects(r);
+    EXPECT_EQ(xs.size(), input.count);
+  }
+}
+
 TEST(GeoTest, BaseReflection){
 
   // Reflect a vector at 45 degrees
