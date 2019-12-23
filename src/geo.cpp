@@ -250,12 +250,21 @@ namespace geo {
   }
 
   math::Tuple Cylinder::local_normal_at(const math::Tuple& local_point) const {
+    
+    // Compute the square of the distance from the y axis
+    auto dist_sq = pow(local_point.x, 2) + pow(local_point.z, 2);
+
+    if (dist_sq < 1 && local_point.y >= maximum - math::EPSILON)
+      return math::Vector(0, 1, 0);
+
+    if (dist_sq < 1 && local_point.y <= minimum + math::EPSILON)
+      return math::Vector(0, -1, 0);
 
     return math::Vector(local_point.x, 0, local_point.z);
   }  
 
   math::Tuple reflect(const math::Tuple& vec, const math::Tuple& normal) {
-  
+
     // The velocity vec is reflected around the normal
   
     return vec - normal * 2 * math::dot(vec, normal);
