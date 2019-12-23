@@ -464,6 +464,7 @@ TEST(GeoTest, CylinderCloseAttribute) {
 
 TEST(GeoTest, ClosedCylinderIntersection) {
 
+  // Intersects the caps of a closed cylinder
   auto cyl = std::make_shared<geo::Cylinder>();
   cyl->minimum = 1;
   cyl->maximum = 2;
@@ -491,6 +492,37 @@ TEST(GeoTest, ClosedCylinderIntersection) {
     auto xs = cyl->local_intersects(r);
     EXPECT_EQ(xs.size(), input.count);
   }
+}
+
+TEST(GeoTest, ClosedCylinderNormalAt) {
+
+  // Find the normal vector on a closed cylinder's end caps
+  auto cyl = std::make_shared<geo::Cylinder>();
+  cyl->minimum = 1;
+  cyl->maximum = 2;
+  cyl->closed = true;
+
+  struct TestInput {
+    math::Tuple point;
+    math::Tuple normal;
+
+    TestInput(const math::Tuple& p, const math::Tuple& n) : point {p}, normal {n} {}
+  };
+
+  std::vector<TestInput> test_inputs {
+    TestInput(math::Point(0, 1, 0), math::Vector(0, -1, 0)),
+    TestInput(math::Point(0.5, 1, 0), math::Vector(0, -1, 0)),
+    TestInput(math::Point(0, 1, 0.5), math::Vector(0, -1, 0)),
+    TestInput(math::Point(0, 2, 0), math::Vector(0, 1, 0)),
+    TestInput(math::Point(0.5, 2, 0), math::Vector(0, 1, 0)),
+    TestInput(math::Point(0, 2, 0.5), math::Vector(0, 1, 0)),
+  };
+
+  for (const auto& input : test_inputs) {
+    auto vec = cyl->local_normal_at(input.point);
+    EXPECT_EQ(input.normal, vec);
+  }
+  
 }
 
 TEST(GeoTest, BaseReflection){
