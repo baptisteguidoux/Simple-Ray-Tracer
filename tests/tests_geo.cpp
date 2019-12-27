@@ -608,6 +608,32 @@ TEST(GeoTest, DoubleConeEndCapsIntersections) {
   
 }
 
+TEST(GeoTest, DoubleConeNormalVector) {
+
+  // Computing the normal vector on a DoubleCone
+  auto cone = std::make_shared<geo::DoubleCone>();
+
+  struct TestInput {
+
+    math::Tuple point;
+    math::Tuple normal;
+
+    TestInput(const math::Tuple& p, const math::Tuple& n) : point {p}, normal {n} {}
+  };
+
+  std::vector<TestInput> test_inputs {
+    TestInput(math::Point(0, 0, 0), math::Vector(0, 0, 0)),
+    TestInput(math::Point(1, 1, 1), math::Vector(1, -sqrt(2), 1)),
+    TestInput(math::Point(-1, -1, 0), math::Vector(-1, 1, 0)),
+  };
+
+  for (const auto& input : test_inputs) {
+    auto norm = cone->local_normal_at(input.point);
+    EXPECT_EQ(norm, input.normal);
+  }
+
+}
+
 TEST(GeoTest, BaseReflection){
 
   // Reflect a vector at 45 degrees

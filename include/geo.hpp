@@ -179,6 +179,7 @@ namespace geo {
   };
 
   /*! \class DoubleCone
+   *  Can obtain a simple cone by truncating it at min = -1 and max = 0 and translate y 1
    */
   class DoubleCone : public Shape {
   public:

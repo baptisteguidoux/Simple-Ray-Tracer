@@ -241,14 +241,6 @@ namespace geo {
     return ixs;    
   }
 
-  
-  bool check_cap(const ray::Ray& ray, const double t, const double radius) {
-    double x = ray.origin.x + t * ray.direction.x;
-    double z = ray.origin.z + t * ray.direction.z;
-
-    return (pow(x, 2) + pow(z, 2)) <= radius; // The radius of the Cylinder is 1
-  }
-
   math::Tuple Cylinder::local_normal_at(const math::Tuple& local_point) const {
     
     // Compute the square of the distance from the y axis
@@ -333,7 +325,20 @@ namespace geo {
 
   math::Tuple DoubleCone::local_normal_at(const math::Tuple& local_point) const {
 
-    return math::Vector(0, 0, 0);
+    // Compute the square of the distance from the y axis
+    auto dist_sq = pow(local_point.x, 2) + pow(local_point.z, 2);
+
+    if (dist_sq < 1 && local_point.y >= maximum - math::EPSILON)
+      return math::Vector(0, 1, 0);
+
+    if (dist_sq < 1 && local_point.y <= minimum + math::EPSILON)
+      return math::Vector(0, -1, 0);
+
+    auto y = sqrt(pow(local_point.x, 2) + pow(local_point.z, 2));
+    if (local_point.y > 0)
+      y = -y;
+
+    return math::Vector(local_point.x, y, local_point.z);    
   }
 
   math::Tuple reflect(const math::Tuple& vec, const math::Tuple& normal) {
@@ -365,6 +370,13 @@ namespace geo {
 
     return std::make_pair(tmin, tmax);
   }
+
+  bool check_cap(const ray::Ray& ray, const double t, const double radius) {
+    double x = ray.origin.x + t * ray.direction.x;
+    double z = ray.origin.z + t * ray.direction.z;
+
+    return (pow(x, 2) + pow(z, 2)) <= radius; // The radius of the Cylinder is 1
+  }  
 
   Intersection::Intersection(const float t_, std::shared_ptr<geo::Shape> geo) :
     t {t_}, geometry {geo} {}
