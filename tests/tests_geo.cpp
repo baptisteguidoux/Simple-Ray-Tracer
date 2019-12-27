@@ -525,6 +525,89 @@ TEST(GeoTest, ClosedCylinderNormalAt) {
   
 }
 
+TEST(GeoTest, DoubleConeDefault) {
+
+  // The default minimum and maximum for a cylinder
+  auto cone = geo::DoubleCone();
+  EXPECT_EQ(cone.minimum, -INFINITY);
+  EXPECT_EQ(cone.maximum, INFINITY);
+  EXPECT_FALSE(cone.closed);
+}
+
+TEST(GeoTest, DoubleConeIntersects) {
+
+  // Intersecting a double cone with a ray
+  auto cone = std::make_shared<geo::DoubleCone>();
+
+  struct TestInput {
+    math::Tuple origin;
+    math::Tuple direction;
+    float t0;
+    float t1;
+
+    TestInput(const math::Tuple& o, const math::Tuple& d, const float t0_, const float t1_) : origin {o}, direction {d}, t0 {t0_}, t1 {t1_} {}
+  };
+
+  std::vector<TestInput> test_inputs {
+    TestInput(math::Point(0, 0, -5), math::Vector(0, 0, 1), 5, 5),
+    TestInput(math::Point(0, 0, -5), math::Vector(1, 1, 1), 8.66025, 8.66025),
+    TestInput(math::Point(1, 1, -5), math::Vector(-0.5, -1, 1), 4.55006, 49.44994),
+  };
+
+  for (const auto& input : test_inputs) {
+    auto direction = math::normalize(input.direction);
+    auto r = ray::Ray(input.origin, direction);
+    auto xs = cone->local_intersects(r);
+    ASSERT_EQ(xs.size(), 2);
+    EXPECT_TRUE(math::almost_equal(xs[0].t, input.t0));
+    EXPECT_TRUE(math::almost_equal(xs[1].t, input.t1));
+  }
+
+}
+
+TEST(GeoTest, DoubleConeIntersectsWithARayParallelToOneHalve) {
+
+  // Intersecting a double cone with a ray parallel to one of cones' halves
+  auto cone = std::make_shared<geo::DoubleCone>();
+  auto direction = math::normalize(math::Vector(0, 1, 1));
+  auto r = ray::Ray(math::Point(0, 0, -1), direction);
+  auto xs = cone->local_intersects(r);
+  ASSERT_EQ(xs.size(), 1);
+  EXPECT_TRUE(math::almost_equal(xs[0].t, 0.35355));
+}
+
+TEST(GeoTest, DoubleConeEndCapsIntersections) {
+
+  // Intersecting a cone's end caps
+  auto cone = std::make_shared<geo::DoubleCone>();
+
+  cone->minimum = -0.5;
+  cone->maximum = 0.5;
+  cone->closed = true;
+
+  struct TestInput {
+    math::Tuple origin;
+    math::Tuple direction;
+    int count;
+
+    TestInput(const math::Tuple& o, const math::Tuple& d, const int c) : origin {o}, direction {d}, count {c} {}
+  };
+
+  std::vector<TestInput> test_inputs {
+    TestInput(math::Point(0, 0, -5), math::Vector(0, 1,  0), 0),
+    TestInput(math::Point(0, 0, -0.25), math::Vector(0, 1, 1), 2),
+    TestInput(math::Point(0, 0, -0.25), math::Vector(0, 1, 0), 4),      
+  };
+
+  for (const auto& input : test_inputs) {
+    auto direction = math::normalize(input.direction);
+    auto r = ray::Ray(input.origin, direction);
+    auto xs = cone->local_intersects(r);
+    EXPECT_EQ(xs.size(), input.count);
+  }
+  
+}
+
 TEST(GeoTest, BaseReflection){
 
   // Reflect a vector at 45 degrees

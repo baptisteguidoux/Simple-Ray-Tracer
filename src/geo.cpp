@@ -242,11 +242,11 @@ namespace geo {
   }
 
   
-  bool check_cap(const ray::Ray& ray, const double t) {
+  bool check_cap(const ray::Ray& ray, const double t, const double radius) {
     double x = ray.origin.x + t * ray.direction.x;
     double z = ray.origin.z + t * ray.direction.z;
 
-    return (pow(x, 2) + pow(z, 2)) <= 1; // The radius of the Cylinder is 1
+    return (pow(x, 2) + pow(z, 2)) <= radius; // The radius of the Cylinder is 1
   }
 
   math::Tuple Cylinder::local_normal_at(const math::Tuple& local_point) const {
@@ -261,7 +261,80 @@ namespace geo {
       return math::Vector(0, -1, 0);
 
     return math::Vector(local_point.x, 0, local_point.z);
+  }
+
+  DoubleCone::~DoubleCone() {};
+
+  Intersections DoubleCone::local_intersects(const ray::Ray& local_ray) {
+
+    // same algorithm as Cylinder, except for the calculation of a, b and c
+
+    auto a = pow(local_ray.direction.x, 2) - pow(local_ray.direction.y, 2) + pow(local_ray.direction.z, 2);
+
+    auto b = 2 * (local_ray.origin.x * local_ray.direction.x) - 2 * (local_ray.origin.y * local_ray.direction.y) + 2 * (local_ray.origin.z * local_ray.direction.z);
+    
+    auto c = pow(local_ray.origin.x, 2) - pow(local_ray.origin.y, 2) + pow(local_ray.origin.z, 2);
+
+    // ray is parallel to one of the double cones' halves
+    if (math::almost_equal(a, 0)) {
+      // this means the ray may still intersects with the other halve
+      if (math::almost_equal(b, 0))
+	return intersects_caps(local_ray, Intersections{});
+      else // if b is not zero, there is one point of intersection
+	return intersects_caps(local_ray, Intersections{Intersection((-c / (2 * b)), std::make_shared<geo::DoubleCone>(*this))});
+    }
+    
+    // discriminant
+    auto disc = pow(b, 2) - 4 * a * c;
+    if (disc < 0)
+      return Intersections{};
+
+    auto t0 = (-b - sqrt(disc)) / (2 * a);
+    auto t1 = (-b + sqrt(disc)) / (2 * a);
+    if (t0 > t1)
+      std::swap(t0, t1);
+
+    Intersections xs;
+
+    // Check if the ray is above the minimum
+    auto y0 = local_ray.origin.y + t0 * local_ray.direction.y;
+    if (minimum < y0 && y0 < maximum)
+      xs.push_back(Intersection(t0, std::make_shared<geo::DoubleCone>(*this)));
+
+    // Check if the ray is below the maximum
+    auto y1 = local_ray.origin.y + t1 * local_ray.direction.y;
+    if (minimum < y1 && y1 < maximum)
+      xs.push_back(Intersection(t1, std::make_shared<geo::DoubleCone>(*this)));
+
+    //return xs;
+    return intersects_caps(local_ray, xs);    
+  }
+
+  Intersections DoubleCone::intersects_caps(const ray::Ray& local_ray, Intersections ixs) const {
+
+    // same algorithm as Cylinder
+    
+    // If the  DoubleCone is not closed or the ray has no possibility to intersects the DoubleCone
+    if (! closed || math::almost_equal(std::abs(local_ray.direction.y), 0))
+      return ixs;
+
+    // Check for an intersection with the lower cap
+    double t = (minimum - local_ray.origin.y) / local_ray.direction.y;
+    if (check_cap(local_ray, t, std::abs(minimum)))
+      ixs.push_back(Intersection(t, std::make_shared<geo::DoubleCone>(*this)));
+
+    // Check for an intersection with the upper cap
+    t = (maximum - local_ray.origin.y) / local_ray.direction.y;
+    if (check_cap(local_ray, t, std::abs(maximum)))
+      ixs.push_back(Intersection(t, std::make_shared<geo::DoubleCone>(*this)));
+
+    return ixs;    
   }  
+
+  math::Tuple DoubleCone::local_normal_at(const math::Tuple& local_point) const {
+
+    return math::Vector(0, 0, 0);
+  }
 
   math::Tuple reflect(const math::Tuple& vec, const math::Tuple& normal) {
 
