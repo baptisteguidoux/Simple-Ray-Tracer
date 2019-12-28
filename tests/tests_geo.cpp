@@ -616,6 +616,12 @@ TEST(GeoTest, GroupShape) {
   EXPECT_EQ(group.shapes.size(), 0);
 }
 
+TEST(GeoTest, ShapeHasParentAttribute) {
+
+  auto s = std::make_shared<geo::TestShape>();
+  EXPECT_EQ(s->parent, nullptr);
+}
+
 
 TEST(GeoTest, DoubleConeNormalVector) {
 
