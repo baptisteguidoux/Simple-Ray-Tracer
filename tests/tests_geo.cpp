@@ -612,16 +612,33 @@ TEST(GeoTest, GroupShape) {
 
   // Creating a new group
   auto group = geo::Group();
+  
   EXPECT_EQ(group.transform, math::IDENTITY_MATRIX);
   EXPECT_EQ(group.shapes.size(), 0);
 }
 
 TEST(GeoTest, ShapeHasParentAttribute) {
 
-  auto s = std::make_shared<geo::TestShape>();
-  EXPECT_EQ(s->parent, nullptr);
+  // A Shape has a parent variable
+  auto shape = std::make_shared<geo::TestShape>();
+  
+  EXPECT_EQ(shape->parent, nullptr);
 }
 
+TEST(GeoTest, GroupShapeAddChild) {
+
+  // Adding a child to a Group
+  auto group = std::make_shared<geo::Group>();
+  auto shape = std::make_shared<geo::TestShape>();
+  group->add_child(shape);
+  
+  EXPECT_NE(group->shapes.size(), 0);
+
+  // Test group includes shape
+  auto it = std::find_if(group->shapes.begin(), group->shapes.end(), [=](const std::shared_ptr<geo::Shape> shp){return *shp == *shape;});
+  EXPECT_EQ(**it, *shape); // "double dereferencing" (iterator and smart ptr)
+  EXPECT_EQ(*shape->parent, *group);
+}
 
 TEST(GeoTest, DoubleConeNormalVector) {
 

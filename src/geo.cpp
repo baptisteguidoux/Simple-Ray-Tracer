@@ -389,6 +389,12 @@ namespace geo {
 
     return math::Vector(0, 0, 0);
   }
+
+  void Group::add_child(std::shared_ptr<Shape> shape) {
+
+    shapes.push_back(shape);
+    shape->parent = std::make_shared<geo::Group>(*this);
+  }
   
 
   Intersection::Intersection(const float t_, std::shared_ptr<geo::Shape> geo) :

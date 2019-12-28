@@ -217,6 +217,12 @@ namespace geo {
     Intersections local_intersects(const ray::Ray& local_ray) override;
 
     math::Tuple local_normal_at(const math::Tuple& local_point) const override;
+
+    /*! \fn void add_child(std::shared_ptr<Shape> shape)
+     *  \brief Add the shape to the group of Shapes 
+     *  \param shape the Shape to add to the Group
+     */
+    void add_child(std::shared_ptr<Shape> shape);
   };
 
   
