@@ -608,6 +608,15 @@ TEST(GeoTest, DoubleConeEndCapsIntersections) {
   
 }
 
+TEST(GeoTest, GroupShape) {
+
+  // Creating a new group
+  auto group = geo::Group();
+  EXPECT_EQ(group.transform, math::IDENTITY_MATRIX);
+  EXPECT_EQ(group.shapes.size(), 0);
+}
+
+
 TEST(GeoTest, DoubleConeNormalVector) {
 
   // Computing the normal vector on a DoubleCone

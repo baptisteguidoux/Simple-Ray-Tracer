@@ -376,7 +376,20 @@ namespace geo {
     double z = ray.origin.z + t * ray.direction.z;
 
     return (pow(x, 2) + pow(z, 2)) <= radius; // The radius of the Cylinder is 1
-  }  
+  }
+
+  Group::~Group() {};
+
+  Intersections Group::local_intersects(const ray::Ray& local_ray) {
+
+    return Intersections{};
+  }
+
+  math::Tuple Group::local_normal_at(const math::Tuple& local_point) const {
+
+    return math::Vector(0, 0, 0);
+  }
+  
 
   Intersection::Intersection(const float t_, std::shared_ptr<geo::Shape> geo) :
     t {t_}, geometry {geo} {}

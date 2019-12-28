@@ -201,8 +201,23 @@ namespace geo {
      *  \return The given Intersections + the possible point of intersections with end caps
      */ 
     Intersections intersects_caps(const ray::Ray& local_ray, Intersections ixs) const;
-
   };
+
+  /*! \class Group
+   *  \brief A Shape that is a collection of Shapes
+   */
+  class Group : public Shape {
+  public:
+
+    std::vector<std::shared_ptr<Shape>> shapes;
+
+    ~Group() override;
+    
+    Intersections local_intersects(const ray::Ray& local_ray) override;
+
+    math::Tuple local_normal_at(const math::Tuple& local_point) const override;
+  };
+
   
   /*! \fn math::Tuple reflect(const math::Tuple& vec, const math::Tuple& normal)
    *  \brief Reflects the vector around the normal
