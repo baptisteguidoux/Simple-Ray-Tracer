@@ -38,6 +38,97 @@ TEST(GeoTest, IntersectionDataStructure) {
   // EXPECT_NE(xss[1].geometry, sphere2);
 }
 
+TEST(GeoTest, IntersectionCopyOperator) {
+
+  auto shape = std::make_shared<geo::TestShape>();
+  shape->transform = math::translation(0, 1, 0) * math::scaling(0.5, 1, 0.25);
+  shape->material.pattern = std::make_shared<pattern::CheckerPattern>(color::BLACK, color::WHITE);
+
+  geo::Intersection intersection1(1, shape);
+
+  auto intersection2 = intersection1;
+
+  EXPECT_EQ(*intersection1.geometry, *intersection2.geometry);
+  EXPECT_EQ(intersection1.geometry->transform, intersection2.geometry->transform);
+  EXPECT_EQ(intersection1.geometry->material, intersection2.geometry->material);
+}
+
+TEST(GeoTest, IntersectionCopyConstructor) {
+
+  auto shape = std::make_shared<geo::TestShape>();
+  shape->transform = math::translation(0, 1, 0) * math::scaling(0.5, 1, 0.25);
+  shape->material.pattern = std::make_shared<pattern::CheckerPattern>(color::BLACK, color::WHITE);
+
+  geo::Intersection intersection1(1, shape);
+  geo::Intersection intersection2 {intersection1};
+
+  EXPECT_EQ(*intersection1.geometry, *intersection2.geometry);
+  EXPECT_EQ(intersection1.geometry->transform, intersection2.geometry->transform);
+  EXPECT_EQ(intersection1.geometry->material, intersection2.geometry->material);
+}
+
+TEST(GeoTest, IntersectionsCopyOperator) {
+
+  auto shape = std::make_shared<geo::TestShape>();
+  shape->transform = math::translation(0, 1, 0) * math::scaling(0.5, 1, 0.25);
+  shape->material.pattern = std::make_shared<pattern::CheckerPattern>(color::BLACK, color::WHITE);
+
+  auto sphere = std::make_shared<geo::Sphere>();
+  sphere->transform = math::rotation_z(M_PI);
+  sphere->material.color = color::Color(1, 0.2, 0.45);
+
+  auto plane = std::make_shared<geo::Plane>();
+  plane->transform = math::rotation_z(M_PI / 2) * math::scaling(0.25, 0.25, 0.25);
+  plane->material.specular = 0.2;
+
+  geo::Intersections intersections1 {
+    geo::Intersection(0, shape),
+    geo::Intersection(1, sphere),
+    geo::Intersection(2, plane),
+  };
+
+  auto intersections2 = intersections1;
+
+  for (auto i = 0; i < intersections1.size(); i++) {
+    EXPECT_EQ(intersections1[i], intersections2[i]);
+    EXPECT_EQ(*intersections1[i].geometry, *intersections2[i].geometry);
+    EXPECT_EQ(intersections1[i].geometry->transform, intersections2[i].geometry->transform);
+    EXPECT_EQ(intersections1[i].geometry->material, intersections2[i].geometry->material);
+  }
+
+}
+
+TEST(GeoTest, IntersectionsCopyConstructor) {
+
+  auto shape = std::make_shared<geo::TestShape>();
+  shape->transform = math::translation(0, 1, 0) * math::scaling(0.5, 1, 0.25);
+  shape->material.pattern = std::make_shared<pattern::CheckerPattern>(color::BLACK, color::WHITE);
+
+  auto sphere = std::make_shared<geo::Sphere>();
+  sphere->transform = math::rotation_z(M_PI);
+  sphere->material.color = color::Color(1, 0.2, 0.45);
+
+  auto plane = std::make_shared<geo::Plane>();
+  plane->transform = math::rotation_z(M_PI / 2) * math::scaling(0.25, 0.25, 0.25);
+  plane->material.specular = 0.2;
+
+  geo::Intersections intersections1 {
+    geo::Intersection(0, shape),
+    geo::Intersection(1, sphere),
+    geo::Intersection(2, plane),
+  };
+
+  geo::Intersections intersections2 {intersections1};
+
+  for (auto i = 0; i < intersections1.size(); i++) {
+    EXPECT_EQ(intersections1[i], intersections2[i]);
+    EXPECT_EQ(*intersections1[i].geometry, *intersections2[i].geometry);
+    EXPECT_EQ(intersections1[i].geometry->transform, intersections2[i].geometry->transform);
+    EXPECT_EQ(intersections1[i].geometry->material, intersections2[i].geometry->material);
+  }
+
+}
+
 TEST(GeoTest, SphereIntesect){
 
   ray::Ray ray(math::Point(0, 0, -5.0), math::Vector(0, 0, 1));
@@ -608,6 +699,32 @@ TEST(GeoTest, DoubleConeEndCapsIntersections) {
   
 }
 
+TEST(GeoTest, DoubleConeNormalVector) {
+
+  // Computing the normal vector on a DoubleCone
+  auto cone = std::make_shared<geo::DoubleCone>();
+
+  struct TestInput {
+
+    math::Tuple point;
+    math::Tuple normal;
+
+    TestInput(const math::Tuple& p, const math::Tuple& n) : point {p}, normal {n} {}
+  };
+
+  std::vector<TestInput> test_inputs {
+    TestInput(math::Point(0, 0, 0), math::Vector(0, 0, 0)),
+    TestInput(math::Point(1, 1, 1), math::Vector(1, -sqrt(2), 1)),
+    TestInput(math::Point(-1, -1, 0), math::Vector(-1, 1, 0)),
+  };
+
+  for (const auto& input : test_inputs) {
+    auto norm = cone->local_normal_at(input.point);
+    EXPECT_EQ(norm, input.normal);
+  }
+
+}
+
 TEST(GeoTest, GroupShape) {
 
   // Creating a new group
@@ -640,30 +757,39 @@ TEST(GeoTest, GroupShapeAddChild) {
   EXPECT_EQ(*shape->parent, *group);
 }
 
-TEST(GeoTest, DoubleConeNormalVector) {
+TEST(GeoTest, GroupRayIntersectsEmpty) {
 
-  // Computing the normal vector on a DoubleCone
-  auto cone = std::make_shared<geo::DoubleCone>();
+  // Intersecting a Ray with an empty group
+  auto group = std::make_shared<geo::Group>();
+  ray::Ray ray(math::Point(0, 0, 0), math::Vector(0, 0, 1));
+  auto xs = group->local_intersects(ray);
+  EXPECT_EQ(xs.size(), 0);  
+}
 
-  struct TestInput {
+TEST(GeoTest, GroupRayIntersectsNotEmpty) {
 
-    math::Tuple point;
-    math::Tuple normal;
+  // Intersecting a Ray with a nonempty group
+  
+  auto group = std::make_shared<geo::Group>();
+  auto sphere1 = std::make_shared<geo::Sphere>();
+  auto sphere2 = std::make_shared<geo::Sphere>();
+  auto sphere3 = std::make_shared<geo::Sphere>();
+  
+  sphere2->transform = math::translation(0, 0, -3);
+  sphere3->transform = math::translation(5, 0, 0);
 
-    TestInput(const math::Tuple& p, const math::Tuple& n) : point {p}, normal {n} {}
-  };
+  group->add_child(sphere1);
+  group->add_child(sphere2);
+  group->add_child(sphere3);
 
-  std::vector<TestInput> test_inputs {
-    TestInput(math::Point(0, 0, 0), math::Vector(0, 0, 0)),
-    TestInput(math::Point(1, 1, 1), math::Vector(1, -sqrt(2), 1)),
-    TestInput(math::Point(-1, -1, 0), math::Vector(-1, 1, 0)),
-  };
+  ray::Ray ray(math::Point(0, 0, -5), math::Vector(0, 0, 1));
+  auto xs = group->local_intersects(ray);
 
-  for (const auto& input : test_inputs) {
-    auto norm = cone->local_normal_at(input.point);
-    EXPECT_EQ(norm, input.normal);
-  }
-
+  ASSERT_EQ(xs.size(), 4);
+  EXPECT_EQ(*xs[0].geometry, *sphere2);
+  EXPECT_EQ(*xs[1].geometry, *sphere2);
+  EXPECT_EQ(*xs[2].geometry, *sphere1);
+  EXPECT_EQ(*xs[3].geometry, *sphere1);
 }
 
 TEST(GeoTest, BaseReflection){

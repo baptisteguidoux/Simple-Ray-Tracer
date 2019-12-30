@@ -382,7 +382,18 @@ namespace geo {
 
   Intersections Group::local_intersects(const ray::Ray& local_ray) {
 
-    return Intersections{};
+    auto group_intersections = Intersections{};
+
+    // Call intersects for each Shape of the Group
+    for (const auto& shape : shapes) {
+      auto shape_intersections = shape->intersects(local_ray);
+      group_intersections.insert(group_intersections.end(), shape_intersections.begin(), shape_intersections.end());
+    }
+
+    // sort intersections
+    std::sort(group_intersections.begin(), group_intersections.end(), [&](const Intersection& inter1, const Intersection& inter2){return inter1.t < inter2.t;});
+    
+    return group_intersections;
   }
 
   math::Tuple Group::local_normal_at(const math::Tuple& local_point) const {
