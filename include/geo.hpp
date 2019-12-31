@@ -100,6 +100,12 @@ namespace geo {
      */    
     std::weak_ptr<Shape> get_weak_ptr();
 
+    /*! \fn virtual bool local_equality_predicate(const Shape* shape) const = 0
+     *  \brief After having check the two Shapes belong to the same class and have same transforms and Material, check if their  member variables are similar
+     *  \return true if the two Shape are equal
+     */     
+    virtual bool local_equality_predicate(const Shape* shape) const = 0;
+
   };
   
   /*! \fn bool operator==(const Shape& first, const Shape& second)
@@ -131,6 +137,8 @@ namespace geo {
 
     math::Tuple local_normal_at(const math::Tuple& local_point) const override;
 
+    bool local_equality_predicate(const Shape* shape) const override;
+
   };
 
   /*! \class Sphere
@@ -143,6 +151,8 @@ namespace geo {
     Intersections local_intersects(const ray::Ray& local_ray) override;
 
     math::Tuple local_normal_at(const math::Tuple& local_point) const override;
+
+    bool local_equality_predicate(const Shape* shape) const override;
   };
 
   /*! \class GlassSphere
@@ -166,6 +176,8 @@ namespace geo {
     Intersections local_intersects(const ray::Ray& local_ray) override;
 
     math::Tuple local_normal_at(const math::Tuple& local_point) const override;
+
+    bool local_equality_predicate(const Shape* shape) const override;
   };
   
   /*! \class Cube
@@ -178,6 +190,8 @@ namespace geo {
     Intersections local_intersects(const ray::Ray& local_ray) override;
 
     math::Tuple local_normal_at(const math::Tuple& local_point) const override;
+
+    bool local_equality_predicate(const Shape* shape) const override;
   };
   
   /*! \class Cylinder
@@ -202,6 +216,8 @@ namespace geo {
      *  \return The given Intersections + the possible point of intersections with end caps
      */ 
     Intersections intersects_caps(const ray::Ray& local_ray, Intersections ixs);
+
+    bool local_equality_predicate(const Shape* shape) const override;
 
   };
 
@@ -228,6 +244,8 @@ namespace geo {
      *  \return The given Intersections + the possible point of intersections with end caps
      */ 
     Intersections intersects_caps(const ray::Ray& local_ray, Intersections ixs);
+
+    bool local_equality_predicate(const Shape* shape) const override;
   };
 
   /*! \class Group
@@ -250,6 +268,8 @@ namespace geo {
      *  \param shape the Shape to add to the Group
      */
     void add_child(Shape* shape);
+
+    bool local_equality_predicate(const Shape* shape) const override;
   };
 
   

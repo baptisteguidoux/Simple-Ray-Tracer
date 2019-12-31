@@ -85,7 +85,12 @@ namespace geo {
 
   bool operator==(const Shape& first, const Shape& second) {
 
-    return (first.transform == second.transform) && (first.material == second.material);
+    if (typeid(first) == typeid(second) && // same class?
+	first.transform == second.transform &&
+	first.material == second.material)
+      return first.local_equality_predicate(&second);
+
+    return false;
   }
 
   bool operator!=(const Shape& first, const Shape& second) {
@@ -105,6 +110,11 @@ namespace geo {
   math::Tuple TestShape::local_normal_at(const math::Tuple& local_point) const {
 
     return math::Vector(local_point.x, local_point.y, local_point.z);
+  }
+
+  bool TestShape::local_equality_predicate(const Shape* shape) const {
+    // If the transforms and material are equal, the TestShapes are equal
+    return true;
   }
   
   Sphere::~Sphere() {};
@@ -145,6 +155,11 @@ namespace geo {
       return object_point - math::Point(0.0, 0.0, 0.0);
   }
 
+  bool Sphere::local_equality_predicate(const Shape* shape) const {
+    // If the transforms and material are equal, the Spheres are equal
+    return true;
+  }
+
   GlassSphere::GlassSphere() {
     Sphere();
     this->material.transparency = 1.0;
@@ -173,6 +188,11 @@ namespace geo {
     static const math::Tuple default_normal = math::Vector(0, 1, 0);
 
     return default_normal;
+  }
+
+  bool Plane::local_equality_predicate(const Shape* shape) const {
+    // If the transforms and material are equal, the Plane are equal
+    return true;
   }
 
   Cube::~Cube() {};
@@ -214,6 +234,11 @@ namespace geo {
     else
       return math::Vector(0, 0, local_point.z);
   };
+
+  bool Cube::local_equality_predicate(const Shape* shape) const {
+    // If the transforms and material are equal, the Cubes are equal
+    return true;
+  }
 
   Cylinder::~Cylinder() {};
   
@@ -288,6 +313,15 @@ namespace geo {
     return math::Vector(local_point.x, 0, local_point.z);
   }
 
+  bool Cylinder::local_equality_predicate(const Shape* shape) const {
+
+    auto cyl = dynamic_cast<const Cylinder*>(shape);
+
+    return (math::almost_equal(minimum, cyl->minimum) &&
+	    math::almost_equal(maximum, cyl->maximum) &&
+	    closed == cyl->closed);
+  }
+  
   DoubleCone::~DoubleCone() {};
 
   Intersections DoubleCone::local_intersects(const ray::Ray& local_ray) {
@@ -373,7 +407,16 @@ namespace geo {
 
     return math::Vector(local_point.x, y, local_point.z);    
   }
+  
+  bool DoubleCone::local_equality_predicate(const Shape* shape) const {
 
+    auto cone = dynamic_cast<const DoubleCone*>(shape);
+    
+    return (math::almost_equal(minimum, cone->minimum) &&
+	    math::almost_equal(maximum, cone->maximum) &&
+	    closed == cone->closed);
+  }
+  
   math::Tuple reflect(const math::Tuple& vec, const math::Tuple& normal) {
 
     // The velocity vec is reflected around the normal
@@ -442,7 +485,32 @@ namespace geo {
     shapes.push_back(shape->get_weak_ptr());
     shape->parent = get_shared_ptr();
   }
-  
+
+  bool Group::local_equality_predicate(const Shape* shape) const {
+
+    auto group = dynamic_cast<const Group*>(shape);
+
+    // Check there are as much shapes in both Groups
+    if (shapes.size() != group->shapes.size())
+      return false;
+
+    // Check that every shape in this Group can be found in the other Group
+    for (const auto& sub_shape : group->shapes) {
+      auto p = std::find_if(shapes.begin(), shapes.end(),
+			    [&](const std::weak_ptr<geo::Shape> shp){
+			      if (auto shrdptr = shp.lock()){
+				if (*shrdptr == *sub_shape.lock())
+				  return true;
+			      };
+			      return false;
+			    });
+      // If the sub shape is not found
+      if (p == shapes.end())
+	return false;
+    }
+
+    return true;
+  }
 
   Intersection::Intersection(const float t_, geo::Shape* geo) :
     t {t_}, geometry {geo->get_shared_ptr()} {}

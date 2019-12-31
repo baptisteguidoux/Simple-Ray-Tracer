@@ -129,6 +129,21 @@ TEST(GeoTest, IntersectionsCopyConstructor) {
 
 }
 
+TEST(GeoTest, SphereEquality) {
+
+  auto sphere1 = std::make_shared<geo::Sphere>();
+  auto sphere2 = std::make_shared<geo::Sphere>();
+  auto sphere3 = std::make_shared<geo::Sphere>();
+
+  sphere1->transform = math::translation(1, 2, 3)* math::scaling(2, 2, 2);
+  sphere1->material.color = color::Color(1, 0.2, 0.3);
+  sphere3->transform = math::translation(1, 2, 3)* math::scaling(2, 2, 2);
+  sphere3->material.color = color::Color(1, 0.2, 0.3);
+
+  EXPECT_NE(*sphere1, *sphere2);
+  EXPECT_EQ(*sphere1, *sphere3);
+}
+
 TEST(GeoTest, SphereIntesect){
 
   ray::Ray ray(math::Point(0, 0, -5.0), math::Vector(0, 0, 1));
@@ -432,6 +447,28 @@ TEST(GeoTest, NormalOnCube) {
  
 }
 
+TEST(GeoTest, CylinderEquality) {
+
+  auto cyl1 = std::make_shared<geo::Cylinder>();
+  auto cyl2 = std::make_shared<geo::Cylinder>();
+  auto cyl3 = std::make_shared<geo::Cylinder>();
+
+  cyl1->transform = math::scaling(1, 2, 3);
+  cyl2->transform = math::scaling(1, 2, 3);
+  cyl3->transform = math::scaling(1, 2, 3);
+
+  cyl1->minimum = 0;
+  cyl1->maximum = 2;
+  cyl1->closed = true;
+
+  cyl3->minimum = 0;
+  cyl3->maximum = 2;
+  cyl3->closed = true;
+
+  EXPECT_NE(*cyl1, *cyl2);
+  EXPECT_EQ(*cyl1, *cyl3);
+}
+
 TEST(GeoTest, CylinderRayMisses) {
 
   // A ray misses a cylinder
@@ -625,6 +662,28 @@ TEST(GeoTest, DoubleConeDefault) {
   EXPECT_FALSE(cone.closed);
 }
 
+TEST(GeoTest, DoubleConeEquality) {
+
+  auto con1 = std::make_shared<geo::DoubleCone>();
+  auto con2 = std::make_shared<geo::DoubleCone>();
+  auto con3 = std::make_shared<geo::DoubleCone>();
+
+  con1->transform = math::scaling(1, 2, 3);
+  con2->transform = math::scaling(1, 2, 3);
+  con3->transform = math::scaling(1, 2, 3);
+
+  con1->minimum = 0;
+  con1->maximum = 2;
+  con1->closed = true;
+
+  con3->minimum = 0;
+  con3->maximum = 2;
+  con3->closed = true;
+
+  EXPECT_NE(*con1, *con2);
+  EXPECT_EQ(*con1, *con3);
+}
+
 TEST(GeoTest, DoubleConeIntersects) {
 
   // Intersecting a double cone with a ray
@@ -732,6 +791,58 @@ TEST(GeoTest, GroupShape) {
   
   EXPECT_EQ(group.transform, math::IDENTITY_MATRIX);
   EXPECT_EQ(group.shapes.size(), 0);
+}
+
+TEST(GeoTest, GroupEquality) {
+
+  // Checks Group Equality
+  auto group1 = std::make_shared<geo::Group>();
+  auto group2 = std::make_shared<geo::Group>();
+  auto group3 = std::make_shared<geo::Group>();
+
+  group1->transform = math::rotation_z(M_PI / 2);
+  group2->transform = math::rotation_z(M_PI / 2);
+  group3->transform = math::rotation_z(M_PI / 2);
+
+  group1->material.specular = 0.2;
+  group2->material.specular = 0.2;
+  group3->material.specular = 0.2;
+
+  auto sphere1 = std::make_shared<geo::Sphere>();
+  auto sphere2 = std::make_shared<geo::Sphere>();
+  sphere2->transform = math::scaling(1, 0.5, 0.25);
+
+  group1->add_child(sphere1.get());
+  group2->add_child(sphere2.get());
+  group3->add_child(sphere1.get());
+
+  EXPECT_NE(*group1, *group2);
+  EXPECT_EQ(*group1, *group3);
+}
+
+TEST(GeoTest, GroupWithSubGroupsEquality) {
+
+  // Checks Group Equality, when a Group contains another Group
+  auto sphere = std::make_shared<geo::Sphere>();
+  sphere->transform = math::scaling(1, 2, 3);
+
+  auto group1 = std::make_shared<geo::Group>();
+  auto group2 = std::make_shared<geo::Group>();
+  
+  group1->add_child(group2.get());
+  group2->add_child(sphere.get());
+
+  auto group3 = std::make_shared<geo::Group>();
+  auto group4 = std::make_shared<geo::Group>();
+  
+  group3->add_child(group4.get());
+  group4->add_child(sphere.get());
+
+  EXPECT_EQ(*group1, *group3);
+
+  group4->transform = math::translation(0, 1, 2);
+
+  EXPECT_NE(*group1, *group3);
 }
 
 TEST(GeoTest, ShapeHasParentAttribute) {
