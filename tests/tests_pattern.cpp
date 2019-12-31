@@ -123,8 +123,8 @@ TEST(PatternTest, MaterialPattern){
   auto normal_v = math::Vector(0, 0, -1);
   auto li = light::PointLight(math::Point(0, 0, -10), color::Color(1, 1, 1));
 
-  auto c1 = lighting(s, li, math::Point(0.9, 0, 0), eye_v, normal_v, false);
-  auto c2 = lighting(s, li, math::Point(1.1, 0, 0), eye_v, normal_v, false);
+  auto c1 = lighting(s.get(), li, math::Point(0.9, 0, 0), eye_v, normal_v, false);
+  auto c2 = lighting(s.get(), li, math::Point(1.1, 0, 0), eye_v, normal_v, false);
   EXPECT_EQ(c1, color::WHITE);
   EXPECT_EQ(c2, color::BLACK);
 }
@@ -241,7 +241,7 @@ TEST(PatternTest, NestedPattern) {
   // A NestedPattern derives from class Pattern
   auto sub_pattern1 = std::make_shared<pattern::StripePattern>(color::WHITE, color::BLACK);
   auto sub_pattern2 = std::make_shared<pattern::StripePattern>(color::Color(1, 0, 0), color::Color(0, 1, 0));
-  auto pattern = std::make_shared<pattern::NestedPattern>(sub_pattern1, sub_pattern2);
+  auto pattern = std::make_shared<pattern::NestedPattern>(sub_pattern1.get(), sub_pattern2.get());
   EXPECT_NE(static_cast<pattern::Pattern*>(pattern.get()), nullptr);
 
   // A NestedPattern alternates between two patterns like a checker
@@ -253,7 +253,7 @@ TEST(PatternTest, NestedPattern) {
   EXPECT_EQ(pattern->pattern_at(math::Point(0, 1.1, 0)), pattern->sub_pattern2->pattern_at(math::Point(0, 1.1, 0)));
 
   // NestedPattern equality
-  auto pattern2 = std::make_shared<pattern::NestedPattern>(sub_pattern1, sub_pattern2);
+  auto pattern2 = std::make_shared<pattern::NestedPattern>(sub_pattern1.get(), sub_pattern2.get());
   EXPECT_EQ(*pattern, *pattern2);
   pattern2->sub_pattern1 = std::make_shared<pattern::RadialGradientPattern>(color::WHITE, color::BLACK);
   EXPECT_NE(*pattern, *pattern2);				       
@@ -264,7 +264,7 @@ TEST(PatternTest, BlendedPattern) {
   // A BlendedPattern derives from class Pattern
   auto sub_pattern1 = std::make_shared<pattern::StripePattern>(color::WHITE, color::BLACK);
   auto sub_pattern2 = std::make_shared<pattern::RingPattern>(color::Color(1, 0, 0), color::Color(0, 1, 0));
-  auto pattern = std::make_shared<pattern::BlendedPattern>(sub_pattern1, sub_pattern2);
+  auto pattern = std::make_shared<pattern::BlendedPattern>(sub_pattern1.get(), sub_pattern2.get());
   EXPECT_NE(static_cast<pattern::Pattern*>(pattern.get()), nullptr);
 
   // A BlendedPattern adds two Pattern
@@ -278,7 +278,7 @@ TEST(PatternTest, BlendedPattern) {
 	    pattern->sub_pattern1->pattern_at(math::Point(0, 0, 1)) + pattern->sub_pattern2->pattern_at(math::Point(0, 0, 1)));    
 
   // BlendedPattern equality
-  auto pattern2 = std::make_shared<pattern::BlendedPattern>(sub_pattern1, sub_pattern2);
+  auto pattern2 = std::make_shared<pattern::BlendedPattern>(sub_pattern1.get(), sub_pattern2.get());
   EXPECT_EQ(*pattern, *pattern2);
   pattern2->sub_pattern1 = std::make_shared<pattern::RadialGradientPattern>(color::WHITE, color::BLACK);
   EXPECT_NE(*pattern, *pattern2);  
@@ -288,7 +288,7 @@ TEST(PatternTest, PerturbedPattern) {
 
   // A PerturbedPattern derives from class Pattern
   auto sub_pattern = std::make_shared<pattern::TestPattern>();
-  auto pattern = std::make_shared<pattern::PerturbedPattern>(sub_pattern);
+  auto pattern = std::make_shared<pattern::PerturbedPattern>(sub_pattern.get());
   EXPECT_NE(static_cast<pattern::Pattern*>(pattern.get()), nullptr);
 
   // A PerturbedPattern just jitter the given point before passing to a "true" Pattern
@@ -302,8 +302,8 @@ TEST(PatternTest, PerturbedPattern) {
 
   // PerturbedPattern equality
   auto sub_pattern2 = std::make_shared<pattern::StripePattern>(color::WHITE, color::BLACK);
-  auto pattern2 = std::make_shared<pattern::PerturbedPattern>(sub_pattern2);
-  auto pattern3 = std::make_shared<pattern::PerturbedPattern>(sub_pattern2);
+  auto pattern2 = std::make_shared<pattern::PerturbedPattern>(sub_pattern2.get());
+  auto pattern3 = std::make_shared<pattern::PerturbedPattern>(sub_pattern2.get());
   EXPECT_EQ(*pattern2, *pattern3);
   pattern3->sub_pattern = std::make_shared<pattern::RadialGradientPattern>(color::WHITE, color::BLACK);
   EXPECT_NE(*pattern, *pattern2);

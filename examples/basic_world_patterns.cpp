@@ -33,7 +33,7 @@ int main() {
   middle->material.pattern = std::make_shared<pattern::PerturbedPattern>(
 				  std::make_shared<pattern::StripePattern>(
 				       color::Color(0, 1, 0),
-				       color::Color(0, 0.8, 0)));
+				       color::Color(0, 0.8, 0)).get());
   middle->material.pattern->transform = math::scaling(0.25, 0.25, 0.25) * math::rotation_z(M_PI / 4);
   middle->material.diffuse = 0.7;
   middle->material.specular = 0.3;

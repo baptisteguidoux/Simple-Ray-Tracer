@@ -88,11 +88,17 @@ namespace geo {
      */    
     math::Tuple normal_to_world(const math::Tuple& object_normal) const;
 
-    /*! \fn std::shared_ptr<Shape> getptr()
+    /*! \fn std::shared_ptr<Shape> get_shared_ptr()
      *  \brief Get a shared_ptr which shares ownership of this Shape
      *  \return a shared_ptr to *this
      */
-    std::shared_ptr<Shape> getptr();
+    std::shared_ptr<Shape> get_shared_ptr();
+
+    /*! \fn std::weak_ptr<Shape> get_weak_ptr()
+     *  \brief Get a weak_ptr which has a weak reference to this Shape
+     *  \return a weak_ptr to *this
+     */    
+    std::weak_ptr<Shape> get_weak_ptr();
 
   };
   
@@ -230,7 +236,7 @@ namespace geo {
   class Group : public Shape {
   public:
 
-    std::vector<std::shared_ptr<Shape>> shapes;
+    std::vector<std::weak_ptr<Shape>> shapes;
 
     ~Group() override;
     
@@ -238,11 +244,12 @@ namespace geo {
 
     math::Tuple local_normal_at(const math::Tuple& local_point) const override;
 
-    /*! \fn void add_child(std::shared_ptr<Shape> shape)
+    /*! \fn void add_child(Shape* shape)
      *  \brief Add the shape to the group of Shapes 
+     *  [CG:R.30] -> Take smart pointers as parameters only to explicitly express lifetime semantics => simple pointer is enough
      *  \param shape the Shape to add to the Group
      */
-    void add_child(std::shared_ptr<Shape> shape);
+    void add_child(Shape* shape);
   };
 
   
@@ -283,7 +290,7 @@ namespace geo {
      *  \param t_ the t value of the intersection, "when" the ray intersects the geo
      *  \param geo the object that's been intersected
      */   
-    Intersection(const float t_, std::shared_ptr<geo::Shape> geo);
+    Intersection(const float t_, geo::Shape* geo);
 
     Intersection() = default;
 

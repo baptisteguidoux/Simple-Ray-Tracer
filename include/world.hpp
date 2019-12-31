@@ -26,12 +26,12 @@ namespace world {
     std::vector<std::shared_ptr<geo::Shape>> objects;
     std::optional<light::PointLight> light;
 
-    /*! \fn bool contains_object(std::shared_ptr<geo::Shape> object) const
+    /*! \fn bool contains_object(geo::Shape* object) const
      *  \brief Check if a geometry can be found in the World
      *  \param object shared_ptr to the object to check if it is present
      *  \return true if the given object is contained in the World
      */    
-    bool contains_object(std::shared_ptr<geo::Shape> object) const;
+    bool contains_object(geo::Shape* object) const;
 
     /*! \fn geo::Intersections intersects(const ray::Ray& ry) const
      *  \brief Check if a Ray intersects any object in the World

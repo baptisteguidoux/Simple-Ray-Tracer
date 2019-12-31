@@ -26,6 +26,16 @@ namespace pattern {
     
     return !(*this == other);
   }
+ 
+  std::shared_ptr<Pattern> Pattern::get_shared_ptr() {
+
+    return shared_from_this();
+  }
+
+  std::weak_ptr<Pattern> Pattern::get_weak_ptr() {
+
+    return weak_from_this();
+  }
 
   color::Color TestPattern::local_pattern_at(const math::Tuple& pattern_point) const {
     
@@ -136,7 +146,8 @@ namespace pattern {
     return (this->start_color == cast_other.start_color) && (this->end_color == cast_other.end_color);
   }
 
-  NestedPattern::NestedPattern(const std::shared_ptr<Pattern>& sb1, const std::shared_ptr<Pattern>& sb2) : sub_pattern1 {sb1}, sub_pattern2 {sb2} {}
+  NestedPattern::NestedPattern(Pattern* sb1, Pattern* sb2)
+    : sub_pattern1 {sb1->get_shared_ptr()}, sub_pattern2 {sb2->get_shared_ptr()} {}
 
   NestedPattern::~NestedPattern() {};
 
@@ -155,7 +166,8 @@ namespace pattern {
     return (*sub_pattern1 == *cast_other.sub_pattern1) && (*sub_pattern2 == *cast_other.sub_pattern2);
   }
 
-  BlendedPattern::BlendedPattern(const std::shared_ptr<Pattern>& sb1, const std::shared_ptr<Pattern>& sb2) : sub_pattern1 {sb1}, sub_pattern2 {sb2} {}
+  BlendedPattern::BlendedPattern(Pattern* sb1, Pattern* sb2)
+    : sub_pattern1 {sb1->get_shared_ptr()}, sub_pattern2 {sb2->get_shared_ptr()} {}
 
   BlendedPattern::~BlendedPattern() {};
 
@@ -171,7 +183,7 @@ namespace pattern {
     return (*sub_pattern1 == *cast_other.sub_pattern1) && (*sub_pattern2 == *cast_other.sub_pattern2);
   }
     
-  PerturbedPattern::PerturbedPattern(const std::shared_ptr<Pattern>& sb) : sub_pattern {sb} {}
+  PerturbedPattern::PerturbedPattern(Pattern* sb) : sub_pattern {sb->get_shared_ptr()} {}
 
   PerturbedPattern::~PerturbedPattern() {};
   

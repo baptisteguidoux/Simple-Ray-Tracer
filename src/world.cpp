@@ -28,7 +28,7 @@ namespace world {
     return wrld;
   }
 
-  bool World::contains_object(std::shared_ptr<geo::Shape> object) const {
+  bool World::contains_object(geo::Shape* object) const {
 
     auto it = std::find_if(objects.begin(), objects.end(), [&](const std::shared_ptr<geo::Shape> shp) {return *shp == *object;});
 
@@ -86,7 +86,7 @@ namespace world {
     bool is_shadowed = is_point_shadowed(comps.over_point);
 
     // If we want several lights, we should iterate over lights and sum the resulting Color
-    auto surface = light::lighting(comps.geometry,
+    auto surface = light::lighting(comps.geometry.get(),
   				   *light, // std::optional
   				   comps.over_point, // ensure we are just above the surface, not below (floating point rounding errors...)
   				   comps.eye_vector,

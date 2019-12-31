@@ -19,7 +19,7 @@ namespace pattern {
 
   /*! \class Pattern
    */  
-  class Pattern {
+  class Pattern : public std::enable_shared_from_this<Pattern> {
   public:
 
     math::Matrix transform = math::IDENTITY_MATRIX;
@@ -62,6 +62,18 @@ namespace pattern {
      *  \return true if the two Pattern are identical, false otherwise
      */
     virtual bool local_equality_predicate(const Pattern& other) const = 0;
+
+    /*! \fn std::shared_ptr<Shape> get_shared_ptr()
+     *  \brief Get a shared_ptr which shares ownership of this Pattern
+     *  \return a shared_ptr to *this
+     */
+    std::shared_ptr<Pattern> get_shared_ptr();
+
+    /*! \fn std::weak_ptr<Shape> get_weak_ptr()
+     *  \brief Get a weak_ptr which has a weak reference to this Pattern
+     *  \return a weak_ptr to *this
+     */    
+    std::weak_ptr<Pattern> get_weak_ptr();
 
   };
 
@@ -172,7 +184,7 @@ namespace pattern {
     std::shared_ptr<Pattern> sub_pattern1;
     std::shared_ptr<Pattern> sub_pattern2;
     
-    NestedPattern(const std::shared_ptr<Pattern>& sb1, const std::shared_ptr<Pattern>& sb2);
+    NestedPattern(Pattern* sb1, Pattern* sb2);
 
     ~NestedPattern() override;
 
@@ -190,7 +202,7 @@ namespace pattern {
     std::shared_ptr<Pattern> sub_pattern1;
     std::shared_ptr<Pattern> sub_pattern2;
     
-    BlendedPattern(const std::shared_ptr<Pattern>& sb1, const std::shared_ptr<Pattern>& sb2);
+    BlendedPattern(Pattern* sb1, Pattern* sb2);
 
     ~BlendedPattern() override;
 
@@ -208,7 +220,7 @@ namespace pattern {
     std::shared_ptr<Pattern> sub_pattern;
     noise::OpenSimplexNoise noise;
     
-    PerturbedPattern(const std::shared_ptr<Pattern>& sb);
+    PerturbedPattern(Pattern* sb);
 
     ~PerturbedPattern() override;
 

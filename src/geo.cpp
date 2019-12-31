@@ -73,9 +73,14 @@ namespace geo {
     return normal;
   }
 
-  std::shared_ptr<Shape> Shape::getptr() {
+  std::shared_ptr<Shape> Shape::get_shared_ptr() {
 
     return shared_from_this();
+  }
+
+  std::weak_ptr<Shape> Shape::get_weak_ptr() {
+
+    return weak_from_this();
   }
 
   bool operator==(const Shape& first, const Shape& second) {
@@ -129,8 +134,8 @@ namespace geo {
 
     // Return the intersections in increasing order
     auto result = (t1 < t2) ?
-      Intersections{Intersection(t1, getptr()), Intersection(t2, getptr())}
-    : Intersections{Intersection(t2, getptr()), Intersection(t1, getptr())};
+      Intersections{Intersection(t1, this), Intersection(t2, this)}
+    : Intersections{Intersection(t2, this), Intersection(t1, this)};
 
     return result;      
   }
@@ -160,7 +165,7 @@ namespace geo {
 
     auto t = - local_ray.origin.y / local_ray.direction.y; // Always assuming the Plane is in xz space only
     
-    return Intersections {Intersection(t, getptr())};
+    return Intersections {Intersection(t, this)};
   }
 
   math::Tuple Plane::local_normal_at(const math::Tuple& local_point) const {
@@ -187,8 +192,8 @@ namespace geo {
     if (tmin > tmax)
       return Intersections {};
     
-    Intersections ixs {Intersection(tmin, getptr())};
-    ixs.push_back(Intersection(tmax, getptr()));
+    Intersections ixs {Intersection(tmin, this)};
+    ixs.push_back(Intersection(tmax, this));
 		  
     return ixs;
   };
@@ -240,12 +245,12 @@ namespace geo {
     // Check if the ray is above the minimum
     auto y0 = local_ray.origin.y + t0 * local_ray.direction.y;
     if (minimum < y0 && y0 < maximum)
-      xs.push_back(Intersection(t0, getptr()));
+      xs.push_back(Intersection(t0, this));
 
     // Check if the ray is below the maximum
     auto y1 = local_ray.origin.y + t1 * local_ray.direction.y;
     if (minimum < y1 && y1 < maximum)
-      xs.push_back(Intersection(t1, getptr()));
+      xs.push_back(Intersection(t1, this));
     
     return intersects_caps(local_ray, xs);
   }
@@ -259,12 +264,12 @@ namespace geo {
     // Check for an intersection with the lower cap
     double t = (minimum - local_ray.origin.y) / local_ray.direction.y;
     if (check_cap(local_ray, t))
-      ixs.push_back(Intersection(t, getptr()));
+      ixs.push_back(Intersection(t, this));
 
     // Check for an intersection with the upper cap
     t = (maximum - local_ray.origin.y) / local_ray.direction.y;
     if (check_cap(local_ray, t))
-      ixs.push_back(Intersection(t, getptr()));
+      ixs.push_back(Intersection(t, this));
 
     return ixs;    
   }
@@ -301,7 +306,7 @@ namespace geo {
       if (math::almost_equal(b, 0))
 	return intersects_caps(local_ray, Intersections{});
       else // if b is not zero, there is one point of intersection
-	return intersects_caps(local_ray, Intersections{Intersection((-c / (2 * b)), getptr())});
+	return intersects_caps(local_ray, Intersections{Intersection((-c / (2 * b)), this)});
     }
     
     // discriminant
@@ -319,12 +324,12 @@ namespace geo {
     // Check if the ray is above the minimum
     auto y0 = local_ray.origin.y + t0 * local_ray.direction.y;
     if (minimum < y0 && y0 < maximum)
-      xs.push_back(Intersection(t0, getptr()));
+      xs.push_back(Intersection(t0, this));
 
     // Check if the ray is below the maximum
     auto y1 = local_ray.origin.y + t1 * local_ray.direction.y;
     if (minimum < y1 && y1 < maximum)
-      xs.push_back(Intersection(t1, getptr()));
+      xs.push_back(Intersection(t1, this));
 
     //return xs;
     return intersects_caps(local_ray, xs);    
@@ -341,12 +346,12 @@ namespace geo {
     // Check for an intersection with the lower cap
     double t = (minimum - local_ray.origin.y) / local_ray.direction.y;
     if (check_cap(local_ray, t, std::abs(minimum)))
-      ixs.push_back(Intersection(t, getptr()));
+      ixs.push_back(Intersection(t, this));
 
     // Check for an intersection with the upper cap
     t = (maximum - local_ray.origin.y) / local_ray.direction.y;
     if (check_cap(local_ray, t, std::abs(maximum)))
-      ixs.push_back(Intersection(t, getptr()));
+      ixs.push_back(Intersection(t, this));
 
     return ixs;    
   }  
@@ -413,13 +418,16 @@ namespace geo {
     auto group_intersections = Intersections{};
 
     // Call intersects for each Shape of the Group
-    for (const auto& shape : shapes) {
-      auto shape_intersections = shape->intersects(local_ray);
-      group_intersections.insert(group_intersections.end(), shape_intersections.begin(), shape_intersections.end());
+    for (const auto& shape_weak_ptr : shapes)
+      // Check the weak_ptr can be converted to a shared_ptr
+      if (auto shrd_shape_ptr = shape_weak_ptr.lock()) {
+	auto shape_intersections = shrd_shape_ptr->intersects(local_ray);
+	group_intersections.insert(group_intersections.end(), shape_intersections.begin(), shape_intersections.end());
     }
 
     // sort intersections
-    std::sort(group_intersections.begin(), group_intersections.end(), [&](const Intersection& inter1, const Intersection& inter2){return inter1.t < inter2.t;});
+    std::sort(group_intersections.begin(), group_intersections.end(),
+	      [&](const Intersection& inter1, const Intersection& inter2){return inter1.t < inter2.t;});
     
     return group_intersections;
   }
@@ -429,15 +437,15 @@ namespace geo {
     return math::Vector(0, 0, 0);
   }
 
-  void Group::add_child(std::shared_ptr<Shape> shape) {
+  void Group::add_child(Shape* shape) {
 
-    shapes.push_back(shape);
-    shape->parent = getptr();
+    shapes.push_back(shape->get_weak_ptr());
+    shape->parent = get_shared_ptr();
   }
   
 
-  Intersection::Intersection(const float t_, std::shared_ptr<geo::Shape> geo) :
-    t {t_}, geometry {geo} {}
+  Intersection::Intersection(const float t_, geo::Shape* geo) :
+    t {t_}, geometry {geo->get_shared_ptr()} {}
 
   Intersection& Intersection::operator=(const Intersection& source) {
 
@@ -540,7 +548,8 @@ namespace geo {
       }
 
       // If the intersection object already in containers
-      const auto shpp = std::find_if(containers.begin(), containers.end(), [&](const std::shared_ptr<geo::Shape> shp) {return *shp.get() == *ix_.geometry.get();});
+      const auto shpp = std::find_if(containers.begin(), containers.end(),
+				     [&](const std::shared_ptr<geo::Shape> shp) {return *shp.get() == *ix_.geometry.get();});
       if (shpp != containers.end())
     	// Then intersection is leaving the object, erase it from `containers`
     	containers.erase(containers.begin() + std::distance(containers.begin(), shpp));

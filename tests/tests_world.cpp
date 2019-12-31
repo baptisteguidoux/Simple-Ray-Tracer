@@ -28,12 +28,12 @@ TEST(WorldTest, ContainsObjectFunc) {
   
   world.objects.push_back(std::make_shared<geo::Sphere>(sphere));
 
-  EXPECT_TRUE(world.contains_object(std::make_shared<geo::Sphere>(sphere)));
+  EXPECT_TRUE(world.contains_object(std::make_shared<geo::Sphere>(sphere).get()));
 
   sphere = geo::Sphere();
   sphere.material.ambient = 1;
   
-  EXPECT_FALSE(world.contains_object(std::make_shared<geo::Sphere>(sphere)));  
+  EXPECT_FALSE(world.contains_object(std::make_shared<geo::Sphere>(sphere).get()));  
 }
 
 TEST(WorldTest, DefaultConstructor) {
@@ -51,8 +51,8 @@ TEST(WorldTest, DefaultConstructor) {
 
   auto default_world = world::build_default_world();
   EXPECT_EQ(*default_world.light, light); // access optional
-  EXPECT_TRUE(default_world.contains_object(sphere1));
-  EXPECT_TRUE(default_world.contains_object(sphere2));
+  EXPECT_TRUE(default_world.contains_object(sphere1.get()));
+  EXPECT_TRUE(default_world.contains_object(sphere2.get()));
 }
 
 TEST(WorldTest, WorldIntersects) {
@@ -76,7 +76,7 @@ TEST(WorldTest, ShadeHit) {
   auto wrld = world::build_default_world();
   auto r = ray::Ray(math::Point(0.0, 0.0, -5.0), math::Vector(0.0, 0.0, 1.0));
   auto shape = wrld.objects.at(0);
-  auto ixs = geo::Intersection(4.0, shape);
+  auto ixs = geo::Intersection(4.0, shape.get());
   
   auto comps = geo::prepare_computations(ixs, r);
   auto col = wrld.shade_hit(comps);
@@ -86,7 +86,7 @@ TEST(WorldTest, ShadeHit) {
   wrld.light = light::PointLight(math::Point(0.0, 0.25, 0.0), color::Color(1, 1, 1));
   r = ray::Ray(math::Point(0.0, 0.0, 0.0), math::Vector(0.0, 0.0, 1.0));
   shape = wrld.objects.at(1);
-  ixs = geo::Intersection(0.5, shape);
+  ixs = geo::Intersection(0.5, shape.get());
 
   comps = prepare_computations(ixs, r);
   col = wrld.shade_hit(comps);
@@ -102,7 +102,7 @@ TEST(WorldTest, ShadeHit) {
   s2->transform = math::translation(0, 0, 10);
   wrld.objects.push_back(s2);
   r = ray::Ray(math::Point(0, 0, 5), math::Vector(0, 0, 1));
-  ixs = geo::Intersection(4, s2);
+  ixs = geo::Intersection(4, s2.get());
   comps = prepare_computations(ixs, r);
   col = wrld.shade_hit(comps);
   EXPECT_EQ(col, color::Color(0.1, 0.1, 0.1));
@@ -181,7 +181,7 @@ TEST(WorldTest, ReflectedColor) {
   auto& shape = w.objects.at(1);
   // guarantee any reflection will have something to reflect...
   shape->material.ambient = 1; 
-  auto i = geo::Intersection(1, shape);
+  auto i = geo::Intersection(1, shape.get());
   auto comps = geo::prepare_computations(i, r);
   auto col = w.reflected_color(comps);
   // ... but the inner sphere is not reflective
@@ -195,7 +195,7 @@ TEST(WorldTest, ReflectedColor) {
   shape2->transform = math::translation(0, -1, 0);
   w.objects.push_back(shape2);
   r = ray::Ray(math::Point(0, 0, -3), math::Vector(0, -sqrt(2) / 2, sqrt(2) / 2));
-  i = geo::Intersection(sqrt(2), shape2);
+  i = geo::Intersection(sqrt(2), shape2.get());
   comps = geo::prepare_computations(i, r);
   col = w.reflected_color(comps);
   EXPECT_EQ(col, color::Color(0.19033, 0.23791, 0.14274));
@@ -212,14 +212,16 @@ TEST(WorldTest, ShadeHitWithReflect) {
   shape->transform = math::translation(0, -1, 0);
   w.objects.push_back(shape);
   auto r = ray::Ray(math::Point(0, 0, -3), math::Vector(0, -sqrt(2) / 2, sqrt(2) / 2));
-  auto i = geo::Intersection(sqrt(2), shape);
+  auto i = geo::Intersection(sqrt(2), shape.get());
   auto comps = geo::prepare_computations(i, r);
   auto col = w.shade_hit(comps);
   EXPECT_EQ(col, color::Color(0.87676, 0.92434, 0.82917));
 }
 
 TEST(WorldTest, ReflectionAvoidInfiniteRecursion) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe"; // Otherwise memory leak
 
+  // color_at with mutually reflective surfaces
   // Handles infinite recursion
   // Place two reflective planes face to face
   auto w = world::World();
@@ -247,7 +249,7 @@ TEST(WorldTest, ReflectionLimitRecursion) {
   shape->transform = math::translation(0, -1, 0);
   w.objects.push_back(shape);
   auto r = ray::Ray(math::Point(0, 0, -3), math::Vector(0, -sqrt(2) / 2, sqrt(2) / 2));
-  auto i = geo::Intersection(sqrt(2), shape);
+  auto i = geo::Intersection(sqrt(2), shape.get());
   auto comps = geo::prepare_computations(i, r);
   auto col = w.reflected_color(comps, 0); //no recursive call remaining
   EXPECT_EQ(col, color::BLACK);
@@ -259,7 +261,7 @@ TEST(WorldTest, RefractionOpaqueObject) {
   auto w = world::build_default_world();
   const auto& s = w.objects.at(0);
   auto r = ray::Ray(math::Point(0, 0, -5), math::Vector(0, 0, 1));
-  auto xs = geo::Intersections {geo::Intersection(4, s), geo::Intersection(6, s)};
+  auto xs = geo::Intersections {geo::Intersection(4, s.get()), geo::Intersection(6, s.get())};
   auto comps = geo::prepare_computations(xs[0], r, xs);
   auto c = w.refracted_color(comps, 5);
   EXPECT_EQ(c, color::BLACK);
@@ -273,7 +275,7 @@ TEST(WorldTest, RefractionMaxRecursionLimit) {
   s->material.transparency = 1;
   s->material.refractive_index = 1.5;
   auto r = ray::Ray(math::Point(0, 0, -5), math::Vector(0, 0, 1));
-  auto xs = geo::Intersections {geo::Intersection(4, s), geo::Intersection(6, s)};
+  auto xs = geo::Intersections {geo::Intersection(4, s.get()), geo::Intersection(6, s.get())};
   auto comps = geo::prepare_computations(xs[0], r, xs);
   auto c = w.refracted_color(comps, 0);
   EXPECT_EQ(c, color::BLACK);
@@ -287,7 +289,7 @@ TEST(WorldTest, RefractionTotalInternalReflection) {
   s->material.transparency = 1;
   s->material.refractive_index = 1.5;
   auto r = ray::Ray(math::Point(0, 0, sqrt(2) / 2), math::Vector(0, 1, 0));
-  auto xs = geo::Intersections {geo::Intersection(-sqrt(2)/2, s), geo::Intersection(sqrt(2)/2, s)};
+  auto xs = geo::Intersections {geo::Intersection(-sqrt(2)/2, s.get()), geo::Intersection(sqrt(2)/2, s.get())};
   // the ray originates from inside the sphere
   auto comps = geo::prepare_computations(xs[1], r, xs);
   auto c = w.refracted_color(comps);
@@ -306,10 +308,10 @@ TEST(WorldTest, RefractionRefractedColor) {
   obj2->material.transparency = 1;
   obj2->material.refractive_index = 1.5;
   auto r = ray::Ray(math::Point(0, 0, 0.1), math::Vector(0, 1, 0));
-  auto xs = geo::Intersections{geo::Intersection(-0.9899, obj1),
-			       geo::Intersection(-0.4899, obj2),
-			       geo::Intersection(0.4899, obj2),
-			       geo::Intersection(0.9899, obj1)};
+  auto xs = geo::Intersections{geo::Intersection(-0.9899, obj1.get()),
+			       geo::Intersection(-0.4899, obj2.get()),
+			       geo::Intersection(0.4899, obj2.get()),
+			       geo::Intersection(0.9899, obj1.get())};
   auto comps = geo::prepare_computations(xs[2], r, xs);
   auto c = w.refracted_color(comps);
   EXPECT_EQ(c, color::Color(0, 0.99888, 0.04722));
@@ -332,7 +334,7 @@ TEST(WorldTest, RefractionShadeHit) {
   w.objects.push_back(ball);
   
   auto r = ray::Ray(math::Point(0, 0, -3), math::Vector(0, -sqrt(2)/2, sqrt(2)/2));
-  auto xs = geo::Intersections{geo::Intersection(sqrt(2), floor)};
+  auto xs = geo::Intersections{geo::Intersection(sqrt(2), floor.get())};
   auto comps = geo::prepare_computations(xs[0], r, xs);
   auto col = w.shade_hit(comps);
   EXPECT_EQ(col, color::Color(0.93642, 0.68642, 0.68642));
@@ -356,7 +358,7 @@ TEST(WorldTest, FresnelEffectShadeHit) {
   ball->transform = math::translation(0, -3.5, -0.5);
   w.objects.push_back(ball);
 
-  auto xs = geo::Intersections{geo::Intersection(sqrt(2), floor)};
+  auto xs = geo::Intersections{geo::Intersection(sqrt(2), floor.get())};
   auto comps = geo::prepare_computations(xs[0], r, xs);
   auto col = w.shade_hit(comps);
   EXPECT_EQ(col, color::Color(0.93391, 0.69643, 0.69243));

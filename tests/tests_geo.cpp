@@ -16,13 +16,13 @@ TEST(GeoTest, IntersectionDataStructure) {
   // For the moment, an Intersection will only contain two things:
   // the t value of the intersection, and the object that was intersected
   auto sphere = std::make_shared<geo::TestShape>();
-  geo::Intersection inter(3.5, sphere);
+  geo::Intersection inter(3.5, sphere.get());
   EXPECT_EQ(inter.t, 3.5);
   EXPECT_EQ(inter.geometry, sphere);
 
   // std::vector of Intersection(s)
-  geo::Intersection inter1(1.0, sphere);
-  geo::Intersection inter2(2.0, sphere);
+  geo::Intersection inter1(1.0, sphere.get());
+  geo::Intersection inter2(2.0, sphere.get());
 
   auto xss = geo::Intersections{inter1, inter2};
   EXPECT_EQ(xss.size(), 2);
@@ -44,7 +44,7 @@ TEST(GeoTest, IntersectionCopyOperator) {
   shape->transform = math::translation(0, 1, 0) * math::scaling(0.5, 1, 0.25);
   shape->material.pattern = std::make_shared<pattern::CheckerPattern>(color::BLACK, color::WHITE);
 
-  geo::Intersection intersection1(1, shape);
+  geo::Intersection intersection1(1, shape.get());
 
   auto intersection2 = intersection1;
 
@@ -59,7 +59,7 @@ TEST(GeoTest, IntersectionCopyConstructor) {
   shape->transform = math::translation(0, 1, 0) * math::scaling(0.5, 1, 0.25);
   shape->material.pattern = std::make_shared<pattern::CheckerPattern>(color::BLACK, color::WHITE);
 
-  geo::Intersection intersection1(1, shape);
+  geo::Intersection intersection1(1, shape.get());
   geo::Intersection intersection2 {intersection1};
 
   EXPECT_EQ(*intersection1.geometry, *intersection2.geometry);
@@ -82,9 +82,9 @@ TEST(GeoTest, IntersectionsCopyOperator) {
   plane->material.specular = 0.2;
 
   geo::Intersections intersections1 {
-    geo::Intersection(0, shape),
-    geo::Intersection(1, sphere),
-    geo::Intersection(2, plane),
+    geo::Intersection(0, shape.get()),
+    geo::Intersection(1, sphere.get()),
+    geo::Intersection(2, plane.get()),
   };
 
   auto intersections2 = intersections1;
@@ -113,9 +113,9 @@ TEST(GeoTest, IntersectionsCopyConstructor) {
   plane->material.specular = 0.2;
 
   geo::Intersections intersections1 {
-    geo::Intersection(0, shape),
-    geo::Intersection(1, sphere),
-    geo::Intersection(2, plane),
+    geo::Intersection(0, shape.get()),
+    geo::Intersection(1, sphere.get()),
+    geo::Intersection(2, plane.get()),
   };
 
   geo::Intersections intersections2 {intersections1};
@@ -185,34 +185,34 @@ TEST(GeoTest, Hits) {
 
   // The hit when all intersections have a positive t
   auto s = std::make_shared<geo::Sphere>();
-  auto inter1 = geo::Intersection(1.0, s);
-  auto inter2 = geo::Intersection(2.0, s);
+  auto inter1 = geo::Intersection(1.0, s.get());
+  auto inter2 = geo::Intersection(2.0, s.get());
   auto xss = geo::Intersections {inter1, inter2};
 
   auto h = geo::hit(xss);
   EXPECT_EQ(h, inter1);
 
   // The hit, when some intersections have a negative t
-  auto inter3 = geo::Intersection(-1.0, s);
-  auto inter4 = geo::Intersection(2.0, s);
+  auto inter3 = geo::Intersection(-1.0, s.get());
+  auto inter4 = geo::Intersection(2.0, s.get());
   xss = geo::Intersections {inter3, inter4};
 
   auto h2 = geo::hit(xss);
   EXPECT_EQ(h2, inter4);
 
   // The hit when all intersections have a negative t
-  auto inter5 = geo::Intersection(-2.0, s);
-  auto inter6 = geo::Intersection(-1.0, s);
+  auto inter5 = geo::Intersection(-2.0, s.get());
+  auto inter6 = geo::Intersection(-1.0, s.get());
   xss = geo::Intersections {inter5, inter6};
 
   auto h3 = geo::hit(xss);
   EXPECT_EQ(h3, std::nullopt); // std::optional void result
 
   // The hit is always the lowest nonegative intersection
-  auto inter7 = geo::Intersection(5.0, s);
-  auto inter8 = geo::Intersection(7.0, s);
-  auto inter9 = geo::Intersection(-3.0, s);
-  auto inter10 = geo::Intersection(2.0, s);
+  auto inter7 = geo::Intersection(5.0, s.get());
+  auto inter8 = geo::Intersection(7.0, s.get());
+  auto inter9 = geo::Intersection(-3.0, s.get());
+  auto inter10 = geo::Intersection(2.0, s.get());
   xss = geo::Intersections {inter7, inter8, inter9, inter10};
 
   EXPECT_EQ(geo::hit(xss), inter10);
@@ -747,13 +747,14 @@ TEST(GeoTest, GroupShapeAddChild) {
   // Adding a child to a Group
   auto group = std::make_shared<geo::Group>();
   auto shape = std::make_shared<geo::TestShape>();
-  group->add_child(shape);
+  group->add_child(shape.get());
   
   EXPECT_NE(group->shapes.size(), 0);
 
   // Test group includes shape
-  auto it = std::find_if(group->shapes.begin(), group->shapes.end(), [=](const std::shared_ptr<geo::Shape> shp){return *shp == *shape;});
-  EXPECT_EQ(**it, *shape); // "double dereferencing" (iterator and smart ptr)
+  auto it = std::find_if(group->shapes.begin(), group->shapes.end(),
+			 [=](const std::weak_ptr<geo::Shape> shp){return *std::shared_ptr<geo::Shape>(shp) == *shape;});
+  EXPECT_EQ(*std::shared_ptr<geo::Shape>(*it), *shape); // "double dereferencing" (iterator and smart ptr)
   EXPECT_EQ(*shape->parent, *group);
 }
 
@@ -777,9 +778,9 @@ TEST(GeoTest, GroupRayIntersectsNotEmpty) {
   sphere2->transform = math::translation(0, 0, -3);
   sphere3->transform = math::translation(5, 0, 0);
 
-  group->add_child(sphere1);
-  group->add_child(sphere2);
-  group->add_child(sphere3);
+  group->add_child(sphere1.get());
+  group->add_child(sphere2.get());
+  group->add_child(sphere3.get());
 
   ray::Ray ray(math::Point(0, 0, -5), math::Vector(0, 0, 1));
   auto xs = group->local_intersects(ray);
@@ -798,7 +799,7 @@ TEST(GeoTest, GroupTransforms) {
   group->transform = math::scaling(2, 2, 2);
   auto sphere = std::make_shared<geo::Sphere>();
   sphere->transform = math::translation(5, 0, 0);
-  group->add_child(sphere);
+  group->add_child(sphere.get());
 
   ray::Ray ray(math::Point(10, 0, -10), math::Vector(0, 0, 1));
   auto xs = group->intersects(ray);
@@ -812,10 +813,10 @@ TEST(GeoTest, GroupWorldPointToObjectPoint) {
   group1->transform = math::rotation_y(M_PI / 2);
   auto group2 = std::make_shared<geo::Group>();
   group2->transform = math::scaling(2, 2, 2);
-  group1->add_child(group2);
+  group1->add_child(group2.get());
   auto sphere = std::make_shared<geo::Sphere>();
   sphere->transform = math::translation(5, 0, 0);
-  group2->add_child(sphere);
+  group2->add_child(sphere.get());
 
   auto point = sphere->world_to_object(math::Point(-2, 0, -10));
   ASSERT_NE(sphere->parent, nullptr);
@@ -835,10 +836,10 @@ TEST(GeoTest, GroupANormalVectorFromObjectToWorldSpace) {
   group1->transform = math::rotation_y(M_PI / 2);
   auto group2 = std::make_shared<geo::Group>();
   group2->transform = math::scaling(1, 2, 3);
-  group1->add_child(group2);
+  group1->add_child(group2.get());
   auto sphere = std::make_shared<geo::Sphere>();
   sphere->transform = math::translation(5, 0, 0);
-  group2->add_child(sphere);
+  group2->add_child(sphere.get());
 
   auto normal = sphere->normal_to_world(math::Vector(sqrt(3)/3, sqrt(3)/3, sqrt(3)/3));
   EXPECT_EQ(normal, math::Vector(0.28571, 0.42857, -0.85714));
@@ -879,7 +880,7 @@ TEST(GeoTest, PrepareComputations) {
   // Precompute the state of an intersection
   auto r = ray::Ray(math::Point(0.0, 0.0, -5.0), math::Vector(0.0, 0.0, 1.0));
   auto shape = std::make_shared<geo::Sphere>();
-  auto i = geo::Intersection(4.0, shape);
+  auto i = geo::Intersection(4.0, shape.get());
 
   auto comps = geo::prepare_computations(i, r);
   EXPECT_EQ(comps.t, i.t);
@@ -894,14 +895,14 @@ TEST(GeoTest, InsideObjectIntersection) {
   // The hit, when an intersection occurs on the outside
   auto r = ray::Ray(math::Point(0.0, 0.0, -5.0), math::Vector(0.0, 0.0, 1.0));
   auto shape = std::make_shared<geo::Sphere>();
-  auto ix = geo::Intersection(4, shape);
+  auto ix = geo::Intersection(4, shape.get());
 
   auto comps = geo::prepare_computations(ix, r);
   EXPECT_FALSE(comps.inside);
 
   // The hit, when an intersection occurs on the inside
   r = ray::Ray(math::Point(0.0, 0.0, 0.0), math::Vector(0.0, 0.0, 1.0));
-  ix = geo::Intersection(1.0, shape);
+  ix = geo::Intersection(1.0, shape.get());
   comps = geo::prepare_computations(ix, r);
   EXPECT_EQ(comps.point, math::Point(0.0, 0.0, 1.0));
   EXPECT_EQ(comps.eye_vector, math::Vector(0.0, 0.0, -1.0));
@@ -916,7 +917,7 @@ TEST(GeoTest, OverPoint) {
   auto r = ray::Ray(math::Point(0, 0, -5), math::Vector(0, 0, 1));
   auto shape = std::make_shared<geo::Sphere>();
   shape->transform = math::translation(0, 0, 1);
-  auto ix = geo::Intersection(5, shape);
+  auto ix = geo::Intersection(5, shape.get());
   auto comps = geo::prepare_computations(ix, r);
   EXPECT_TRUE(comps.over_point.z < - math::EPSILON / 2);
   EXPECT_TRUE(comps.point.z > comps.over_point.z);
@@ -927,7 +928,7 @@ TEST(GeoTest, ReflectionPrepareComputations) {
   // prepare_computations precomputes the reflect_vector
   auto shape = std::make_shared<geo::Plane>();
   auto r = ray::Ray(math::Point(0, 1, -1), math::Vector(0, -sqrt(2) / 2, sqrt(2) / 2));
-  auto i = geo::Intersection(sqrt(2), shape);
+  auto i = geo::Intersection(sqrt(2), shape.get());
   auto comps = geo::prepare_computations(i, r);
   EXPECT_EQ(comps.reflect_vector, math::Vector(0, sqrt(2) / 2, sqrt(2) / 2)); // reflect vector bounces on the plane at 45
 }
@@ -947,12 +948,12 @@ TEST(GeoTest, RefractionN1AndN2) {
   c->material.refractive_index = 2.5;
 
   auto r = ray::Ray(math::Point(0, 0, -4), math::Vector(0, 0, 1));
-  auto xs = geo::Intersections {geo::Intersection(2, a),
-				  geo::Intersection(2.75, b),
-				  geo::Intersection(3.25, c),
-				  geo::Intersection(4.75, b),
-				  geo::Intersection(5.25, c),
-				  geo::Intersection(6, a),
+  auto xs = geo::Intersections {geo::Intersection(2, a.get()),
+				  geo::Intersection(2.75, b.get()),
+				  geo::Intersection(3.25, c.get()),
+				  geo::Intersection(4.75, b.get()),
+				  geo::Intersection(5.25, c.get()),
+				  geo::Intersection(6, a.get()),
   };
 
   std::vector<double> n1_results {1.0, 1.5, 2.0, 2.5, 2.5, 1.5};
@@ -972,7 +973,7 @@ TEST(GeoTest, ComputationsUnderPoint) {
   auto r = ray::Ray(math::Point(0, 0, -5), math::Vector(0, 0, 1));
   auto s = std::make_shared<geo::GlassSphere>();
   s->transform = math::translation(0, 0, 1);
-  auto i = geo::Intersection(5, s);
+  auto i = geo::Intersection(5, s.get());
   auto xs = geo::Intersections {i};
   auto comps = geo::prepare_computations(i, r, xs);
 
@@ -985,7 +986,7 @@ TEST(GeoTest, FresnelEffectTotalInternalReflection) {
   // The Schlick approximation under total internal reflection
   auto shape = std::make_shared<geo::GlassSphere>();
   auto r = ray::Ray(math::Point(0, 0, sqrt(2)/2), math::Vector(0, 1, 0));
-  auto xs = geo::Intersections{geo::Intersection(-sqrt(2)/2, shape), geo::Intersection(sqrt(2)/2, shape)};
+  auto xs = geo::Intersections{geo::Intersection(-sqrt(2)/2, shape.get()), geo::Intersection(sqrt(2)/2, shape.get())};
   auto comps = geo::prepare_computations(xs[1], r, xs);
   auto reflectance = comps.schlick();
   EXPECT_EQ(reflectance, 1);
@@ -996,7 +997,7 @@ TEST(GeoTest, FresnelEffectPerpendicularRayReflectance) {
   // The Schlick approximation with a perpendicular ray is small
   auto shape = std::make_shared<geo::GlassSphere>();
   auto r = ray::Ray(math::Point(0, 0, 0), math::Vector(0, 1, 0));
-  auto xs = geo::Intersections{geo::Intersection(-1, shape), geo::Intersection(1, shape)};
+  auto xs = geo::Intersections{geo::Intersection(-1, shape.get()), geo::Intersection(1, shape.get())};
   auto comps = geo::prepare_computations(xs[1], r, xs);
   auto reflectance = comps.schlick();
   EXPECT_TRUE(math::almost_equal(reflectance, 0.04));
@@ -1008,7 +1009,7 @@ TEST(GeoTest, FresnelEffectSmallAngleAndN1GTN2) {
   // The Schlick approximation with small angle and n2 > n1
   auto shape = std::make_shared<geo::GlassSphere>();
   auto r = ray::Ray(math::Point(0, 0.99, -2), math::Vector(0, 0, 1));
-  auto xs = geo::Intersections{geo::Intersection(1.8589, shape)};
+  auto xs = geo::Intersections{geo::Intersection(1.8589, shape.get())};
   auto comps = geo::prepare_computations(xs[0], r, xs);
   auto reflectance = comps.schlick();
   EXPECT_TRUE(math::almost_equal(reflectance, 0.48873));

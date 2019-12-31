@@ -23,7 +23,7 @@ namespace light {
     return !(first == second);
   }    
 
-  color::Color lighting(std::shared_ptr<geo::Shape> object, const PointLight light, const math::Tuple& position,
+  color::Color lighting(geo::Shape* object, const PointLight light, const math::Tuple& position,
   			const math::Tuple& eye_vector, const math::Tuple& normal_vector, const bool in_shadow) {
 
     // Use material or pattern as color    
