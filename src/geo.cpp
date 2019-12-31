@@ -160,13 +160,14 @@ namespace geo {
     return true;
   }
 
-  GlassSphere::GlassSphere() {
-    Sphere();
-    this->material.transparency = 1.0;
-    this->material.refractive_index = 1.5;
-  }
+  std::shared_ptr<Sphere> build_glass_sphere() {
 
-  GlassSphere::~GlassSphere() {};
+    auto sphere = std::make_shared<geo::Sphere>();
+    sphere->material.transparency = 1.0;
+    sphere->material.refractive_index = 1.5;
+
+    return sphere;
+  }
 
   Plane::~Plane() {};
 

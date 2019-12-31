@@ -155,16 +155,7 @@ namespace geo {
     bool local_equality_predicate(const Shape* shape) const override;
   };
 
-  /*! \class GlassSphere
-   *  \brief Sphere with a glassy transparency and refractive index
-   */  
-  class GlassSphere : public Sphere {
-  public:
-
-    GlassSphere();
-
-    ~GlassSphere() override;
-  };
+  std::shared_ptr<Sphere> build_glass_sphere();
 
   /*! \class Plane
    */  

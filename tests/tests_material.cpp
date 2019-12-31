@@ -55,14 +55,15 @@ TEST(MaterialTest, RefrationMembers) {
   EXPECT_TRUE(math::almost_equal(m.refractive_index, 1)); // vacuum refractive index
 
   // Helper constructor
-  auto s = geo::GlassSphere();
-  EXPECT_EQ(s.transform, math::IDENTITY_MATRIX);
-  EXPECT_EQ(s.material.transparency, 1.0);
-  EXPECT_EQ(s.material.refractive_index, 1.5);
+  auto s = geo::build_glass_sphere();
+  EXPECT_EQ(s->transform, math::IDENTITY_MATRIX);
+  EXPECT_EQ(s->material.transparency, 1.0);
+  EXPECT_EQ(s->material.refractive_index, 1.5);
 
   // Like a Sphere
   auto s2 = geo::Sphere();
   s2.material.transparency = 1.0;
   s2.material.refractive_index = 1.5;
-  EXPECT_EQ(s, s2);
+  EXPECT_EQ(*s, s2);
 }
+
