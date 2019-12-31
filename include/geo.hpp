@@ -81,6 +81,13 @@ namespace geo {
      */ 
     math::Tuple world_to_object(const math::Tuple& world_point) const;
 
+    /*! \fn math::Tuple normal_to_world(const math::Tuple& object_normal) const
+     *  \brief Convert the normal in object space to world space, recursively if any parents
+     *  \param object_normal object space normal vector
+     *  \return world space normal vector
+     */    
+    math::Tuple normal_to_world(const math::Tuple& object_normal) const;
+
     /*! \fn std::shared_ptr<Shape> getptr()
      *  \brief Get a shared_ptr which shares ownership of this Shape
      *  \return a shared_ptr to *this

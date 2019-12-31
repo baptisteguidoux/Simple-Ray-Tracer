@@ -812,12 +812,10 @@ TEST(GeoTest, GroupWorldPointToObjectPoint) {
   group1->transform = math::rotation_y(M_PI / 2);
   auto group2 = std::make_shared<geo::Group>();
   group2->transform = math::scaling(2, 2, 2);
-  //group1->add_child(group2);
-  
+  group1->add_child(group2);
   auto sphere = std::make_shared<geo::Sphere>();
   sphere->transform = math::translation(5, 0, 0);
   group2->add_child(sphere);
-  group1->add_child(group2);
 
   auto point = sphere->world_to_object(math::Point(-2, 0, -10));
   ASSERT_NE(sphere->parent, nullptr);
@@ -828,6 +826,22 @@ TEST(GeoTest, GroupWorldPointToObjectPoint) {
   ASSERT_NE(sphere->parent->parent, nullptr);
   ASSERT_EQ(*sphere->parent->parent, *group1);
   EXPECT_EQ(point, math::Point(0, 0, -1));
+}
+
+TEST(GeoTest, GroupANormalVectorFromObjectToWorldSpace) {
+
+  // Taking a normal vector in object space to convert it to world space, taking into consideration every parent objects
+  auto group1 = std::make_shared<geo::Group>();
+  group1->transform = math::rotation_y(M_PI / 2);
+  auto group2 = std::make_shared<geo::Group>();
+  group2->transform = math::scaling(1, 2, 3);
+  group1->add_child(group2);
+  auto sphere = std::make_shared<geo::Sphere>();
+  sphere->transform = math::translation(5, 0, 0);
+  group2->add_child(sphere);
+
+  auto normal = sphere->normal_to_world(math::Vector(sqrt(3)/3, sqrt(3)/3, sqrt(3)/3));
+  EXPECT_EQ(normal, math::Vector(0.28571, 0.42857, -0.85714));
 }
 
 TEST(GeoTest, BaseReflection){

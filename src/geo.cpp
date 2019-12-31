@@ -61,6 +61,18 @@ namespace geo {
     return math::inverse(transform) * world_point;
   }
 
+  math::Tuple Shape::normal_to_world(const math::Tuple& object_normal) const {
+
+    auto normal = math::transpose(math::inverse(transform)) * object_normal;
+    normal.w = 0;
+    normal = math::normalize(normal);
+
+    if (parent != nullptr)
+      normal = parent->normal_to_world(normal);
+
+    return normal;
+  }
+
   std::shared_ptr<Shape> Shape::getptr() {
 
     return shared_from_this();
