@@ -28,7 +28,7 @@ namespace geo {
   /*! \class Shape
    *  \brief Base class, with some virtual functions
    */
-  class Shape {
+  class Shape : public std::enable_shared_from_this<Shape> {
   public:
 
     /* virtual destructor
@@ -73,7 +73,20 @@ namespace geo {
      *  \return the Color of the Pattern at the given Point
      */
     color::Color pattern_at(const math::Tuple& world_point) const;
-    
+
+    /*! \fn math::Point world_to_object(const math::Tuple& world_point) const
+     *  \brief Pass through all parents recursively to transform given world space Point into object space Point
+     *  \param world_point Point to convert to local space
+     *  \return local space Point
+     */ 
+    math::Tuple world_to_object(const math::Tuple& world_point) const;
+
+    /*! \fn std::shared_ptr<Shape> getptr()
+     *  \brief Get a shared_ptr which shares ownership of this Shape
+     *  \return a shared_ptr to *this
+     */
+    std::shared_ptr<Shape> getptr();
+
   };
   
   /*! \fn bool operator==(const Shape& first, const Shape& second)
@@ -169,13 +182,13 @@ namespace geo {
 
     math::Tuple local_normal_at(const math::Tuple& local_point) const override;
 
-    /*! \fn Intersections intersects_caps(const ray::Ray& ray, Intersections ixs) const
+    /*! \fn Intersections intersects_caps(const ray::Ray& ray, Intersections ixs)
      *  \brief Checks if the Ray intersects with the end caps of the Cylinder
      *  \param local_ray Ray to check
      *  \param ixs existing Intersections
      *  \return The given Intersections + the possible point of intersections with end caps
      */ 
-    Intersections intersects_caps(const ray::Ray& local_ray, Intersections ixs) const;
+    Intersections intersects_caps(const ray::Ray& local_ray, Intersections ixs);
 
   };
 
@@ -195,13 +208,13 @@ namespace geo {
 
     math::Tuple local_normal_at(const math::Tuple& local_point) const override;
 
-    /*! \fn Intersections intersects_caps(const ray::Ray& ray, Intersections ixs) const
+    /*! \fn Intersections intersects_caps(const ray::Ray& ray, Intersections ixs)
      *  \brief Checks if the Ray intersects with the end caps of the DoubleCone
      *  \param local_ray Ray to check
      *  \param ixs existing Intersections
      *  \return The given Intersections + the possible point of intersections with end caps
      */ 
-    Intersections intersects_caps(const ray::Ray& local_ray, Intersections ixs) const;
+    Intersections intersects_caps(const ray::Ray& local_ray, Intersections ixs);
   };
 
   /*! \class Group

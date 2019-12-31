@@ -515,9 +515,9 @@ TEST(GeoTest, CylinderMaximumMinimumBounds) {
 TEST(GeoTest, CylinderIntersectingTruncatedCylinder) {
 
   // Intersecting a constrained cylinder
-  auto cyl = geo::Cylinder();
-  cyl.minimum = 1;
-  cyl.maximum = 2;
+  auto cyl = std::make_shared<geo::Cylinder>();
+  cyl->minimum = 1;
+  cyl->maximum = 2;
 
   struct TestInput {
     math::Point origin;
@@ -540,7 +540,7 @@ TEST(GeoTest, CylinderIntersectingTruncatedCylinder) {
   for (const auto& input : inputs) {
     auto direction = math::normalize(input.direction);
     auto r = ray::Ray(input.origin, direction);
-    auto xs = cyl.local_intersects(r);
+    auto xs = cyl->local_intersects(r);
     EXPECT_EQ(xs.size(), input.count);
   }
 
@@ -769,7 +769,6 @@ TEST(GeoTest, GroupRayIntersectsEmpty) {
 TEST(GeoTest, GroupRayIntersectsNotEmpty) {
 
   // Intersecting a Ray with a nonempty group
-  
   auto group = std::make_shared<geo::Group>();
   auto sphere1 = std::make_shared<geo::Sphere>();
   auto sphere2 = std::make_shared<geo::Sphere>();
@@ -790,6 +789,45 @@ TEST(GeoTest, GroupRayIntersectsNotEmpty) {
   EXPECT_EQ(*xs[1].geometry, *sphere2);
   EXPECT_EQ(*xs[2].geometry, *sphere1);
   EXPECT_EQ(*xs[3].geometry, *sphere1);
+}
+
+TEST(GeoTest, GroupTransforms) {
+
+  // Group and child transformations are both applied
+  auto group = std::make_shared<geo::Group>();
+  group->transform = math::scaling(2, 2, 2);
+  auto sphere = std::make_shared<geo::Sphere>();
+  sphere->transform = math::translation(5, 0, 0);
+  group->add_child(sphere);
+
+  ray::Ray ray(math::Point(10, 0, -10), math::Vector(0, 0, 1));
+  auto xs = group->intersects(ray);
+  EXPECT_EQ(xs.size(), 2);
+}
+
+TEST(GeoTest, GroupWorldPointToObjectPoint) {
+
+  // Converting a point from world to object space, taking into consideration every parent objects
+  auto group1 = std::make_shared<geo::Group>();
+  group1->transform = math::rotation_y(M_PI / 2);
+  auto group2 = std::make_shared<geo::Group>();
+  group2->transform = math::scaling(2, 2, 2);
+  //group1->add_child(group2);
+  
+  auto sphere = std::make_shared<geo::Sphere>();
+  sphere->transform = math::translation(5, 0, 0);
+  group2->add_child(sphere);
+  group1->add_child(group2);
+
+  auto point = sphere->world_to_object(math::Point(-2, 0, -10));
+  ASSERT_NE(sphere->parent, nullptr);
+  ASSERT_EQ(*sphere->parent, *group2);
+  ASSERT_NE(group2->parent, nullptr);
+  ASSERT_EQ(*group2->parent, *group1);
+  ASSERT_EQ(group1->parent, nullptr);
+  ASSERT_NE(sphere->parent->parent, nullptr);
+  ASSERT_EQ(*sphere->parent->parent, *group1);
+  EXPECT_EQ(point, math::Point(0, 0, -1));
 }
 
 TEST(GeoTest, BaseReflection){

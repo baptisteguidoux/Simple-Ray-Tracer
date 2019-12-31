@@ -50,6 +50,22 @@ namespace geo {
     return material.pattern->pattern_at(object_point);
   }
 
+  math::Tuple Shape::world_to_object(const math::Tuple& world_point) const {
+
+    // It the Shape has a parent, first convert the point to its parent space
+    if (parent != nullptr) {
+      auto parent_point = parent->world_to_object(world_point);
+      return math::inverse(transform) * parent_point;
+    }
+  
+    return math::inverse(transform) * world_point;
+  }
+
+  std::shared_ptr<Shape> Shape::getptr() {
+
+    return shared_from_this();
+  }
+
   bool operator==(const Shape& first, const Shape& second) {
 
     return (first.transform == second.transform) && (first.material == second.material);
@@ -101,8 +117,8 @@ namespace geo {
 
     // Return the intersections in increasing order
     auto result = (t1 < t2) ?
-      Intersections{Intersection(t1, std::make_shared<Sphere>(*this)), Intersection(t2, std::make_shared<Sphere>(*this))}
-    : Intersections{Intersection(t2, std::make_shared<Sphere>(*this)), Intersection(t1, std::make_shared<Sphere>(*this))};
+      Intersections{Intersection(t1, getptr()), Intersection(t2, getptr())}
+    : Intersections{Intersection(t2, getptr()), Intersection(t1, getptr())};
 
     return result;      
   }
@@ -132,7 +148,7 @@ namespace geo {
 
     auto t = - local_ray.origin.y / local_ray.direction.y; // Always assuming the Plane is in xz space only
     
-    return Intersections {Intersection(t, std::make_shared<Plane>(*this))};
+    return Intersections {Intersection(t, getptr())};
   }
 
   math::Tuple Plane::local_normal_at(const math::Tuple& local_point) const {
@@ -159,8 +175,8 @@ namespace geo {
     if (tmin > tmax)
       return Intersections {};
     
-    Intersections ixs {Intersection(tmin, std::make_shared<Cube>(*this))};
-    ixs.push_back(Intersection(tmax, std::make_shared<Cube>(*this)));
+    Intersections ixs {Intersection(tmin, getptr())};
+    ixs.push_back(Intersection(tmax, getptr()));
 		  
     return ixs;
   };
@@ -212,17 +228,17 @@ namespace geo {
     // Check if the ray is above the minimum
     auto y0 = local_ray.origin.y + t0 * local_ray.direction.y;
     if (minimum < y0 && y0 < maximum)
-      xs.push_back(Intersection(t0, std::make_shared<geo::Cylinder>(*this)));
+      xs.push_back(Intersection(t0, getptr()));
 
     // Check if the ray is below the maximum
     auto y1 = local_ray.origin.y + t1 * local_ray.direction.y;
     if (minimum < y1 && y1 < maximum)
-      xs.push_back(Intersection(t1, std::make_shared<geo::Cylinder>(*this)));
+      xs.push_back(Intersection(t1, getptr()));
     
     return intersects_caps(local_ray, xs);
   }
 
-  Intersections Cylinder::intersects_caps(const ray::Ray& local_ray, Intersections ixs) const {
+  Intersections Cylinder::intersects_caps(const ray::Ray& local_ray, Intersections ixs) {
 
     // If the  Cylinder is not closed or the ray has no possibility to intersects the Cylinder
     if (! closed || math::almost_equal(std::abs(local_ray.direction.y), 0))
@@ -231,12 +247,12 @@ namespace geo {
     // Check for an intersection with the lower cap
     double t = (minimum - local_ray.origin.y) / local_ray.direction.y;
     if (check_cap(local_ray, t))
-      ixs.push_back(Intersection(t, std::make_shared<geo::Cylinder>(*this)));
+      ixs.push_back(Intersection(t, getptr()));
 
     // Check for an intersection with the upper cap
     t = (maximum - local_ray.origin.y) / local_ray.direction.y;
     if (check_cap(local_ray, t))
-      ixs.push_back(Intersection(t, std::make_shared<geo::Cylinder>(*this)));
+      ixs.push_back(Intersection(t, getptr()));
 
     return ixs;    
   }
@@ -273,7 +289,7 @@ namespace geo {
       if (math::almost_equal(b, 0))
 	return intersects_caps(local_ray, Intersections{});
       else // if b is not zero, there is one point of intersection
-	return intersects_caps(local_ray, Intersections{Intersection((-c / (2 * b)), std::make_shared<geo::DoubleCone>(*this))});
+	return intersects_caps(local_ray, Intersections{Intersection((-c / (2 * b)), getptr())});
     }
     
     // discriminant
@@ -291,18 +307,18 @@ namespace geo {
     // Check if the ray is above the minimum
     auto y0 = local_ray.origin.y + t0 * local_ray.direction.y;
     if (minimum < y0 && y0 < maximum)
-      xs.push_back(Intersection(t0, std::make_shared<geo::DoubleCone>(*this)));
+      xs.push_back(Intersection(t0, getptr()));
 
     // Check if the ray is below the maximum
     auto y1 = local_ray.origin.y + t1 * local_ray.direction.y;
     if (minimum < y1 && y1 < maximum)
-      xs.push_back(Intersection(t1, std::make_shared<geo::DoubleCone>(*this)));
+      xs.push_back(Intersection(t1, getptr()));
 
     //return xs;
     return intersects_caps(local_ray, xs);    
   }
 
-  Intersections DoubleCone::intersects_caps(const ray::Ray& local_ray, Intersections ixs) const {
+  Intersections DoubleCone::intersects_caps(const ray::Ray& local_ray, Intersections ixs) {
 
     // same algorithm as Cylinder
     
@@ -313,12 +329,12 @@ namespace geo {
     // Check for an intersection with the lower cap
     double t = (minimum - local_ray.origin.y) / local_ray.direction.y;
     if (check_cap(local_ray, t, std::abs(minimum)))
-      ixs.push_back(Intersection(t, std::make_shared<geo::DoubleCone>(*this)));
+      ixs.push_back(Intersection(t, getptr()));
 
     // Check for an intersection with the upper cap
     t = (maximum - local_ray.origin.y) / local_ray.direction.y;
     if (check_cap(local_ray, t, std::abs(maximum)))
-      ixs.push_back(Intersection(t, std::make_shared<geo::DoubleCone>(*this)));
+      ixs.push_back(Intersection(t, getptr()));
 
     return ixs;    
   }  
@@ -367,7 +383,7 @@ namespace geo {
 
     if (tmin > tmax)
       return std::make_pair(tmax, tmin);
-
+    
     return std::make_pair(tmin, tmax);
   }
 
@@ -404,7 +420,7 @@ namespace geo {
   void Group::add_child(std::shared_ptr<Shape> shape) {
 
     shapes.push_back(shape);
-    shape->parent = std::make_shared<geo::Group>(*this);
+    shape->parent = getptr();
   }
   
 
