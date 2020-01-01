@@ -32,7 +32,7 @@ namespace geo {
     // The vector from the sphere's origin to the point on the sphere is the normal at the point where it intersects (for a sphere centered at origin)
 
     // From world space to object space
-    auto local_point = world_to_object(world_point);//math::inverse(transform) * world_point;
+    auto local_point = world_to_object(world_point);
     // The object's normal vector we get is in object space
     auto local_normal = local_normal_at(local_point);
 
@@ -41,7 +41,7 @@ namespace geo {
 
   color::Color Shape::pattern_at(const math::Tuple& world_point) const {
 
-    auto object_point = math::inverse(transform) * world_point;
+    auto object_point = world_to_object(world_point);
 
     return material.pattern->pattern_at(object_point);
   }
@@ -475,7 +475,8 @@ namespace geo {
 
   math::Tuple Group::local_normal_at(const math::Tuple& local_point) const {
 
-    return math::Vector(0, 0, 0);
+    // In a Group, normals are computed by calling children Shapes local_normal_at
+    throw std::runtime_error {"Group.local_normal_at function should not be called"};
   }
 
   void Group::add_child(Shape* shape) {
