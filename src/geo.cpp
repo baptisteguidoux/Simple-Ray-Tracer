@@ -32,15 +32,11 @@ namespace geo {
     // The vector from the sphere's origin to the point on the sphere is the normal at the point where it intersects (for a sphere centered at origin)
 
     // From world space to object space
-    auto local_point = math::inverse(transform) * world_point;
+    auto local_point = world_to_object(world_point);//math::inverse(transform) * world_point;
     // The object's normal vector we get is in object space
     auto local_normal = local_normal_at(local_point);
-    // When the sphere has been transformed, to keep the normals perpendicular to the surface, we must multiply the normal by the inverse transpose matrix
-    auto world_normal = math::transpose(math::inverse(transform)) * local_normal;
-    // If the transform includes any kind of translation, multiplying by its transpose will mess with w coordinates in the vector
-    world_normal.w = 0;
-       
-    return math::normalize(world_normal);
+
+    return normal_to_world(local_normal);
   }
 
   color::Color Shape::pattern_at(const math::Tuple& world_point) const {
@@ -63,6 +59,7 @@ namespace geo {
 
   math::Tuple Shape::normal_to_world(const math::Tuple& object_normal) const {
 
+     // When the sphere has been transformed, to keep the normals perpendicular to the surface, we must multiply the normal by the inverse transpose matrix
     auto normal = math::transpose(math::inverse(transform)) * object_normal;
     normal.w = 0;
     normal = math::normalize(normal);

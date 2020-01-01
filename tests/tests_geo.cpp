@@ -956,6 +956,22 @@ TEST(GeoTest, GroupANormalVectorFromObjectToWorldSpace) {
   EXPECT_EQ(normal, math::Vector(0.28571, 0.42857, -0.85714));
 }
 
+TEST(GeoTest, GroupFindNormalOfObject) {
+
+  // Finding the normal on a child object, taking into consideration the transformations of the child and parent
+  auto group1 = std::make_shared<geo::Group>();
+  group1->transform = math::rotation_y(M_PI / 2);
+  auto group2 = std::make_shared<geo::Group>();
+  group2->transform = math::scaling(1, 2, 3);
+  group1->add_child(group2.get());
+  auto sphere = std::make_shared<geo::Sphere>();
+  sphere->transform = math::translation(5, 0, 0);
+  group2->add_child(sphere.get());
+
+  auto normal = sphere->normal_at(math::Point(1.7321, 1.1547, -5.5774));
+  EXPECT_EQ(normal, math::Vector(0.285704, 0.428543, -0.857161));
+}
+
 TEST(GeoTest, BaseReflection){
 
   // Reflect a vector at 45 degrees
