@@ -24,6 +24,7 @@ namespace geo {
   struct Intersection;
   typedef std::vector<Intersection> Intersections;
 
+  struct Bounds;
 
   /*! \class Shape
    *  \brief Base class, with some virtual functions
@@ -106,6 +107,12 @@ namespace geo {
      */     
     virtual bool local_equality_predicate(const Shape* shape) const = 0;
 
+    /*! \fn virtual Bounds get_bounds() const = 0
+     *  \brief Get the bounding box coordinates for each untransformed Shape, in object space
+     *  \return Bounds struct for this Shape
+     */    
+    virtual Bounds get_bounds() const = 0;
+
   };
   
   /*! \fn bool operator==(const Shape& first, const Shape& second)
@@ -139,6 +146,8 @@ namespace geo {
 
     bool local_equality_predicate(const Shape* shape) const override;
 
+    Bounds get_bounds() const override;
+
   };
 
   /*! \class Sphere
@@ -153,6 +162,8 @@ namespace geo {
     math::Tuple local_normal_at(const math::Tuple& local_point) const override;
 
     bool local_equality_predicate(const Shape* shape) const override;
+
+    Bounds get_bounds() const override;
   };
 
   std::shared_ptr<Sphere> build_glass_sphere();
@@ -169,6 +180,8 @@ namespace geo {
     math::Tuple local_normal_at(const math::Tuple& local_point) const override;
 
     bool local_equality_predicate(const Shape* shape) const override;
+
+    Bounds get_bounds() const override;
   };
   
   /*! \class Cube
@@ -183,6 +196,8 @@ namespace geo {
     math::Tuple local_normal_at(const math::Tuple& local_point) const override;
 
     bool local_equality_predicate(const Shape* shape) const override;
+
+    Bounds get_bounds() const override;
   };
   
   /*! \class Cylinder
@@ -209,6 +224,8 @@ namespace geo {
     Intersections intersects_caps(const ray::Ray& local_ray, Intersections ixs);
 
     bool local_equality_predicate(const Shape* shape) const override;
+
+    Bounds get_bounds() const override;
 
   };
 
@@ -237,6 +254,8 @@ namespace geo {
     Intersections intersects_caps(const ray::Ray& local_ray, Intersections ixs);
 
     bool local_equality_predicate(const Shape* shape) const override;
+
+    Bounds get_bounds() const override;
   };
 
   /*! \class Group
@@ -261,6 +280,8 @@ namespace geo {
     void add_child(Shape* shape);
 
     bool local_equality_predicate(const Shape* shape) const override;
+
+    Bounds get_bounds() const override;
   };
 
   
@@ -372,8 +393,39 @@ namespace geo {
    *  \return a Computations
    */
   Computations prepare_computations(const Intersection& ix, const ray::Ray r, const Intersections& ixs = Intersections{});
+
+  /*! \struct Bounds
+   *  \brief Stores the coordinates of a bounding box
+   */
+  struct Bounds {
+
+    math::Tuple minimum = math::Point(-INFINITY, -INFINITY, -INFINITY); /// minumum coordinates of the bounding box
+    math::Point maximum = math::Point(INFINITY, INFINITY, INFINITY);; /// maximum coordinates of the bounding box
+
+    /*! \fn Bounds()
+     *  \brief Constructs a default Bounds (min and max Point = infinity)
+     */     
+    Bounds() = default;
+    
+    /*! \fn Bounds(const math::Point& min, const math::Point& max)
+     *  \brief Constructs a Bounds by passing two Points
+     */    
+    Bounds(const math::Point& min, const math::Point& max);
+
+  };
   
 }
 
 #endif
   
+
+#ifndef GEO_STATIC_CONSTANTS
+#define GEO_STATIC_CONSTANTS
+
+namespace geo {
+
+  static const double BOUNDS_MARGIN = 0.05; /// avoid acne
+}
+
+#endif
+

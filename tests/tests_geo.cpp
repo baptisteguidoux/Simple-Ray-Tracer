@@ -1142,3 +1142,153 @@ TEST(GeoTest, FresnelEffectSmallAngleAndN1GTN2) {
   EXPECT_TRUE(math::almost_equal(reflectance, 0.48873));
 }
 
+TEST(GeoTest, BoundsDefaultStructure) {
+
+  // A Bounds is a structure holding the minumum and maximum coordinates of a bounding box
+  // We store those coordinates as Points
+  auto bounds = geo::Bounds();
+
+  EXPECT_TRUE(math::is_point(bounds.minimum));
+  EXPECT_TRUE(math::is_point(bounds.maximum));
+
+  EXPECT_EQ(bounds.minimum.x, -INFINITY);
+  EXPECT_EQ(bounds.minimum.y, -INFINITY);
+  EXPECT_EQ(bounds.minimum.z, -INFINITY);
+  
+  EXPECT_EQ(bounds.maximum.x, INFINITY);
+  EXPECT_EQ(bounds.maximum.y, INFINITY);
+  EXPECT_EQ(bounds.maximum.z, INFINITY);
+}
+
+TEST(GeoTest, BoundsConstructor) {
+
+  // A Bounds can be constructed by passing two Points
+  auto bounds = geo::Bounds(math::Point(3.8, 1.4, 2.1), math::Point(0.2, 1, 9.4));
+  EXPECT_EQ(bounds.minimum, math::Point(3.8, 1.4, 2.1));
+  EXPECT_EQ(bounds.maximum, math::Point(0.2, 1, 9.4));
+}
+
+TEST(GeoTest, TestShapeBounds) {
+
+  // A TestShape returns the default Bounds
+  auto test_shape = std::make_shared<geo::TestShape>();
+  auto bounds = test_shape->get_bounds();
+
+  EXPECT_EQ(bounds.minimum.x, -INFINITY);
+  EXPECT_EQ(bounds.minimum.y, -INFINITY);
+  EXPECT_EQ(bounds.minimum.z, -INFINITY);
+
+  EXPECT_EQ(bounds.maximum.x, INFINITY);
+  EXPECT_EQ(bounds.maximum.y, INFINITY);
+  EXPECT_EQ(bounds.maximum.z, INFINITY);
+}
+
+TEST(GeoTest, SphereBounds) {
+
+  // An untransformed Sphere extends from -1 to 1 on x, y and z axis
+  auto sphere = std::make_shared<geo::Sphere>();
+  auto bounds = sphere->get_bounds();
+
+  EXPECT_EQ(bounds.minimum.x, -1 - geo::BOUNDS_MARGIN);
+  EXPECT_EQ(bounds.minimum.y, -1 - geo::BOUNDS_MARGIN);
+  EXPECT_EQ(bounds.minimum.z, -1 - geo::BOUNDS_MARGIN);
+
+  EXPECT_EQ(bounds.maximum.x, 1 + geo::BOUNDS_MARGIN);
+  EXPECT_EQ(bounds.maximum.y, 1 + geo::BOUNDS_MARGIN);
+  EXPECT_EQ(bounds.maximum.z, 1 + geo::BOUNDS_MARGIN);
+}
+
+TEST(GeoTest, PlaneBounds) {
+  
+  // An untransformed Plane is infinite on x and z, small on y
+  auto plane = std::make_shared<geo::Plane>();
+  auto bounds = plane->get_bounds();
+
+  EXPECT_EQ(bounds.minimum.x, -INFINITY);
+  EXPECT_EQ(bounds.minimum.y, -geo::BOUNDS_MARGIN);
+  EXPECT_EQ(bounds.minimum.z, -INFINITY);
+
+  EXPECT_EQ(bounds.maximum.x, INFINITY);
+  EXPECT_EQ(bounds.maximum.y, geo::BOUNDS_MARGIN);
+  EXPECT_EQ(bounds.maximum.z, INFINITY);
+}
+
+TEST(GeoTest, CubeBounds) {
+  
+  // An untransformed Cube extends from -1 to 1 on x, y and z
+  auto cube = std::make_shared<geo::Cube>();
+  auto bounds = cube->get_bounds();
+
+  EXPECT_EQ(bounds.minimum.x, -1 - geo::BOUNDS_MARGIN);
+  EXPECT_EQ(bounds.minimum.y, -1 - geo::BOUNDS_MARGIN);
+  EXPECT_EQ(bounds.minimum.z, -1 - geo::BOUNDS_MARGIN);
+
+  EXPECT_EQ(bounds.maximum.x, 1 + geo::BOUNDS_MARGIN);
+  EXPECT_EQ(bounds.maximum.y, 1 + geo::BOUNDS_MARGIN);
+  EXPECT_EQ(bounds.maximum.z, 1 + geo::BOUNDS_MARGIN);  
+}
+
+TEST(GeoTest, CylinderBounds) {
+  
+  // An untransformed untruncated Cylinder is infinite on y, and extends from -1 to 1 on x and z
+  auto cylinder = std::make_shared<geo::Cylinder>();
+  auto bounds = cylinder->get_bounds();
+
+  EXPECT_EQ(bounds.minimum.x, -1 - geo::BOUNDS_MARGIN);
+  EXPECT_EQ(bounds.minimum.y, -INFINITY);
+  EXPECT_EQ(bounds.minimum.z, -1 - geo::BOUNDS_MARGIN);
+
+  EXPECT_EQ(bounds.maximum.x, 1 + geo::BOUNDS_MARGIN);
+  EXPECT_EQ(bounds.maximum.y, INFINITY);
+  EXPECT_EQ(bounds.maximum.z, 1 + geo::BOUNDS_MARGIN);  
+}
+
+TEST(GeoTest, TruncatedCylinderBounds) {
+  
+  // An untransformed untruncated Truncated_Cylinder is infinite on y, and extends from -1 to 1 on x and z
+  auto truncated_cylinder = std::make_shared<geo::Cylinder>();
+  truncated_cylinder->minimum = -1;
+  truncated_cylinder->maximum = 1;
+  auto bounds = truncated_cylinder->get_bounds();
+
+  EXPECT_EQ(bounds.minimum.x, -1 - geo::BOUNDS_MARGIN);
+  EXPECT_EQ(bounds.minimum.y, -1 - geo::BOUNDS_MARGIN);
+  EXPECT_EQ(bounds.minimum.z, -1 - geo::BOUNDS_MARGIN);
+
+  EXPECT_EQ(bounds.maximum.x, 1 + geo::BOUNDS_MARGIN);
+  EXPECT_EQ(bounds.maximum.y, 1 + geo::BOUNDS_MARGIN);
+  EXPECT_EQ(bounds.maximum.z, 1 + geo::BOUNDS_MARGIN);  
+}
+
+TEST(GeoTest, ConeBounds) {
+  
+  // An untransformed untruncated Cone is infinite on y, and its radius (x, z) extends from -y to y
+  auto cone = std::make_shared<geo::DoubleCone>();
+  auto bounds = cone->get_bounds();
+
+  EXPECT_EQ(bounds.minimum.x, -INFINITY);
+  EXPECT_EQ(bounds.minimum.y, -INFINITY);
+  EXPECT_EQ(bounds.minimum.z, -INFINITY);
+
+  EXPECT_EQ(bounds.maximum.x, INFINITY);
+  EXPECT_EQ(bounds.maximum.y, INFINITY);
+  EXPECT_EQ(bounds.maximum.z, INFINITY);  
+}
+
+TEST(GeoTest, TruncatedConeBounds) {
+  
+  // An untransformed untruncated Truncated_Cone is infinite on y, and its radius (x, z) extends from -y to y
+  auto truncated_cone = std::make_shared<geo::DoubleCone>();
+  truncated_cone->minimum = -3;
+  truncated_cone->maximum = 6;
+  auto bounds = truncated_cone->get_bounds();
+
+  EXPECT_EQ(bounds.minimum.x, -3 - geo::BOUNDS_MARGIN);
+  EXPECT_EQ(bounds.minimum.y, -3 - geo::BOUNDS_MARGIN);
+  EXPECT_EQ(bounds.minimum.z, -3 - geo::BOUNDS_MARGIN);
+
+  EXPECT_EQ(bounds.maximum.x, 6 + geo::BOUNDS_MARGIN);
+  EXPECT_EQ(bounds.maximum.y, 6 + geo::BOUNDS_MARGIN);
+  EXPECT_EQ(bounds.maximum.z, 6 + geo::BOUNDS_MARGIN);  
+}
+

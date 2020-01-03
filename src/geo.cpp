@@ -113,6 +113,11 @@ namespace geo {
     // If the transforms and material are equal, the TestShapes are equal
     return true;
   }
+
+  Bounds TestShape::get_bounds() const {
+
+    return Bounds();
+  }
   
   Sphere::~Sphere() {};
   
@@ -157,6 +162,12 @@ namespace geo {
     return true;
   }
 
+  Bounds Sphere::get_bounds() const {
+
+    return Bounds(math::Point(-1 - BOUNDS_MARGIN, -1 - BOUNDS_MARGIN, -1 - BOUNDS_MARGIN),
+		  math::Point(1 + BOUNDS_MARGIN, 1 + BOUNDS_MARGIN, 1 + BOUNDS_MARGIN));
+  }
+
   std::shared_ptr<Sphere> build_glass_sphere() {
 
     auto sphere = std::make_shared<geo::Sphere>();
@@ -191,6 +202,12 @@ namespace geo {
   bool Plane::local_equality_predicate(const Shape* shape) const {
     // If the transforms and material are equal, the Plane are equal
     return true;
+  }
+
+  Bounds Plane::get_bounds() const {
+
+    return Bounds(math::Point(-INFINITY, -BOUNDS_MARGIN, -INFINITY),
+		  math::Point(INFINITY, BOUNDS_MARGIN, INFINITY));
   }
 
   Cube::~Cube() {};
@@ -236,6 +253,12 @@ namespace geo {
   bool Cube::local_equality_predicate(const Shape* shape) const {
     // If the transforms and material are equal, the Cubes are equal
     return true;
+  }
+
+  Bounds Cube::get_bounds() const {
+
+    return Bounds(math::Point(-1 - BOUNDS_MARGIN, -1 - BOUNDS_MARGIN, -1 - BOUNDS_MARGIN),
+		  math::Point(1 + BOUNDS_MARGIN, 1 + BOUNDS_MARGIN, 1 + BOUNDS_MARGIN));
   }
 
   Cylinder::~Cylinder() {};
@@ -318,6 +341,12 @@ namespace geo {
     return (math::almost_equal(minimum, cyl->minimum) &&
 	    math::almost_equal(maximum, cyl->maximum) &&
 	    closed == cyl->closed);
+  }
+
+  Bounds Cylinder::get_bounds() const {
+
+    return Bounds(math::Point(-1 - BOUNDS_MARGIN, minimum - BOUNDS_MARGIN, -1 - BOUNDS_MARGIN),
+		  math::Point(1 + BOUNDS_MARGIN, maximum + BOUNDS_MARGIN, 1 + BOUNDS_MARGIN));
   }
   
   DoubleCone::~DoubleCone() {};
@@ -413,6 +442,12 @@ namespace geo {
     return (math::almost_equal(minimum, cone->minimum) &&
 	    math::almost_equal(maximum, cone->maximum) &&
 	    closed == cone->closed);
+  }
+
+  Bounds DoubleCone::get_bounds() const {
+
+    return Bounds(math::Point(minimum - BOUNDS_MARGIN, minimum - BOUNDS_MARGIN, minimum - BOUNDS_MARGIN),
+		  math::Point(maximum + BOUNDS_MARGIN, maximum + BOUNDS_MARGIN, maximum + BOUNDS_MARGIN));    
   }
   
   math::Tuple reflect(const math::Tuple& vec, const math::Tuple& normal) {
@@ -511,6 +546,12 @@ namespace geo {
     return true;
   }
 
+  Bounds Group::get_bounds() const {
+
+    return Bounds();
+  }
+
+  
   Intersection::Intersection(const float t_, geo::Shape* geo) :
     t {t_}, geometry {geo->get_shared_ptr()} {}
 
@@ -635,9 +676,10 @@ namespace geo {
       }
     }
     
-    
     return comps;
   }
+
+  Bounds::Bounds(const math::Point& min, const math::Point& max) : minimum {min}, maximum {max} {}
 
 }
 
