@@ -1,6 +1,7 @@
 
 #include <memory>
 #include <cmath>
+#include <algorithm>
 
 #include <gtest/gtest.h>
 

@@ -5,6 +5,9 @@
 #define MATRIX_H
 
 
+#undef minor // GNU defines a minor macro
+
+
 #include <vector>
 
 #include "tuple.hpp"
