@@ -457,11 +457,11 @@ namespace geo {
     return vec - normal * 2 * math::dot(vec, normal);
   }  
 
-  std::pair<double, double> check_axis(const double origin, const double direction) {
+  std::pair<double, double> check_axis(const double origin, const double direction, const double min_val, const double max_val) {
 
     // each pair of planes is offset 1 unit in opposing direction
-    double tmin_numerator = -1 - origin;
-    double tmax_numerator = 1 - origin;
+    double tmin_numerator = min_val - origin;
+    double tmax_numerator = max_val - origin;
 
     double tmin, tmax;
 
@@ -493,6 +493,21 @@ namespace geo {
 
     auto group_intersections = Intersections{};
 
+    if (shapes.size() == 0)
+      return group_intersections;
+    
+    // Check if ray intersects the Group's bounding box
+    auto bounds = get_bounds();
+
+    auto [xtmin, xtmax] = check_axis(local_ray.origin.x, local_ray.direction.x, bounds.minimum.x, bounds.maximum.x);
+    auto [ytmin, ytmax] = check_axis(local_ray.origin.y, local_ray.direction.y, bounds.minimum.y, bounds.maximum.y);
+    auto [ztmin, ztmax] = check_axis(local_ray.origin.z, local_ray.direction.z, bounds.minimum.z, bounds.maximum.z);
+    auto tmin = std::max(xtmin, std::max(ytmin, ztmin));
+    auto tmax = std::min(xtmax, std::min(ytmax, ztmax));
+    // When the ray misses the cube, do not test against the children
+    if (tmin > tmax)
+      return group_intersections;
+      
     // Call intersects for each Shape of the Group
     for (const auto& shape_weak_ptr : shapes)
       // Check the weak_ptr can be converted to a shared_ptr
@@ -548,7 +563,45 @@ namespace geo {
 
   Bounds Group::get_bounds() const {
 
-    return Bounds();
+    Bounds bounds(math::Point(0, 0, 0), math::Point(0, 0, 0));
+
+    if (shapes.size() == 0)
+      return bounds;
+
+    // To initialize the bounds with the first shape
+    bool bound_first_set = false;
+    
+    for (const auto& child : shapes)
+      // Check if the transformed shape is in the bounding box, else increase it
+      if (auto shpptr = child.lock()) {
+
+	auto object_space_bounds = shpptr->get_bounds();
+	auto group_space_bounds_min = shpptr->transform * object_space_bounds.minimum;
+	auto group_space_bounds_max = shpptr->transform * object_space_bounds.maximum;
+
+	if (! bound_first_set) {
+	  bounds.minimum = group_space_bounds_min;
+	  bounds.maximum = group_space_bounds_max;
+	  bound_first_set = true;
+	  
+	} else {
+	  if (group_space_bounds_min.x < bounds.minimum.x)
+	    bounds.minimum.x = group_space_bounds_min.x;
+	  if (group_space_bounds_min.y < bounds.minimum.y)
+	    bounds.minimum.y = group_space_bounds_min.y;
+	  if (group_space_bounds_min.z < bounds.minimum.z)
+	    bounds.minimum.z = group_space_bounds_min.z;
+
+	  if (group_space_bounds_max.x > bounds.maximum.x)
+	    bounds.maximum.x = group_space_bounds_max.x;
+	  if (group_space_bounds_max.y > bounds.maximum.y)
+	    bounds.maximum.y = group_space_bounds_max.y;
+	  if (group_space_bounds_max.z > bounds.maximum.z)
+	    bounds.maximum.z = group_space_bounds_max.z;
+	}
+      }
+    
+    return bounds;
   }
 
   

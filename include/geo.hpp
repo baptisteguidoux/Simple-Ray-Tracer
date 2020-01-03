@@ -274,13 +274,16 @@ namespace geo {
 
     /*! \fn void add_child(Shape* shape)
      *  \brief Add the shape to the group of Shapes 
-     *  [CG:R.30] -> Take smart pointers as parameters only to explicitly express lifetime semantics => simple pointer is enough
      *  \param shape the Shape to add to the Group
      */
-    void add_child(Shape* shape);
+    void add_child(Shape* shape); // [CG:R.30] -> Take smart pointers as parameters only to explicitly express lifetime semantics => simple pointer is enough
 
     bool local_equality_predicate(const Shape* shape) const override;
 
+    /*! \fn  Bounds get_bounds() const 
+     *  \brief Convert the Bounds of its children into group space
+     *  \return Group's Bounds
+     */
     Bounds get_bounds() const override;
   };
 
@@ -297,9 +300,11 @@ namespace geo {
    *  \brief helper function to find intersection points in Cube.local_intersects
    *  \param origin ray origin (one axis)
    *  \param direction  ray direction(one axis)
+   *  \param min_val min value for the tested axis
+   *  \param max_val max value for the tested axis
    *  \return a pair, min and max t values
    */  
-  std::pair<double, double> check_axis(const double origin, const double direction);
+  std::pair<double, double> check_axis(const double origin, const double direction, const double min_val = -1, const double max_val = 1);
 
   /*! \fn bool check_cap(const ray::Ray& ray, const double t)
    *  \biref helper function to Cylinder/DoubleCone.intersects_caps, to check if the intersection lies in the Cylinder radius 
@@ -417,7 +422,7 @@ namespace geo {
 }
 
 #endif
-  
+
 
 #ifndef GEO_STATIC_CONSTANTS
 #define GEO_STATIC_CONSTANTS

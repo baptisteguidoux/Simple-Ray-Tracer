@@ -1292,3 +1292,65 @@ TEST(GeoTest, TruncatedConeBounds) {
   EXPECT_EQ(bounds.maximum.z, 6 + geo::BOUNDS_MARGIN);  
 }
 
+TEST(GeoTest, EmptyGroupBoundingBox) {
+
+  // An empty Group has a "dot size" bounding box
+  auto group = std::make_shared<geo::Group>();
+  auto bounds = group->get_bounds();
+
+  EXPECT_EQ(bounds.minimum.x, 0);
+  EXPECT_EQ(bounds.minimum.y, 0);
+  EXPECT_EQ(bounds.minimum.z, 0);
+  
+  EXPECT_EQ(bounds.maximum.x, 0);
+  EXPECT_EQ(bounds.maximum.y, 0);
+  EXPECT_EQ(bounds.maximum.z, 0);  
+}
+
+TEST(GeoTest, OneObjectGroupBoundingBox) {
+  
+  // A Group with only one shape has a bounding box with the same dimensions as the single object
+  auto group1 = std::make_shared<geo::Group>();
+  auto sphere1 = std::make_shared<geo::Sphere>();
+  group1->add_child(sphere1.get());
+  auto bounds1 = group1->get_bounds();
+
+  EXPECT_EQ(bounds1.minimum.x, -1 - geo::BOUNDS_MARGIN);
+  EXPECT_EQ(bounds1.minimum.y, -1 - geo::BOUNDS_MARGIN);
+  EXPECT_EQ(bounds1.minimum.z, -1 - geo::BOUNDS_MARGIN);
+
+  EXPECT_EQ(bounds1.maximum.x, 1 + geo::BOUNDS_MARGIN);
+  EXPECT_EQ(bounds1.maximum.y, 1 + geo::BOUNDS_MARGIN);
+  EXPECT_EQ(bounds1.maximum.z, 1 + geo::BOUNDS_MARGIN);
+
+  // Now if the object is transformed, the bounding box is transformed
+  auto group2 = std::make_shared<geo::Group>();
+  auto sphere2 = std::make_shared<geo::Sphere>();
+  sphere2->transform = math::translation(0, 1, 0) * math::scaling(2, 2, 2);
+  group2->add_child(sphere2.get());
+  auto bounds2 = group2->get_bounds();
+
+  auto transformed_minimum = sphere2->transform * bounds1.minimum; // sphere1 is untransformed
+  auto transformed_maximum = sphere2->transform * bounds1.maximum;
+  
+  EXPECT_EQ(bounds2.minimum, transformed_minimum);
+  EXPECT_EQ(bounds2.maximum, transformed_maximum);
+}
+
+TEST(GeoTest, SeveralObjectsGroupBoundingBox) {
+
+  // The Bounds of a Group containing several Shapes is the minimum and maximum (for each x, y, and z) of each Shape transformed
+  auto group = std::make_shared<geo::Group>();
+  auto sphere1 = std::make_shared<geo::Sphere>();
+  sphere1->transform = math::translation(1, 2, 4);
+  auto sphere2 = std::make_shared<geo::Sphere>();
+  sphere2->transform = math::translation(-4, -5, 8);
+  group->add_child(sphere1.get());
+  group->add_child(sphere2.get());
+
+  auto bounds = group->get_bounds();
+
+  EXPECT_EQ(bounds.minimum, math::Point(-5 - geo::BOUNDS_MARGIN, -6 - geo::BOUNDS_MARGIN, 3 - geo::BOUNDS_MARGIN)); // -1 (radius) and margin
+  EXPECT_EQ(bounds.maximum, math::Point(2 + geo::BOUNDS_MARGIN, 3 + geo::BOUNDS_MARGIN, 9 + geo::BOUNDS_MARGIN)); // +1 (radius) and margin
+}
+
