@@ -38,7 +38,7 @@ namespace geo {
 
     math::Matrix transform = math::IDENTITY_MATRIX; /*!< default transform*/
     material::Material material = material::Material();
-    std::shared_ptr<Shape> parent; /*!< A shape has an optional parent (should be only nullptr or a shared_ptr to a Group)*/
+    std::weak_ptr<Shape> parent; /*!< A shape has an optional parent (should be only nullptr or a shared_ptr to a Group)*/
 
     /*! \fn Intersections intersects(const ray::Ray& ray)
      *  \brief Computes the Intersections of the Ray and Shape, calls local_intersects
@@ -264,7 +264,7 @@ namespace geo {
   class Group : public Shape {
   public:
 
-    std::vector<std::weak_ptr<Shape>> shapes;
+    std::vector<std::shared_ptr<Shape>> shapes;
 
     ~Group() override;
     

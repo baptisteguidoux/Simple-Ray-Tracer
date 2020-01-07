@@ -851,7 +851,7 @@ TEST(GeoTest, ShapeHasParentAttribute) {
   // A Shape has a parent variable
   auto shape = std::make_shared<geo::TestShape>();
   
-  EXPECT_EQ(shape->parent, nullptr);
+  EXPECT_EQ(shape->parent.lock(), nullptr);
 }
 
 TEST(GeoTest, GroupShapeAddChild) {
@@ -865,9 +865,9 @@ TEST(GeoTest, GroupShapeAddChild) {
 
   // Test group includes shape
   auto it = std::find_if(group->shapes.begin(), group->shapes.end(),
-			 [=](const std::weak_ptr<geo::Shape> shp){return *std::shared_ptr<geo::Shape>(shp) == *shape;});
+			 [=](const std::shared_ptr<geo::Shape> shp){return *std::shared_ptr<geo::Shape>(shp) == *shape;});
   EXPECT_EQ(*std::shared_ptr<geo::Shape>(*it), *shape); // "double dereferencing" (iterator and smart ptr)
-  EXPECT_EQ(*shape->parent, *group);
+  EXPECT_EQ(*shape->parent.lock(), *group);
 }
 
 TEST(GeoTest, GroupRayIntersectsEmpty) {
@@ -931,13 +931,13 @@ TEST(GeoTest, GroupWorldPointToObjectPoint) {
   group2->add_child(sphere.get());
 
   auto point = sphere->world_to_object(math::Point(-2, 0, -10));
-  ASSERT_NE(sphere->parent, nullptr);
-  ASSERT_EQ(*sphere->parent, *group2);
-  ASSERT_NE(group2->parent, nullptr);
-  ASSERT_EQ(*group2->parent, *group1);
-  ASSERT_EQ(group1->parent, nullptr);
-  ASSERT_NE(sphere->parent->parent, nullptr);
-  ASSERT_EQ(*sphere->parent->parent, *group1);
+  ASSERT_NE(sphere->parent.lock(), nullptr);
+  ASSERT_EQ(*sphere->parent.lock(), *group2);
+  ASSERT_NE(group2->parent.lock(), nullptr);
+  ASSERT_EQ(*group2->parent.lock(), *group1);
+  ASSERT_EQ(group1->parent.lock(), nullptr);
+  ASSERT_NE(sphere->parent.lock()->parent.lock(), nullptr);
+  ASSERT_EQ(*sphere->parent.lock()->parent.lock(), *group1);
   EXPECT_EQ(point, math::Point(0, 0, -1));
 }
 

@@ -49,8 +49,9 @@ namespace geo {
   math::Tuple Shape::world_to_object(const math::Tuple& world_point) const {
 
     // It the Shape has a parent, first convert the point to its parent space
-    if (parent != nullptr) {
-      auto parent_point = parent->world_to_object(world_point);
+    if (auto parentptr = parent.lock()) {
+      //if (parent != nullptr) {
+      auto parent_point = parentptr->world_to_object(world_point);
       return math::inverse(transform) * parent_point;
     }
   
@@ -64,8 +65,9 @@ namespace geo {
     normal.w = 0;
     normal = math::normalize(normal);
 
-    if (parent != nullptr)
-      normal = parent->normal_to_world(normal);
+    //if (parent != nullptr)
+    if (auto parentptr = parent.lock())
+      normal = parentptr->normal_to_world(normal);
 
     return normal;
   }
@@ -509,12 +511,20 @@ namespace geo {
       return group_intersections;
       
     // Call intersects for each Shape of the Group
-    for (const auto& shape_weak_ptr : shapes)
+    // for (const auto& shape_weak_ptr : shapes)
+    //   // Check the weak_ptr can be converted to a shared_ptr
+    //   if (auto shrd_shape_ptr = shape_weak_ptr.lock()) {
+    // 	auto shape_intersections = shrd_shape_ptr->intersects(local_ray);
+    // 	group_intersections.insert(group_intersections.end(), shape_intersections.begin(), shape_intersections.end());
+    // }
+
+    // Call intersects for each Shape of the Group
+    for (const auto& shrd_shape_ptr : shapes)
       // Check the weak_ptr can be converted to a shared_ptr
-      if (auto shrd_shape_ptr = shape_weak_ptr.lock()) {
+      if (shrd_shape_ptr != nullptr) {
 	auto shape_intersections = shrd_shape_ptr->intersects(local_ray);
 	group_intersections.insert(group_intersections.end(), shape_intersections.begin(), shape_intersections.end());
-    }
+    }    
 
     // sort intersections
     std::sort(group_intersections.begin(), group_intersections.end(),
@@ -531,8 +541,10 @@ namespace geo {
 
   void Group::add_child(Shape* shape) {
 
-    shapes.push_back(shape->get_weak_ptr());
-    shape->parent = get_shared_ptr();
+    shapes.push_back(shape->get_shared_ptr());
+    shape->parent = get_weak_ptr();
+    //shapes.push_back(shape->get_weak_ptr());
+    //shape->parent = get_shared_ptr();
   }
 
   bool Group::local_equality_predicate(const Shape* shape) const {
@@ -544,15 +556,25 @@ namespace geo {
       return false;
 
     // Check that every shape in this Group can be found in the other Group
+    // for (const auto& sub_shape : group->shapes) {
+    //   auto p = std::find_if(shapes.begin(), shapes.end(),
+    // 			    [&](const std::weak_ptr<geo::Shape> shp){
+    // 			      if (auto shrdptr = shp.lock()){
+    // 				if (*shrdptr == *sub_shape.lock())
+    // 				  return true;
+    // 			      };
+    // 			      return false;
+    // 			    });
+
     for (const auto& sub_shape : group->shapes) {
       auto p = std::find_if(shapes.begin(), shapes.end(),
-			    [&](const std::weak_ptr<geo::Shape> shp){
-			      if (auto shrdptr = shp.lock()){
-				if (*shrdptr == *sub_shape.lock())
+			    [&](const std::shared_ptr<geo::Shape> shp){
+			      if (*shp == *sub_shape) {
 				  return true;
 			      };
 			      return false;
 			    });
+      
       // If the sub shape is not found
       if (p == shapes.end())
 	return false;
@@ -571,9 +593,9 @@ namespace geo {
     // To initialize the bounds with the first shape
     bool bound_first_set = false;
     
-    for (const auto& child : shapes)
+    for (const auto& shpptr : shapes) {
       // Check if the transformed shape is in the bounding box, else increase it
-      if (auto shpptr = child.lock()) {
+      //if (auto shpptr = child.lock()) {
 
 	auto object_space_bounds = shpptr->get_bounds();
 	auto group_space_bounds_min = shpptr->transform * object_space_bounds.minimum;
