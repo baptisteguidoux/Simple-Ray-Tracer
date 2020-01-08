@@ -116,9 +116,10 @@ namespace geo {
     return true;
   }
 
-  Bounds TestShape::get_bounds() const {
+  BoundingBox TestShape::get_bounds() const {
 
-    return Bounds();
+    return BoundingBox(math::Point(-1, -1, -1),
+		       math::Point(1, 1, 1));
   }
   
   Sphere::~Sphere() {};
@@ -164,10 +165,10 @@ namespace geo {
     return true;
   }
 
-  Bounds Sphere::get_bounds() const {
+  BoundingBox Sphere::get_bounds() const {
 
-    return Bounds(math::Point(-1 - BOUNDS_MARGIN, -1 - BOUNDS_MARGIN, -1 - BOUNDS_MARGIN),
-		  math::Point(1 + BOUNDS_MARGIN, 1 + BOUNDS_MARGIN, 1 + BOUNDS_MARGIN));
+    return BoundingBox(math::Point(-1, -1, -1),
+		       math::Point(1, 1, 1));
   }
 
   std::shared_ptr<Sphere> build_glass_sphere() {
@@ -206,10 +207,10 @@ namespace geo {
     return true;
   }
 
-  Bounds Plane::get_bounds() const {
+  BoundingBox Plane::get_bounds() const {
 
-    return Bounds(math::Point(-INFINITY, -BOUNDS_MARGIN, -INFINITY),
-		  math::Point(INFINITY, BOUNDS_MARGIN, INFINITY));
+    return BoundingBox(math::Point(-INFINITY, 0, -INFINITY),
+		       math::Point(INFINITY, 0, INFINITY));
   }
 
   Cube::~Cube() {};
@@ -257,10 +258,10 @@ namespace geo {
     return true;
   }
 
-  Bounds Cube::get_bounds() const {
+  BoundingBox Cube::get_bounds() const {
 
-    return Bounds(math::Point(-1 - BOUNDS_MARGIN, -1 - BOUNDS_MARGIN, -1 - BOUNDS_MARGIN),
-		  math::Point(1 + BOUNDS_MARGIN, 1 + BOUNDS_MARGIN, 1 + BOUNDS_MARGIN));
+    return BoundingBox(math::Point(-1, -1, -1),
+		       math::Point(1, 1, 1));
   }
 
   Cylinder::~Cylinder() {};
@@ -345,10 +346,10 @@ namespace geo {
 	    closed == cyl->closed);
   }
 
-  Bounds Cylinder::get_bounds() const {
+  BoundingBox Cylinder::get_bounds() const {
 
-    return Bounds(math::Point(-1 - BOUNDS_MARGIN, minimum - BOUNDS_MARGIN, -1 - BOUNDS_MARGIN),
-		  math::Point(1 + BOUNDS_MARGIN, maximum + BOUNDS_MARGIN, 1 + BOUNDS_MARGIN));
+    return BoundingBox(math::Point(-1, minimum, -1),
+		       math::Point(1, maximum, 1));
   }
   
   DoubleCone::~DoubleCone() {};
@@ -446,10 +447,17 @@ namespace geo {
 	    closed == cone->closed);
   }
 
-  Bounds DoubleCone::get_bounds() const {
+  BoundingBox DoubleCone::get_bounds() const {
 
-    return Bounds(math::Point(minimum - BOUNDS_MARGIN, minimum - BOUNDS_MARGIN, minimum - BOUNDS_MARGIN),
-		  math::Point(maximum + BOUNDS_MARGIN, maximum + BOUNDS_MARGIN, maximum + BOUNDS_MARGIN));    
+    // // if unlimited
+    // if (minimum == -INFINITY && maximum  == INFINITY)
+    //   return BoundingBox(math::Point(minimum, minimum, minimum),
+    // 			 math::Point(maximum, maximum, maximum));    
+
+    auto limit = std::max(std::abs(minimum), std::abs(maximum));
+
+    return BoundingBox(math::Point(-limit, minimum, -limit),
+		       math::Point(limit, maximum, limit));
   }
   
   math::Tuple reflect(const math::Tuple& vec, const math::Tuple& normal) {
@@ -509,18 +517,9 @@ namespace geo {
     // When the ray misses the cube, do not test against the children
     if (tmin > tmax)
       return group_intersections;
-      
-    // Call intersects for each Shape of the Group
-    // for (const auto& shape_weak_ptr : shapes)
-    //   // Check the weak_ptr can be converted to a shared_ptr
-    //   if (auto shrd_shape_ptr = shape_weak_ptr.lock()) {
-    // 	auto shape_intersections = shrd_shape_ptr->intersects(local_ray);
-    // 	group_intersections.insert(group_intersections.end(), shape_intersections.begin(), shape_intersections.end());
-    // }
 
     // Call intersects for each Shape of the Group
     for (const auto& shrd_shape_ptr : shapes)
-      // Check the weak_ptr can be converted to a shared_ptr
       if (shrd_shape_ptr != nullptr) {
 	auto shape_intersections = shrd_shape_ptr->intersects(local_ray);
 	group_intersections.insert(group_intersections.end(), shape_intersections.begin(), shape_intersections.end());
@@ -583,9 +582,9 @@ namespace geo {
     return true;
   }
 
-  Bounds Group::get_bounds() const {
+  BoundingBox Group::get_bounds() const {
 
-    Bounds bounds(math::Point(0, 0, 0), math::Point(0, 0, 0));
+    BoundingBox bounds(math::Point(0, 0, 0), math::Point(0, 0, 0));
 
     if (shapes.size() == 0)
       return bounds;
@@ -754,7 +753,37 @@ namespace geo {
     return comps;
   }
 
-  Bounds::Bounds(const math::Point& min, const math::Point& max) : minimum {min}, maximum {max} {}
+  BoundingBox::BoundingBox(const math::Tuple& min, const math::Tuple& max) :
+    minimum {min}, maximum {max} {}
 
+  void BoundingBox::include(const math::Tuple& point) {
+
+    point.x < minimum.x ? minimum.x = point.x : minimum.x;
+    point.y < minimum.y ? minimum.y = point.y : minimum.y;
+    point.z < minimum.z ? minimum.z = point.z : minimum.z;
+
+    point.x > maximum.x ? maximum.x = point.x : maximum.x;
+    point.y > maximum.y ? maximum.y = point.y : maximum.y;
+    point.z > maximum.z ? maximum.z = point.z : maximum.z;
+  }
+
+  void BoundingBox::add(const BoundingBox& box) {
+
+    include(box.minimum);
+    include(box.maximum);
+  }
+
+  bool BoundingBox::contains(const math::Tuple& point) const {
+
+    return (minimum.x <= point.x && maximum.x >= point.x &&
+	    minimum.y <= point.y && maximum.y >= point.y &&
+	    minimum.z <= point.z && maximum.z >= point.z);
+  }
+
+  bool BoundingBox::contains(const BoundingBox& box) const {
+
+    return (contains(box.minimum) && contains(box.maximum));
+  }
+      
 }
 

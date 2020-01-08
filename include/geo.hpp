@@ -24,7 +24,7 @@ namespace geo {
   struct Intersection;
   typedef std::vector<Intersection> Intersections;
 
-  struct Bounds;
+  struct BoundingBox;
 
   /*! \class Shape
    *  \brief Base class, with some virtual functions
@@ -107,11 +107,11 @@ namespace geo {
      */     
     virtual bool local_equality_predicate(const Shape* shape) const = 0;
 
-    /*! \fn virtual Bounds get_bounds() const = 0
+    /*! \fn virtual BoundingBox get_bounds() const = 0
      *  \brief Get the bounding box coordinates for each untransformed Shape, in object space
-     *  \return Bounds struct for this Shape
+     *  \return BoundingBox struct for this Shape
      */    
-    virtual Bounds get_bounds() const = 0;
+    virtual BoundingBox get_bounds() const = 0;
 
   };
   
@@ -146,7 +146,7 @@ namespace geo {
 
     bool local_equality_predicate(const Shape* shape) const override;
 
-    Bounds get_bounds() const override;
+    BoundingBox get_bounds() const override;
 
   };
 
@@ -163,7 +163,7 @@ namespace geo {
 
     bool local_equality_predicate(const Shape* shape) const override;
 
-    Bounds get_bounds() const override;
+    BoundingBox get_bounds() const override;
   };
 
   std::shared_ptr<Sphere> build_glass_sphere();
@@ -181,7 +181,7 @@ namespace geo {
 
     bool local_equality_predicate(const Shape* shape) const override;
 
-    Bounds get_bounds() const override;
+    BoundingBox get_bounds() const override;
   };
   
   /*! \class Cube
@@ -197,7 +197,7 @@ namespace geo {
 
     bool local_equality_predicate(const Shape* shape) const override;
 
-    Bounds get_bounds() const override;
+    BoundingBox get_bounds() const override;
   };
   
   /*! \class Cylinder
@@ -225,7 +225,7 @@ namespace geo {
 
     bool local_equality_predicate(const Shape* shape) const override;
 
-    Bounds get_bounds() const override;
+    BoundingBox get_bounds() const override;
 
   };
 
@@ -255,7 +255,7 @@ namespace geo {
 
     bool local_equality_predicate(const Shape* shape) const override;
 
-    Bounds get_bounds() const override;
+    BoundingBox get_bounds() const override;
   };
 
   /*! \class Group
@@ -280,11 +280,11 @@ namespace geo {
 
     bool local_equality_predicate(const Shape* shape) const override;
 
-    /*! \fn  Bounds get_bounds() const 
-     *  \brief Convert the Bounds of its children into group space
-     *  \return Group's Bounds
+    /*! \fn  BoundingBox get_bounds() const 
+     *  \brief Convert the BoundingBox of its children into group space
+     *  \return Group's BoundingBox
      */
-    Bounds get_bounds() const override;
+    BoundingBox get_bounds() const override;
   };
 
   
@@ -399,37 +399,50 @@ namespace geo {
    */
   Computations prepare_computations(const Intersection& ix, const ray::Ray r, const Intersections& ixs = Intersections{});
 
-  /*! \struct Bounds
+  /*! \struct BoundingBox
    *  \brief Stores the coordinates of a bounding box
    */
-  struct Bounds {
+  struct BoundingBox {
 
-    math::Tuple minimum = math::Point(-INFINITY, -INFINITY, -INFINITY); /// minumum coordinates of the bounding box
-    math::Point maximum = math::Point(INFINITY, INFINITY, INFINITY);; /// maximum coordinates of the bounding box
+    math::Tuple minimum = math::Point(INFINITY, INFINITY, INFINITY); /// minumum coordinates of the bounding box
+    math::Tuple maximum = math::Point(-INFINITY, -INFINITY, -INFINITY);; /// maximum coordinates of the bounding box
 
-    /*! \fn Bounds()
-     *  \brief Constructs a default Bounds (min and max Point = infinity)
+    /*! \fn BoundingBox()
+     *  \brief Constructs a default BoundingBox (min = infinity, max = -infinity)
      */     
-    Bounds() = default;
+    BoundingBox() = default;
     
-    /*! \fn Bounds(const math::Point& min, const math::Point& max)
-     *  \brief Constructs a Bounds by passing two Points
+    /*! \fn BoundingBox(const math::Tuple& min, const math::Tuple& max)
+     *  \brief Constructs a BoundingBox by passing two Points
      */    
-    Bounds(const math::Point& min, const math::Point& max);
+    BoundingBox(const math::Tuple& min, const math::Tuple& max);
 
+    /*! \fn void include(const math::Tuple& point)
+     *  \brief Make sure the BoundingBox can include the given Point
+     *  \param point the Point to include
+     */
+    void include(const math::Tuple& point);
+
+    /*! \fn void add(const BoundingBox& box)
+     *  \brief Extend this BoundingBox with another one
+     *  \param box the other BoundingBox
+     */    
+    void add(const BoundingBox& box);
+
+    /*! \fn bool contains(const math::Tuple& point) const
+     *  \brief Check if the BoundingBox contains the given point
+     *  \param point the Point to check if inside
+     */    
+    bool contains(const math::Tuple& point) const;
+
+    /*! \fn bool contains(const BoundingBox& box) const
+     *  \brief Check if the BoundingBox contains the given BoundingBox
+     *  \param point the PBoundingBox to check if inside
+     */        
+    bool contains(const BoundingBox& box) const;
+    
   };
   
-}
-
-#endif
-
-
-#ifndef GEO_STATIC_CONSTANTS
-#define GEO_STATIC_CONSTANTS
-
-namespace geo {
-
-  static const double BOUNDS_MARGIN = 0.05; /// avoid acne
 }
 
 #endif
