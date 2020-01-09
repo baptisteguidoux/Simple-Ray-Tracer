@@ -760,6 +760,41 @@ namespace geo {
 
     return true;
   }
+
+  std::pair<BoundingBox, BoundingBox> BoundingBox::split() const {
+
+    // Find largest dimension
+    auto dx = maximum.x - minimum.x;
+    auto dy = maximum.y - minimum.y;
+    auto dz = maximum.z - minimum.z;
+    auto greatest = std::max(dx, std::max(dy, dz));
+
+    auto x0 = minimum.x;
+    auto y0 = minimum.y;
+    auto z0 = minimum.z;
+    auto x1 = maximum.x;
+    auto y1 = maximum.y;
+    auto z1 = maximum.z;    
+    // Adjust Points so that they lie on the dividing plane
+    if (greatest == dx) {
+      x0 = x0 + dx / 2.0;
+      x1 = x0;
+    } else if (greatest == dy) {
+      y0 = y0 + dy / 2.0;
+      y1 = y0;
+    } else {
+      z0 = z0 + dz / 2.0;
+      z1 = z0;
+    }
+    
+    auto mid_min = math::Point(x0, y0, z0);
+    auto mid_max = math::Point(x1, y1, z1);    
+
+    BoundingBox left(minimum, mid_max);
+    BoundingBox right(mid_min, maximum);
+
+    return std::make_pair(left, right);
+  }
       
 }
 

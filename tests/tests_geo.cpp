@@ -1472,3 +1472,39 @@ TEST(GeoTest, GroupIntersectsIfBoundingBoxHitTestChildren) {
   EXPECT_NE(child->saved_ray, ray::Ray(math::Point(0, 0, 0), math::Vector(0, 0, 0)));  
 }
 
+TEST(GeoTest, BoundingBoxSplitCube) {
+
+  geo::BoundingBox box(math::Point(-1, -4, -5), math::Point(9, 6, 5));
+  auto [left, right] = box.split();
+  EXPECT_EQ(left.minimum, math::Point(-1, -4, -5));
+  EXPECT_EQ(left.maximum, math::Point(4, 6, 5));
+  EXPECT_EQ(right.minimum, math::Point(4, -4, -5));
+  EXPECT_EQ(right.maximum, math::Point(9, 6, 5));  
+}
+
+TEST(GeoTest, BoundingBoxSplitXWide) {
+  geo::BoundingBox box(math::Point(-1, -2, -3), math::Point(9, 5.5, 3));
+  auto [left, right] = box.split();
+  EXPECT_EQ(left.minimum, math::Point(-1, -2, -3));
+  EXPECT_EQ(left.maximum, math::Point(4, 5.5, 3));
+  EXPECT_EQ(right.minimum, math::Point(4, -2, -3));
+  EXPECT_EQ(right.maximum, math::Point(9, 5.5, 3));  
+}
+
+TEST(GeoTest, BoundingBoxSplitYWide) {
+  geo::BoundingBox box(math::Point(-1, -2, -3), math::Point(5, 8, 3));
+  auto [left, right] = box.split();
+  EXPECT_EQ(left.minimum, math::Point(-1, -2, -3));
+  EXPECT_EQ(left.maximum, math::Point(5, 3, 3));
+  EXPECT_EQ(right.minimum, math::Point(-1, 3, -3));
+  EXPECT_EQ(right.maximum, math::Point(5, 8, 3));
+}
+
+TEST(GeoTest, BoundingBoxSplitZWide) {
+  geo::BoundingBox box(math::Point(-1, -2, -3), math::Point(5, 3, 7));
+  auto [left, right] = box.split();
+  EXPECT_EQ(left.minimum, math::Point(-1, -2, -3));
+  EXPECT_EQ(left.maximum, math::Point(5, 3, 2));
+  EXPECT_EQ(right.minimum, math::Point(-1, -2, 2));
+  EXPECT_EQ(right.maximum, math::Point(5, 3, 7));
+}

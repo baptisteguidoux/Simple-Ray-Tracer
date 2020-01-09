@@ -460,7 +460,12 @@ namespace geo {
      *  \return true if the Ray intersects the box, false otherwise
      */
     bool intersects(const ray::Ray& r) const;
-    
+
+    /*! \fn std::pair<BoundingBox, BoundingBox> split() const
+     *  \brief Split the BoundingBox on the longest axis
+     *  \return a pair of BoundingBox
+     */    
+    std::pair<BoundingBox, BoundingBox> split() const;
   };
   
 }
