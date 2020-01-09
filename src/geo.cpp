@@ -592,6 +592,15 @@ namespace geo {
     return std::make_pair(left_shapes, right_shapes);
   }
 
+  void Group::make_subgroup(const std::vector<Shape*> shape_vec) {
+
+    auto subgroup = std::make_shared<Group>();
+    for (const auto& shapeptr : shape_vec)
+      subgroup->add_child(shapeptr);
+
+    shapes.push_back(std::move(subgroup));
+  }
+
   
   Intersection::Intersection(const float t_, geo::Shape* geo) :
     t {t_}, geometry {geo->get_shared_ptr()} {}

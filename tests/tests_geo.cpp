@@ -1527,3 +1527,19 @@ TEST(GeoTest, GroupPartitionChildren) {
   EXPECT_EQ(*right[0], *sphere2);
 }
 
+TEST(GeoTest, SubGroupFromListOfChildren) {
+
+  auto sphere1 = std::make_shared<geo::Sphere>();
+  auto sphere2 = std::make_shared<geo::Sphere>();
+  auto group = std::make_shared<geo::Group>();
+  group->make_subgroup(std::vector<geo::Shape*>{sphere1.get(), sphere2.get()});
+
+  ASSERT_EQ(group->shapes.size(), 1);
+  // the only child of this Group is another Group
+  geo::Group* subgroupptr = dynamic_cast<geo::Group*>(group->shapes[0].get());
+  ASSERT_NE(subgroupptr, nullptr);
+  ASSERT_EQ(subgroupptr->shapes.size(), 2);
+  EXPECT_EQ(*subgroupptr->shapes[0], *sphere1);
+  EXPECT_EQ(*subgroupptr->shapes[1], *sphere2);
+}
+

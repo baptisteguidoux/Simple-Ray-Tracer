@@ -297,8 +297,14 @@ namespace geo {
      *  \return a pair of vector of shapes ([left, right])
      */
     std::pair<std::vector<Shape*>, std::vector<Shape*>> partition_children();
-  };
 
+    /*! \fn void make_subgroup(const std::vector<Shape*> shape_vec)
+     *  \brief Create a child Group and add the elements of shape_vec to it
+     *  \param shape_vec
+     */ 
+    void make_subgroup(const std::vector<Shape*> shape_vec);
+    
+  };
   
   /*! \fn math::Tuple reflect(const math::Tuple& vec, const math::Tuple& normal)
    *  \brief Reflects the vector around the normal
