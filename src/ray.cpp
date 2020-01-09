@@ -26,6 +26,15 @@ namespace ray {
     
     return origin + (direction * time);
   }
+
+  bool operator==(const Ray& ray1, const Ray& ray2) {
+    return (ray1.origin == ray2.origin && ray1.direction == ray2.direction);
+  }
+
+  bool operator!=(const Ray& ray1, const Ray& ray2) {
+
+    return !(ray1 == ray2);
+  }
   
 }
 

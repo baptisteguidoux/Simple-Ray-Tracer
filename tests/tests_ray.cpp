@@ -46,3 +46,16 @@ TEST(RayTest, RayTransform) {
   EXPECT_EQ(ray3.direction, math::Vector(0, 3, 0)); // The direction vector is left unnormalized to compute the proper t value
 }
 
+TEST(RayTest, RayEquality) {
+  ray::Ray ray1(math::Point(0, 0, 0), math::Vector(0, 0, 1));
+  ray::Ray ray2(math::Point(2, 3, 4), math::Vector(0, 0, 1));
+  ray::Ray ray3(math::Point(2, 3, 4), math::Vector(1, 0, 0));
+  ray::Ray ray4(math::Point(0, 0, 0), math::Vector(1, 0, 0));
+  ray::Ray ray5(math::Point(0, 0, 0), math::Vector(0, 0, 1));
+
+  EXPECT_NE(ray1, ray2);
+  EXPECT_NE(ray1, ray3);
+  EXPECT_NE(ray1, ray4);
+  EXPECT_EQ(ray1, ray5);
+}
+

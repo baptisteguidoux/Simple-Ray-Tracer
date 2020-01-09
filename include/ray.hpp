@@ -50,7 +50,22 @@ namespace ray {
     math::Tuple position(const float time);      
     
   };
+  
+  /*! \fn bool operator==(const Ray& ray1, const Ray& ray2)
+   *  \brief Compare two Rays
+   *  \param ray1 a Ray
+   *  \param ray2 another Ray
+   *  \return true if they are identical
+   */  
+  bool operator==(const Ray& ray1, const Ray& ray2);
 
+  /*! \fn bool operator!=(const Ray& ray1, const Ray& ray2)
+   *  \brief Compare two Rays
+   *  \param ray1 a Ray
+   *  \param ray2 another Ray
+   *  \return true if they are not identical
+   */
+  bool operator!=(const Ray& ray1, const Ray& ray2);
 }
 
 #endif
