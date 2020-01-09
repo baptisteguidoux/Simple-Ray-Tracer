@@ -567,6 +567,31 @@ namespace geo {
     return box;
   }
 
+  std::pair<std::vector<Shape*>, std::vector<Shape*>> Group::partition_children() {
+
+    auto [left_box, right_box] = get_bounds().split();
+    // containers for the shapes that can be contain in the lef tor right BB
+    std::vector<Shape*> left_shapes;
+    std::vector<Shape*> right_shapes;
+    // the shapes remaining in this group (they do not fit entirely in a sub BB)
+    std::vector<std::shared_ptr<Shape>> group_shapes;
+    
+    // Check the Shapes that can be contain in either sub BB
+    for (const auto& shape : shapes) {
+      auto shape_bounds = shape->get_parent_space_bounds();
+      if (left_box.contains(shape_bounds))
+	  left_shapes.push_back(shape.get());
+      else if (right_box.contains(shape_bounds))
+	right_shapes.push_back(shape.get());
+      else
+	group_shapes.push_back(std::move(shape));
+    }
+
+    shapes = std::move(group_shapes);
+
+    return std::make_pair(left_shapes, right_shapes);
+  }
+
   
   Intersection::Intersection(const float t_, geo::Shape* geo) :
     t {t_}, geometry {geo->get_shared_ptr()} {}

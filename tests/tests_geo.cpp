@@ -2,6 +2,7 @@
 #include <memory>
 #include <cmath>
 #include <algorithm>
+#include <utility>
 
 #include <gtest/gtest.h>
 
@@ -33,10 +34,6 @@ TEST(GeoTest, IntersectionDataStructure) {
   // Now there is an object variable member on Intersection
   EXPECT_EQ(xss[0].geometry, sphere);
   EXPECT_EQ(xss[1].geometry, sphere);
-
-  // This test is in contradiction with the one that checks that a world, default construct, is built with two default spheres
-  // auto sphere2 = geo::Sphere();
-  // EXPECT_NE(xss[1].geometry, sphere2);
 }
 
 TEST(GeoTest, IntersectionCopyOperator) {
@@ -1508,3 +1505,25 @@ TEST(GeoTest, BoundingBoxSplitZWide) {
   EXPECT_EQ(right.minimum, math::Point(-1, -2, 2));
   EXPECT_EQ(right.maximum, math::Point(5, 3, 7));
 }
+
+TEST(GeoTest, GroupPartitionChildren) {
+
+  auto sphere1 = std::make_shared<geo::Sphere>();
+  sphere1->transform = math::translation(-2, 0, 0);
+  auto sphere2 = std::make_shared<geo::Sphere>();
+  sphere2->transform = math::translation(2, 0, 0);
+  auto sphere3 = std::make_shared<geo::Sphere>();
+  auto group = std::make_shared<geo::Group>();
+  group->add_child(sphere1.get());
+  group->add_child(sphere2.get());
+  group->add_child(sphere3.get());
+
+  auto [left, right] = group->partition_children();
+  ASSERT_EQ(group->shapes.size(), 1);
+  EXPECT_EQ(*(group->shapes[0]), *sphere3);
+  ASSERT_EQ(left.size(), 1);
+  EXPECT_EQ(*left[0], *sphere1);
+  ASSERT_EQ(right.size(), 1);
+  EXPECT_EQ(*right[0], *sphere2);
+}
+

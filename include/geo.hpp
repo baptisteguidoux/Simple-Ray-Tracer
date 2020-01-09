@@ -291,6 +291,12 @@ namespace geo {
      *  \return Group's BoundingBox
      */
     BoundingBox get_bounds() const override;
+
+    /*! \fn std::pair<std::vector<Shape*>, std::vector<Shape*>> partition_children()
+     *  \brief Splits the shapes betwen two vector, one for the left sided objects, another one for the right sided shapes. Shapes that are not entirely in one sub BB stays in this Group
+     *  \return a pair of vector of shapes ([left, right])
+     */
+    std::pair<std::vector<Shape*>, std::vector<Shape*>> partition_children();
   };
 
   
