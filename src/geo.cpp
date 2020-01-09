@@ -82,6 +82,11 @@ namespace geo {
     return weak_from_this();
   }
 
+  BoundingBox Shape::get_parent_space_bounds() const {
+
+    return get_bounds().transform(transform);
+  }
+
   bool operator==(const Shape& first, const Shape& second) {
 
     if (typeid(first) == typeid(second) && // same class?
@@ -449,11 +454,6 @@ namespace geo {
 
   BoundingBox DoubleCone::get_bounds() const {
 
-    // // if unlimited
-    // if (minimum == -INFINITY && maximum  == INFINITY)
-    //   return BoundingBox(math::Point(minimum, minimum, minimum),
-    // 			 math::Point(maximum, maximum, maximum));    
-
     auto limit = std::max(std::abs(minimum), std::abs(maximum));
 
     return BoundingBox(math::Point(-limit, minimum, -limit),
@@ -503,31 +503,18 @@ namespace geo {
 
     auto group_intersections = Intersections{};
 
-    if (shapes.size() == 0)
-      return group_intersections;
-    
-    // Check if ray intersects the Group's bounding box
-    auto bounds = get_bounds();
+    if (get_bounds().intersects(local_ray)) {
+      // Call intersects for each Shape of the Group
+      for (const auto& shrd_shape_ptr : shapes)
+	if (shrd_shape_ptr != nullptr) {
+	  auto shape_intersections = shrd_shape_ptr->intersects(local_ray);
+	  group_intersections.insert(group_intersections.end(), shape_intersections.begin(), shape_intersections.end());
+	}    
 
-    auto [xtmin, xtmax] = check_axis(local_ray.origin.x, local_ray.direction.x, bounds.minimum.x, bounds.maximum.x);
-    auto [ytmin, ytmax] = check_axis(local_ray.origin.y, local_ray.direction.y, bounds.minimum.y, bounds.maximum.y);
-    auto [ztmin, ztmax] = check_axis(local_ray.origin.z, local_ray.direction.z, bounds.minimum.z, bounds.maximum.z);
-    auto tmin = std::max(xtmin, std::max(ytmin, ztmin));
-    auto tmax = std::min(xtmax, std::min(ytmax, ztmax));
-    // When the ray misses the cube, do not test against the children
-    if (tmin > tmax)
-      return group_intersections;
-
-    // Call intersects for each Shape of the Group
-    for (const auto& shrd_shape_ptr : shapes)
-      if (shrd_shape_ptr != nullptr) {
-	auto shape_intersections = shrd_shape_ptr->intersects(local_ray);
-	group_intersections.insert(group_intersections.end(), shape_intersections.begin(), shape_intersections.end());
-    }    
-
-    // sort intersections
-    std::sort(group_intersections.begin(), group_intersections.end(),
-	      [&](const Intersection& inter1, const Intersection& inter2){return inter1.t < inter2.t;});
+      // sort intersections
+      std::sort(group_intersections.begin(), group_intersections.end(),
+		[&](const Intersection& inter1, const Intersection& inter2){return inter1.t < inter2.t;});      
+    }
     
     return group_intersections;
   }
@@ -542,8 +529,6 @@ namespace geo {
 
     shapes.push_back(shape->get_shared_ptr());
     shape->parent = get_weak_ptr();
-    //shapes.push_back(shape->get_weak_ptr());
-    //shape->parent = get_shared_ptr();
   }
 
   bool Group::local_equality_predicate(const Shape* shape) const {
@@ -555,16 +540,6 @@ namespace geo {
       return false;
 
     // Check that every shape in this Group can be found in the other Group
-    // for (const auto& sub_shape : group->shapes) {
-    //   auto p = std::find_if(shapes.begin(), shapes.end(),
-    // 			    [&](const std::weak_ptr<geo::Shape> shp){
-    // 			      if (auto shrdptr = shp.lock()){
-    // 				if (*shrdptr == *sub_shape.lock())
-    // 				  return true;
-    // 			      };
-    // 			      return false;
-    // 			    });
-
     for (const auto& sub_shape : group->shapes) {
       auto p = std::find_if(shapes.begin(), shapes.end(),
 			    [&](const std::shared_ptr<geo::Shape> shp){
@@ -584,45 +559,12 @@ namespace geo {
 
   BoundingBox Group::get_bounds() const {
 
-    BoundingBox bounds(math::Point(0, 0, 0), math::Point(0, 0, 0));
+    BoundingBox box;
 
-    if (shapes.size() == 0)
-      return bounds;
+    for (const auto& child : shapes)
+      box.add(child->get_parent_space_bounds());
 
-    // To initialize the bounds with the first shape
-    bool bound_first_set = false;
-    
-    for (const auto& shpptr : shapes) {
-      // Check if the transformed shape is in the bounding box, else increase it
-      //if (auto shpptr = child.lock()) {
-
-	auto object_space_bounds = shpptr->get_bounds();
-	auto group_space_bounds_min = shpptr->transform * object_space_bounds.minimum;
-	auto group_space_bounds_max = shpptr->transform * object_space_bounds.maximum;
-
-	if (! bound_first_set) {
-	  bounds.minimum = group_space_bounds_min;
-	  bounds.maximum = group_space_bounds_max;
-	  bound_first_set = true;
-	  
-	} else {
-	  if (group_space_bounds_min.x < bounds.minimum.x)
-	    bounds.minimum.x = group_space_bounds_min.x;
-	  if (group_space_bounds_min.y < bounds.minimum.y)
-	    bounds.minimum.y = group_space_bounds_min.y;
-	  if (group_space_bounds_min.z < bounds.minimum.z)
-	    bounds.minimum.z = group_space_bounds_min.z;
-
-	  if (group_space_bounds_max.x > bounds.maximum.x)
-	    bounds.maximum.x = group_space_bounds_max.x;
-	  if (group_space_bounds_max.y > bounds.maximum.y)
-	    bounds.maximum.y = group_space_bounds_max.y;
-	  if (group_space_bounds_max.z > bounds.maximum.z)
-	    bounds.maximum.z = group_space_bounds_max.z;
-	}
-      }
-    
-    return bounds;
+    return box;
   }
 
   
@@ -643,9 +585,6 @@ namespace geo {
   
     // First filter out the intersection with negative t values;
     Intersections nonneg_integers;
-    // std::back_inserter(nonneg_integers) and not nonneg_integers.begin():
-    // copy_if does not do a push_back, it just copy the value on the position where the destination iterator is and then increments the iterator
-    // --> can have seg faults
     std::copy_if(intersections.begin(), intersections.end(), std::back_inserter(nonneg_integers), [&](const Intersection& inter) {return inter.t >= 0;});
   
     if (nonneg_integers.size()) {
@@ -783,6 +722,43 @@ namespace geo {
   bool BoundingBox::contains(const BoundingBox& box) const {
 
     return (contains(box.minimum) && contains(box.maximum));
+  }
+
+  BoundingBox BoundingBox::transform(const math::Matrix& transform) {
+
+    // Transform the eight points to extend the BoundingBox
+    auto p1 = minimum;
+    auto p2 = math::Point(minimum.x, minimum.y, maximum.z);
+    auto p3 = math::Point(minimum.x, maximum.y, minimum.z);
+    auto p4 = math::Point(minimum.x, maximum.y, maximum.z);
+    auto p5 = math::Point(maximum.x, minimum.y, minimum.z);
+    auto p6 = math::Point(maximum.x, minimum.y, maximum.z);
+    auto p7 = math::Point(maximum.x, maximum.y, minimum.z);
+    auto p8 = maximum;
+
+    BoundingBox box;
+
+    for (const auto& p : std::vector<math::Tuple>{p1, p2, p3, p4, p5, p6, p7, p8})
+      box.include(transform * p);
+
+    return box;
+  }
+
+  bool BoundingBox::intersects(const ray::Ray& ray) const {
+
+    // Same logic as for the Cube
+    
+    // Check if ray intersects the boundingbox
+    auto [xtmin, xtmax] = check_axis(ray.origin.x, ray.direction.x, minimum.x, maximum.x);
+    auto [ytmin, ytmax] = check_axis(ray.origin.y, ray.direction.y, minimum.y, maximum.y);
+    auto [ztmin, ztmax] = check_axis(ray.origin.z, ray.direction.z, minimum.z, maximum.z);
+    auto tmin = std::max(xtmin, std::max(ytmin, ztmin));
+    auto tmax = std::min(xtmax, std::min(ytmax, ztmax));
+    // When the ray misses the box
+    if (tmin > tmax)
+      return false;
+
+    return true;
   }
       
 }

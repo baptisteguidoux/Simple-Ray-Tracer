@@ -1344,65 +1344,131 @@ TEST(GeoTest, BoundingBoxContainsAnotherBoundingBoxFunc) {
     EXPECT_EQ(box.contains(geo::BoundingBox(input.min, input.max)), input.result);
 }
 
-// TEST(GeoTest, EmptyGroupBoundingBox) {
+TEST(GeoTest, BoundingBoxTransform) {
 
-//   // An empty Group has a "dot size" bounding box
-//   auto group = std::make_shared<geo::Group>();
-//   auto bounds = group->get_bounds();
+  geo::BoundingBox box(math::Point(-1, -1, -1), math::Point(1, 1, 1));
+  auto matrix = math::rotation_x(M_PI / 4) * math::rotation_y(M_PI / 4);
+  auto box2 = box.transform(matrix);
+  EXPECT_EQ(box2.minimum, math::Point(-1.41421, -1.70711, -1.70711));
+  EXPECT_EQ(box2.maximum, math::Point(1.41421, 1.70711, 1.70711));
+}
 
-//   EXPECT_EQ(bounds.minimum.x, 0);
-//   EXPECT_EQ(bounds.minimum.y, 0);
-//   EXPECT_EQ(bounds.minimum.z, 0);
+TEST(GeoTest, BoundingBoxInParentSpace) {
+
+  auto sphere = std::make_shared<geo::Sphere>();
+  sphere->transform = math::translation(1, -3, 5) * math::scaling(0.5, 2, 4);
+  auto box = sphere->get_parent_space_bounds();
+  EXPECT_EQ(box.minimum, math::Point(0.5, -5, 1));
+  EXPECT_EQ(box.maximum, math::Point(1.5, -1, 9));
+}
+
+TEST(GeoTest, BoundingBoxGroup) {
+
+  // A Group has a BoundingBox that contains its children
+  auto sphere = std::make_shared<geo::Sphere>();
+  sphere->transform = math::translation(2, 5, -3) * math::scaling(2, 2, 2);
+
+  auto cyl = std::make_shared<geo::Cylinder>();
+  cyl->minimum = -2;
+  cyl->maximum = 2;
+  cyl->transform = math::translation(-4, -1, 4) * math::scaling(0.5, 1, 0.5);
+
+  auto group = std::make_shared<geo::Group>();
+  group->add_child(sphere.get());
+  group->add_child(cyl.get());
+
+  auto box = group->get_bounds();
+  EXPECT_EQ(box.minimum, math::Point(-4.5, -3, -5));
+  EXPECT_EQ(box.maximum, math::Point(4, 7, 4.5));
+}
+
+TEST(GeoTest, BoundingBoxIntersectsRay) {
+
+  struct TestInput {
+    math::Tuple origin;
+    math::Tuple direction;
+    bool result;
+
+    TestInput(const math::Tuple& o, const math::Tuple& d, const bool r)
+      : origin {o}, direction {d}, result {r} {};
+  };
+
+  std::vector<TestInput> inputs {
+    TestInput(math::Point(5, 0.5, 0), math::Vector(-1, 0, 0), true),
+    TestInput(math::Point(-5, 0.5, 0), math::Vector(1, 0, 0), true),
+    TestInput(math::Point(0.5, 5, 0), math::Vector(0, -1, 0), true),
+    TestInput(math::Point(0.5, -5, 0), math::Vector(0, 1, 0), true),
+    TestInput(math::Point(0.5, 0, 5), math::Vector(0, 0, -1), true),
+    TestInput(math::Point(0.5, 0, -5), math::Vector(0, 0, 1), true),
+    TestInput(math::Point(0, 0.5, 0), math::Vector(0, 0, 1), true),
+    TestInput(math::Point(-2, 0, 0), math::Vector(2, 4, 6), false),
+    TestInput(math::Point(0, -2, 0), math::Vector(6, 2, 4), false),
+    TestInput(math::Point(0, 0, -2), math::Vector(4, 6, 2), false),
+    TestInput(math::Point(2, 0, 2), math::Vector(0, 0, -1), false),
+    TestInput(math::Point(0, 2, 2), math::Vector(0, -1, 0), false),
+    TestInput(math::Point(2, 2, 0), math::Vector(-1, 0, 0), false),      
+  };
   
-//   EXPECT_EQ(bounds.maximum.x, 0);
-//   EXPECT_EQ(bounds.maximum.y, 0);
-//   EXPECT_EQ(bounds.maximum.z, 0);  
-// }
+  geo::BoundingBox box(math::Point(-1, -1, -1), math::Point(1, 1, 1));
+  for (const auto& input : inputs) {
+    auto r = ray::Ray(input.origin, math::normalize(input.direction));
+    bool result = box.intersects(r);
+    EXPECT_EQ(result, input.result);
+  }
+}
 
-// TEST(GeoTest, OneObjectGroupBoundingBox) {
+TEST(GeoTest, NonCubicBoundingBoxIntersectsRay) {
+
+  struct TestInput {
+    math::Tuple origin;
+    math::Tuple direction;
+    bool result;
+
+    TestInput(const math::Tuple& o, const math::Tuple& d, const bool r)
+      : origin {o}, direction {d}, result {r} {};
+  };
+
+  std::vector<TestInput> inputs {
+    TestInput(math::Point(15, 1, 2), math::Vector(-1, 0, 0), true),
+    TestInput(math::Point(-5, -1, 4), math::Vector(1, 0, 0), true),
+    TestInput(math::Point(7, 6, 5), math::Vector(0, -1, 0), true),
+    TestInput(math::Point(9, -5, 6), math::Vector(0, 1, 0), true),
+    TestInput(math::Point(8, 2, 12), math::Vector(0, 0, -1), true),
+    TestInput(math::Point(6, 0, -5), math::Vector(0, 0, 1), true),
+    TestInput(math::Point(8, 1, 3.5), math::Vector(0, 0, 1), true),
+    TestInput(math::Point(9, -1, -8), math::Vector(2, 4, 6), false),
+    TestInput(math::Point(8, 3, -4), math::Vector(6, 2, 4), false),
+    TestInput(math::Point(9, -1, -2), math::Vector(4, 6, 2), false),
+    TestInput(math::Point(4, 0, 9), math::Vector(0, 0, -1), false),
+    TestInput(math::Point(8, 6, -1), math::Vector(0, -1, 0), false),
+    TestInput(math::Point(12, 5, 4), math::Vector(-1, 0, 0), false),
+  };
   
-//   // A Group with only one shape has a bounding box with the same dimensions as the single object
-//   auto group1 = std::make_shared<geo::Group>();
-//   auto sphere1 = std::make_shared<geo::Sphere>();
-//   group1->add_child(sphere1.get());
-//   auto bounds1 = group1->get_bounds();
+  geo::BoundingBox box(math::Point(5, -2, 0), math::Point(11, 4, 7));
+  for (const auto& input : inputs) {
+    ray::Ray r(input.origin, math::normalize(input.direction));
+    EXPECT_EQ(box.intersects(r), input.result);
+  }
 
-//   EXPECT_EQ(bounds1.minimum.x, -1 - geo::BOUNDS_MARGIN);
-//   EXPECT_EQ(bounds1.minimum.y, -1 - geo::BOUNDS_MARGIN);
-//   EXPECT_EQ(bounds1.minimum.z, -1 - geo::BOUNDS_MARGIN);
+}
 
-//   EXPECT_EQ(bounds1.maximum.x, 1 + geo::BOUNDS_MARGIN);
-//   EXPECT_EQ(bounds1.maximum.y, 1 + geo::BOUNDS_MARGIN);
-//   EXPECT_EQ(bounds1.maximum.z, 1 + geo::BOUNDS_MARGIN);
+TEST(GeoTest, GroupIntersectsIfBoundingBoxMissedNoTestChildren) {
 
-//   // Now if the object is transformed, the bounding box is transformed
-//   auto group2 = std::make_shared<geo::Group>();
-//   auto sphere2 = std::make_shared<geo::Sphere>();
-//   sphere2->transform = math::translation(0, 1, 0) * math::scaling(2, 2, 2);
-//   group2->add_child(sphere2.get());
-//   auto bounds2 = group2->get_bounds();
+  auto child = std::make_shared<geo::TestShape>();
+  auto group = std::make_shared<geo::Group>();
+  group->add_child(child.get());
+  ray::Ray r(math::Point(0, 0, -5), math::Vector(0, 1, 0));
+  auto xs = group->intersects(r);
+  EXPECT_EQ(child->saved_ray, ray::Ray(math::Point(0, 0, 0), math::Vector(0, 0, 0)));
+}
 
-//   auto transformed_minimum = sphere2->transform * bounds1.minimum; // sphere1 is untransformed
-//   auto transformed_maximum = sphere2->transform * bounds1.maximum;
+TEST(GeoTest, GroupIntersectsIfBoundingBoxHitTestChildren) {
   
-//   EXPECT_EQ(bounds2.minimum, transformed_minimum);
-//   EXPECT_EQ(bounds2.maximum, transformed_maximum);
-// }
-
-// TEST(GeoTest, SeveralObjectsGroupBoundingBox) {
-
-//   // The BoundingBox of a Group containing several Shapes is the minimum and maximum (for each x, y, and z) of each Shape transformed
-//   auto group = std::make_shared<geo::Group>();
-//   auto sphere1 = std::make_shared<geo::Sphere>();
-//   sphere1->transform = math::translation(1, 2, 4);
-//   auto sphere2 = std::make_shared<geo::Sphere>();
-//   sphere2->transform = math::translation(-4, -5, 8);
-//   group->add_child(sphere1.get());
-//   group->add_child(sphere2.get());
-
-//   auto bounds = group->get_bounds();
-
-//   EXPECT_EQ(bounds.minimum, math::Point(-5 - geo::BOUNDS_MARGIN, -6 - geo::BOUNDS_MARGIN, 3 - geo::BOUNDS_MARGIN)); // -1 (radius) and margin
-//   EXPECT_EQ(bounds.maximum, math::Point(2 + geo::BOUNDS_MARGIN, 3 + geo::BOUNDS_MARGIN, 9 + geo::BOUNDS_MARGIN)); // +1 (radius) and margin
-// }
+  auto child = std::make_shared<geo::TestShape>();
+  auto group = std::make_shared<geo::Group>();
+  group->add_child(child.get());
+  ray::Ray r(math::Point(0, 0, -5), math::Vector(0, 0, 1));
+  auto xs = group->intersects(r);
+  EXPECT_NE(child->saved_ray, ray::Ray(math::Point(0, 0, 0), math::Vector(0, 0, 0)));  
+}
 

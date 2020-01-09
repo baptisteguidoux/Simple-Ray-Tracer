@@ -113,6 +113,12 @@ namespace geo {
      */    
     virtual BoundingBox get_bounds() const = 0;
 
+    /*! \fn BoundingBox get_parent_space_bounds() const
+     *  \brief Get the SHape's bounds in its parent space
+     *  \return a BoundingBox
+     */    
+    BoundingBox get_parent_space_bounds() const;
+
   };
   
   /*! \fn bool operator==(const Shape& first, const Shape& second)
@@ -440,6 +446,20 @@ namespace geo {
      *  \param point the PBoundingBox to check if inside
      */        
     bool contains(const BoundingBox& box) const;
+
+    /*! \fn BoundingBox transform(const math::Matrix& transform)
+     *  \brief Transforms the BoundingBox with the given transformation Matrix
+     *  \param transform A transformation Matrix
+     *  \return a new, transformed, BoundingBox
+     */    
+    BoundingBox transform(const math::Matrix& transform);
+
+    /*! \fn bool intersects(const ray::Ray& r) const
+     *  \brief Check if the Ray intersects with the BoundingBox
+     *  \param r the Ray
+     *  \return true if the Ray intersects the box, false otherwise
+     */
+    bool intersects(const ray::Ray& r) const;
     
   };
   
