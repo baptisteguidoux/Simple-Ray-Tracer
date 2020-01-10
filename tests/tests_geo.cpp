@@ -1543,3 +1543,73 @@ TEST(GeoTest, SubGroupFromListOfChildren) {
   EXPECT_EQ(*subgroupptr->shapes[1], *sphere2);
 }
 
+TEST(GeoTest, SubdividingPrimitiveDoesNothing) {
+
+  auto sphere = std::make_shared<geo::Sphere>();
+  sphere->divide(1);
+  // sphere stays a Sphere
+  EXPECT_NE(dynamic_cast<geo::Sphere*>(sphere.get()), nullptr);
+}
+
+TEST(GeoTest, SubdividingGroupPartitionsItsChildren) {
+
+  auto sphere1 = std::make_shared<geo::Sphere>();
+  sphere1->transform = math::translation(-2, -2, 0);
+  auto sphere2 = std::make_shared<geo::Sphere>();
+  sphere2->transform = math::translation(-2, 2, 0);
+  auto sphere3 = std::make_shared<geo::Sphere>();
+  sphere3->transform = math::scaling(4, 4, 4);
+  auto group = std::make_shared<geo::Group>();
+  group->add_child(sphere1.get());
+  group->add_child(sphere2.get());
+  group->add_child(sphere3.get());
+
+  group->divide(1);
+  EXPECT_EQ(*group->shapes[0], *sphere3);
+  //subgroup is a Group
+  auto subgroup = dynamic_cast<geo::Group*>(group->shapes[1].get());
+  ASSERT_NE(subgroup, nullptr);
+  ASSERT_EQ(subgroup->shapes.size(), 2);
+  // subgroup contains two sub-subgroups
+  auto subsubgroup1 = dynamic_cast<geo::Group*>(subgroup->shapes[0].get());
+  auto subsubgroup2 = dynamic_cast<geo::Group*>(subgroup->shapes[1].get());
+  ASSERT_NE(subsubgroup1, nullptr);
+  ASSERT_NE(subsubgroup2, nullptr);
+  ASSERT_EQ(subsubgroup1->shapes.size(), 1);
+  ASSERT_EQ(subsubgroup2->shapes.size(), 1);
+  EXPECT_EQ(*subsubgroup1->shapes[0], *sphere1);
+  EXPECT_EQ(*subsubgroup2->shapes[0], *sphere2);
+}
+
+TEST(GeoTest, SubdividingGroupWithTooFewChildren) {
+
+  auto sphere1 = std::make_shared<geo::Sphere>();
+  sphere1->transform = math::translation(-2, 0, 0);
+  auto sphere2 = std::make_shared<geo::Sphere>();
+  sphere2->transform = math::translation(2, 1, 0);
+  auto sphere3 = std::make_shared<geo::Sphere>();
+  sphere3->transform = math::translation(2, -1, 0);
+  auto subgroup = std::make_shared<geo::Group>();
+  subgroup->add_child(sphere1.get());
+  subgroup->add_child(sphere2.get());
+  subgroup->add_child(sphere3.get());
+  auto sphere4 = std::make_shared<geo::Sphere>();
+  auto group = std::make_shared<geo::Group>();
+  group->add_child(subgroup.get());
+  group->add_child(sphere4.get());
+  group->divide(3);
+
+  EXPECT_EQ(*group->shapes[0], *subgroup);
+  EXPECT_EQ(*group->shapes[1], *sphere4);
+  EXPECT_EQ(subgroup->shapes.size(), 2);
+  auto subsubgroup1 = dynamic_cast<geo::Group*>(subgroup->shapes[0].get());
+  ASSERT_NE(subsubgroup1, nullptr);
+  ASSERT_EQ(subsubgroup1->shapes.size(), 1);
+  EXPECT_EQ(*subsubgroup1->shapes[0], *sphere1);
+  auto subsubgroup2 = dynamic_cast<geo::Group*>(subgroup->shapes[1].get());
+  ASSERT_NE(subsubgroup2, nullptr);
+  ASSERT_EQ(subsubgroup2->shapes.size(), 2);
+  EXPECT_EQ(*subsubgroup2->shapes[0], *sphere2);
+  EXPECT_EQ(*subsubgroup2->shapes[1], *sphere3);
+}
+

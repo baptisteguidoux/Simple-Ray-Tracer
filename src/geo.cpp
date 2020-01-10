@@ -82,6 +82,11 @@ namespace geo {
     return weak_from_this();
   }
 
+  void Shape::divide(const int threshold) {
+    // Nothing happens for primitive Shapes. Group overrides this function
+  }
+
+
   BoundingBox Shape::get_parent_space_bounds() const {
 
     return get_bounds().transform(transform);
@@ -565,6 +570,20 @@ namespace geo {
       box.add(child->get_parent_space_bounds());
 
     return box;
+  }
+
+  void Group::divide(const int threshold) {
+
+    if (threshold <= shapes.size()) {
+      auto [left, right] = partition_children();
+      if (left.size() > 0)
+	make_subgroup(left);
+      if (right.size() > 0)
+	make_subgroup(right);
+    }
+
+    for (const auto& child : shapes)
+      child->divide(threshold);
   }
 
   std::pair<std::vector<Shape*>, std::vector<Shape*>> Group::partition_children() {

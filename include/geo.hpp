@@ -119,6 +119,12 @@ namespace geo {
      */    
     BoundingBox get_parent_space_bounds() const;
 
+    /*! \fn virtual void divide(const int threshold)
+     *  \brief Nothing happens for primitive Shape. Overriden by Group
+     *  \param threshold minimum number of children to have before it will be divided
+     */ 
+    virtual void divide(const int threshold);
+
   };
   
   /*! \fn bool operator==(const Shape& first, const Shape& second)
@@ -170,6 +176,7 @@ namespace geo {
     bool local_equality_predicate(const Shape* shape) const override;
 
     BoundingBox get_bounds() const override;
+
   };
 
   std::shared_ptr<Sphere> build_glass_sphere();
@@ -188,6 +195,7 @@ namespace geo {
     bool local_equality_predicate(const Shape* shape) const override;
 
     BoundingBox get_bounds() const override;
+
   };
   
   /*! \class Cube
@@ -204,6 +212,7 @@ namespace geo {
     bool local_equality_predicate(const Shape* shape) const override;
 
     BoundingBox get_bounds() const override;
+
   };
   
   /*! \class Cylinder
@@ -262,6 +271,7 @@ namespace geo {
     bool local_equality_predicate(const Shape* shape) const override;
 
     BoundingBox get_bounds() const override;
+    
   };
 
   /*! \class Group
@@ -303,7 +313,12 @@ namespace geo {
      *  \param shape_vec
      */ 
     void make_subgroup(const std::vector<Shape*> shape_vec);
-    
+
+    /*! \fn void divide(const int threshold) override
+     *  \brief recursively splits a group and its children. 
+     *  \param threshold minimum number of children to have before it will be divided
+     */ 
+    void divide(const int threshold) override;    
   };
   
   /*! \fn math::Tuple reflect(const math::Tuple& vec, const math::Tuple& normal)
