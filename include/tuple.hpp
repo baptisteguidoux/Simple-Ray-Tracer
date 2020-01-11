@@ -79,6 +79,10 @@ namespace math {
      */
     Point(double x_, double y_, double z_);
 
+    /* Point default constructor
+     */    
+    Point() = default;
+
     /*! \fn Tuple& operator=(const Tuple& source)
      *  \brief Copy operator
      */
@@ -93,6 +97,10 @@ namespace math {
     /* Vector constructor
      */
     Vector(double x_, double y_, double z_);
+
+    /* Vector default constructor
+     */    
+    Vector() = default;
 
     /*! \fn Tuple& operator=(const Tuple& source)
      *  \brief Copy operator

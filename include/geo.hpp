@@ -274,6 +274,32 @@ namespace geo {
     
   };
 
+  /*! \class Triangle
+   */
+  class Triangle : public Shape {
+  public:
+
+    math::Point p1;
+    math::Point p2;
+    math::Point p3;
+    math::Vector e1; /// edge vector
+    math::Vector e2;
+    math::Vector normal;    
+
+    Triangle(const math::Point& p1_, const math::Point& p2_, const math::Point& p3_);
+
+    ~Triangle() override;
+    
+    Intersections local_intersects(const ray::Ray& local_ray) override;
+
+    math::Tuple local_normal_at(const math::Tuple& local_point) const override;
+
+    bool local_equality_predicate(const Shape* shape) const override;
+
+    BoundingBox get_bounds() const override;
+    
+  };  
+
   /*! \class Group
    *  \brief A Shape that is a collection of Shapes
    */

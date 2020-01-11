@@ -782,6 +782,94 @@ TEST(GeoTest, DoubleConeNormalVector) {
 
 }
 
+TEST(GeoTest, TriangleConstructor) {
+
+  // The triangle constructor should precompute the two edge vectors and triangle normal
+  math::Point p1(0, 1, 0);
+  math::Point p2(-1, 0, 0);
+  math::Point p3(1, 0, 0);
+
+  auto triangle = std::make_shared<geo::Triangle>(p1, p2, p3);
+
+  EXPECT_EQ(triangle->p1, p1);
+  EXPECT_EQ(triangle->p2, p2);
+  EXPECT_EQ(triangle->p3, p3);
+  EXPECT_EQ(triangle->e1, math::Vector(-1, -1, 0));
+  EXPECT_EQ(triangle->e2, math::Vector(1, -1, 0));
+  EXPECT_EQ(triangle->normal, math::Vector(0, 0, -1));
+}
+
+TEST(GeoTest, TriangleNormalVector) {
+
+  // The triangle's precomputed normal is used for every point of the triangle
+  auto triangle = std::make_shared<geo::Triangle>(math::Point(0, 1, 0), math::Point(-1, 0, 0), math::Point(1, 0, 0));
+  auto n1 = triangle->local_normal_at(math::Point(0, 0.5, 0));
+  auto n2 = triangle->local_normal_at(math::Point(-0.5, 0.75, 0));
+  auto n3 = triangle->local_normal_at(math::Point(0.5, 0.25, 0));
+  EXPECT_EQ(n1, triangle->normal);
+  EXPECT_EQ(n2, triangle->normal);
+  EXPECT_EQ(n3, triangle->normal);  
+}
+
+TEST(GeoTest, TriangleEquality) {
+
+  auto triangle1 = std::make_shared<geo::Triangle>(math::Point(0, 1, 0), math::Point(-1, 0, 0), math::Point(1, 0, 0));
+  auto triangle2 = std::make_shared<geo::Triangle>(math::Point(0, 1, 0), math::Point(-1, 0, 0), math::Point(1, 0, 0));
+  auto triangle3 = std::make_shared<geo::Triangle>(math::Point(1, 0, 0), math::Point(1, 1, 0), math::Point(1, 0, 0));
+
+  EXPECT_EQ(*triangle1, *triangle2);
+  EXPECT_NE(*triangle1, *triangle3);
+}
+
+// A Ray that misses a Triangle should not add any Intersection
+// A Ray that strikes a Triangle should add one Intersection
+TEST(GeoTest, TriangleIntersectsParallelRay) {
+
+  auto triangle = std::make_shared<geo::Triangle>
+    (math::Point(0, 1, 0), math::Point(-1, 0, 0), math::Point(1, 0, 0));
+  ray::Ray r(math::Point(0, -1, -2), math::Vector(0, 1, 0));
+  auto xs = triangle->local_intersects(r);
+  EXPECT_EQ(xs.size(), 0);
+}
+
+TEST(GeoTest, TriangleIntersectsRayPassBeyondP1P3Edge) {
+
+  // The Ray pass beyond the Triangle p1-p3 edge
+  auto triangle = std::make_shared<geo::Triangle>
+    (math::Point(0, 1, 0), math::Point(-1, 0, 0), math::Point(1, 0, 0));
+  ray::Ray r(math::Point(1, 1, -2), math::Vector(0, 0, 1));
+  auto xs = triangle->local_intersects(r);
+  EXPECT_EQ(xs.size(), 0);
+}
+
+TEST(GeoTest, TriangleIntersectsRayPassBeyondP1P2Edge) {
+
+  auto triangle = std::make_shared<geo::Triangle>
+    (math::Point(0, 1, 0), math::Point(-1, 0, 0), math::Point(1, 0, 0));
+  ray::Ray r(math::Point(-1, 1, -2), math::Vector(0, 0, 1));
+  auto xs = triangle->local_intersects(r);
+  EXPECT_EQ(xs.size(), 0);
+}
+
+TEST(GeoTest, TriangleIntersectsRayPassBeyondP2P3Edge) {
+
+  auto triangle = std::make_shared<geo::Triangle>
+    (math::Point(0, 1, 0), math::Point(-1, 0, 0), math::Point(1, 0, 0));
+  ray::Ray r(math::Point(0, -1, -2), math::Vector(0, 0, 1));
+  auto xs = triangle->local_intersects(r);
+  EXPECT_EQ(xs.size(), 0);
+}
+
+TEST(GeoTest, TriangleIntersectsRayStrikes) {
+
+  auto triangle = std::make_shared<geo::Triangle>
+    (math::Point(0, 1, 0), math::Point(-1, 0, 0), math::Point(1, 0, 0));
+  ray::Ray r(math::Point(0, 0.5, -2), math::Vector(0, 0, 1));
+  auto xs = triangle->local_intersects(r);
+  ASSERT_EQ(xs.size(), 1);
+  EXPECT_EQ(xs[0].t, 2);
+}
+
 TEST(GeoTest, GroupShape) {
 
   // Creating a new group
