@@ -17,6 +17,7 @@ namespace parser {
       throw std::runtime_error{"Could not open file: " + std::string(filepath)};
 
     std::string line;
+    uint faces_count = 0;    
     while (std::getline(ifs, line)) {
       std::smatch matches;
       if (std::regex_search(line, matches, RE_VERTEX_PATTERN)) {
@@ -25,7 +26,7 @@ namespace parser {
 	double z = string_to_double(matches[3]);
 	vertices.push_back(math::Point(x, y, z));
       } else if (std::regex_search(line, matches, RE_FACE_PATTERN)) {
-	
+	faces_count++;
 	std::vector<int> vertices_idx;
 	for (std::sregex_iterator p(line.begin(), line.end(), RE_FACE_IDX);
 	     p != std::sregex_iterator{}; p++) 
@@ -48,7 +49,10 @@ namespace parser {
 	ignored_lines++;
       }
     }
-      
+
+    std::cout << "Found " << vertices.size() << " vertices\n";
+    std::cout << "Found " << faces_count << " faces\n";
+    std::cout << "For a total of " << all_triangles.size() << " triangles\n";    
   }
 
   geo::Group* ObjParser::get_group_by_name(const std::string& name) {
@@ -64,7 +68,7 @@ namespace parser {
     return default_group;
   }
 
-  std::vector<std::shared_ptr<geo::Triangle>> ObjParser::fan_triangulation(const std::vector<int>& vertices_idx) const {
+  std::vector<std::shared_ptr<geo::Triangle>> ObjParser::fan_triangulation(const std::vector<int>& vertices_idx) {
     
     std::vector<std::shared_ptr<geo::Triangle>> triangles;
     
@@ -74,6 +78,7 @@ namespace parser {
       const math::Tuple& c = vertices[vertices_idx[i] - 1];
       auto triangle = std::make_shared<geo::Triangle>(a, b, c);
       triangles.push_back(triangle);
+      all_triangles.push_back(triangle);
     }
 
     return triangles;

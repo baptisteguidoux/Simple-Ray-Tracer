@@ -678,8 +678,9 @@ namespace geo {
   void Group::make_subgroup(const std::vector<Shape*> shape_vec) {
 
     auto subgroup = std::make_shared<Group>();
-    for (const auto& shapeptr : shape_vec)
+    for (const auto& shapeptr : shape_vec) {
       subgroup->add_child(shapeptr);
+    }
 
     shapes.push_back(std::move(subgroup));
   }
