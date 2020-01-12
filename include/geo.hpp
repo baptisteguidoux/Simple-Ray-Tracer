@@ -298,7 +298,36 @@ namespace geo {
 
     BoundingBox get_bounds() const override;
     
-  };  
+  };
+
+  /*! \class Triangle
+   */
+  class SmoothTriangle : public Shape {
+  public:
+
+    math::Tuple p1;
+    math::Tuple p2;
+    math::Tuple p3;
+    math::Tuple n1; /// normal vectors
+    math::Tuple n2;
+    math::Tuple n3;
+    math::Tuple e1; /// edge vector  -- > USEFUL FOR SMOOTHTRIANGLE?
+    math::Tuple e2;
+    math::Vector normal;    
+
+    SmoothTriangle(const math::Tuple& p1_, const math::Tuple& p2_, const math::Tuple& p3_, const math::Tuple& n1_, const math::Tuple& n2_, const math::Tuple& n3_);
+
+    ~SmoothTriangle() override;
+    
+    Intersections local_intersects(const ray::Ray& local_ray) override;
+
+    math::Tuple local_normal_at(const math::Tuple& local_point) const override;
+
+    bool local_equality_predicate(const Shape* shape) const override;
+
+    BoundingBox get_bounds() const override;
+    
+  };    
 
   /*! \class Group
    *  \brief A Shape that is a collection of Shapes

@@ -870,6 +870,24 @@ TEST(GeoTest, TriangleIntersectsRayStrikes) {
   EXPECT_EQ(xs[0].t, 2);
 }
 
+TEST(GeoTest, SmoothTriangleConstructor) {
+
+  math::Point p1(0, 1, 0);
+  math::Point p2(-1, 0, 0);
+  math::Point p3(1, 0, 0);
+  math::Vector n1(0, 1, 0);
+  math::Vector n2(-1, 0, 0);
+  math::Vector n3(1, 0, 0);    
+  auto smoothtri = std::make_shared<geo::SmoothTriangle>(p1, p2, p3, n1, n2, n3);
+
+  EXPECT_EQ(smoothtri->p1, p1);
+  EXPECT_EQ(smoothtri->p2, p2);
+  EXPECT_EQ(smoothtri->p3, p3);
+  EXPECT_EQ(smoothtri->n1, n1);
+  EXPECT_EQ(smoothtri->n2, n2);
+  EXPECT_EQ(smoothtri->n3, n3);
+}
+
 TEST(GeoTest, GroupShape) {
 
   // Creating a new group
