@@ -25,18 +25,36 @@ namespace parser {
 	double z = string_to_double(matches[3]);
 	vertices.push_back(math::Point(x, y, z));
       } else if (std::regex_search(line, matches, RE_FACE_PATTERN)) {
-	int a = string_to_int(matches[1]);
-	int b = string_to_int(matches[2]);
-	int c = string_to_int(matches[3]);
-	auto triangle = std::make_shared<geo::Triangle>
-	  (vertices[a-1], vertices[b-1], vertices[c-1]);
-	default_group->add_child(triangle.get());
+	
+	std::vector<int> vertices_idx;
+	for (std::sregex_iterator p(line.begin(), line.end(), RE_FACE_IDX);
+	     p != std::sregex_iterator{}; p++) 
+	  vertices_idx.push_back(string_to_int((*p)[1]));
+
+	auto triangles = fan_triangulation(vertices_idx);
+	for (const auto triangle : triangles)
+	  default_group->add_child(triangle.get());
 	
       }else {
 	ignored_lines++;
       }
     }
       
+  }
+
+  std::vector<std::shared_ptr<geo::Triangle>> ObjParser::fan_triangulation(const std::vector<int>& vertices_idx) const {
+    
+    std::vector<std::shared_ptr<geo::Triangle>> triangles;
+    
+    for (int i = 2; i < vertices_idx.size(); i++) {
+      const math::Tuple& a = vertices[vertices_idx[0] - 1]; // obj file vertices index start at 1
+      const math::Tuple& b = vertices[vertices_idx[i-1] - 1];
+      const math::Tuple& c = vertices[vertices_idx[i] - 1];
+      auto triangle = std::make_shared<geo::Triangle>(a, b, c);
+      triangles.push_back(triangle);
+    }
+
+    return triangles;
   }
 
   double string_to_double(const std::string& s) {
