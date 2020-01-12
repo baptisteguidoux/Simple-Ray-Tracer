@@ -1370,6 +1370,19 @@ TEST(GeoTest, TruncatedConeBoundingBox) {
   EXPECT_EQ(bounds.maximum, math::Point(5, 3, 5));
 }
 
+TEST(GeoTest, TriangleBoundingBox) {
+
+  // Just find smallest and largest x, y, and z components
+  math::Point p1(-3, 7, 2);
+  math::Point p2(6, 2, -4);
+  math::Point p3(2, -1, -1);
+  auto triangle = std::make_shared<geo::Triangle>(p1, p2, p3);
+  auto bounds = triangle->get_bounds();
+
+  EXPECT_EQ(bounds.minimum, math::Point(-3, -1, -4));
+  EXPECT_EQ(bounds.maximum, math::Point(6, 7, 2));
+}
+
 TEST(GeoTest, AddingBoundingBoxesTogether) {
 
   auto box1 = geo::BoundingBox(math::Point(-5, -2, 0), math::Point(7, 4, 4));

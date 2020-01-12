@@ -557,7 +557,13 @@ namespace geo {
 
   BoundingBox Triangle::get_bounds() const  {
 
-    return BoundingBox();
+    BoundingBox bounds;
+
+    bounds.include(p1);
+    bounds.include(p2);
+    bounds.include(p3);
+
+    return bounds;
   }
   
   Group::~Group() {}
