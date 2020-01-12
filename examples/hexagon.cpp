@@ -28,8 +28,8 @@ std::shared_ptr<geo::Cylinder> build_hex_cyl() {
 std::shared_ptr<geo::Group> build_hex_edge() {
 
   auto side = std::make_shared<geo::Group>();
-  side->add_child(build_hex_corner().get());
-  side->add_child(build_hex_cyl().get());
+  side->add_child(build_hex_corner());
+  side->add_child(build_hex_cyl());
 
   return side;
 }
@@ -47,7 +47,7 @@ int main() {
     auto side =  build_hex_edge();
     side->transform = math::rotation_y(i * M_PI / 3);
     //wrld.objects.push_back(side);
-    hexagon->add_child(side.get());
+    hexagon->add_child(side);
   }
 
   wrld.objects.push_back(hexagon);

@@ -57,12 +57,12 @@ int main() {
 
   auto group = std::make_shared<geo::Group>();
 
-  group->add_child(floor.get());
-  group->add_child(left_wall.get());
-  group->add_child(right_wall.get());
-  group->add_child(middle.get());
-  group->add_child(right.get());
-  group->add_child(left.get());
+  group->add_child(floor);
+  group->add_child(left_wall);
+  group->add_child(right_wall);
+  group->add_child(middle);
+  group->add_child(right);
+  group->add_child(left);
 
   wrld.objects.push_back(group);
   

@@ -20,16 +20,15 @@ namespace parser {
     std::shared_ptr<geo::Group> default_group = std::make_shared<geo::Group>(); /// to receive geometry
     std::unordered_map<std::string, std::shared_ptr<geo::Group>> named_groups;
     std::string last_group_added;
-    std::vector<std::shared_ptr<geo::Triangle>> all_triangles;
 
     ObjParser(const std::string_view filepath);
 
-    /*! \fn geo::Group* get_group_by_name(const std::string& name)
+    /*! \fn std::shared_ptr<geo::Group> get_group_by_name(const std::string& name)
      *  \brief Look for a Obj Group by its name
      *  \param name group's name
      *  \return a pointer to the Group
      */ 
-    geo::Group* get_group_by_name(const std::string& name);
+    std::shared_ptr<geo::Group> get_group_by_name(const std::string& name);
 
     /*! \fn std::shared_ptr<geo::Group> to_group() const
      *  \brief Convert the OBJ file as a Group

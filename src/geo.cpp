@@ -594,7 +594,7 @@ namespace geo {
     throw std::runtime_error {"Group.local_normal_at function should not be called"};
   }
 
-  void Group::add_child(Shape* shape) {
+  void Group::add_child(std::shared_ptr<Shape> shape) {
 
     shapes.push_back(shape->get_shared_ptr());
     shape->parent = get_weak_ptr();
@@ -650,12 +650,12 @@ namespace geo {
       child->divide(threshold);
   }
 
-  std::pair<std::vector<Shape*>, std::vector<Shape*>> Group::partition_children() {
+  std::pair<std::vector<std::shared_ptr<Shape>>, std::vector<std::shared_ptr<Shape>>> Group::partition_children() {
 
     auto [left_box, right_box] = get_bounds().split();
     // containers for the shapes that can be contain in the lef tor right BB
-    std::vector<Shape*> left_shapes;
-    std::vector<Shape*> right_shapes;
+    std::vector<std::shared_ptr<Shape>> left_shapes;
+    std::vector<std::shared_ptr<Shape>> right_shapes;
     // the shapes remaining in this group (they do not fit entirely in a sub BB)
     std::vector<std::shared_ptr<Shape>> group_shapes;
     
@@ -663,9 +663,9 @@ namespace geo {
     for (const auto& shape : shapes) {
       auto shape_bounds = shape->get_parent_space_bounds();
       if (left_box.contains(shape_bounds))
-	  left_shapes.push_back(shape.get());
+	  left_shapes.push_back(shape);
       else if (right_box.contains(shape_bounds))
-	right_shapes.push_back(shape.get());
+	right_shapes.push_back(shape);
       else
 	group_shapes.push_back(std::move(shape));
     }
@@ -675,7 +675,7 @@ namespace geo {
     return std::make_pair(left_shapes, right_shapes);
   }
 
-  void Group::make_subgroup(const std::vector<Shape*> shape_vec) {
+  void Group::make_subgroup(const std::vector<std::shared_ptr<Shape>> shape_vec) {
 
     auto subgroup = std::make_shared<Group>();
     for (const auto& shapeptr : shape_vec) {

@@ -898,9 +898,9 @@ TEST(GeoTest, GroupEquality) {
   auto sphere2 = std::make_shared<geo::Sphere>();
   sphere2->transform = math::scaling(1, 0.5, 0.25);
 
-  group1->add_child(sphere1.get());
-  group2->add_child(sphere2.get());
-  group3->add_child(sphere1.get());
+  group1->add_child(sphere1);
+  group2->add_child(sphere2);
+  group3->add_child(sphere1);
 
   EXPECT_NE(*group1, *group2);
   EXPECT_EQ(*group1, *group3);
@@ -915,14 +915,14 @@ TEST(GeoTest, GroupWithSubGroupsEquality) {
   auto group1 = std::make_shared<geo::Group>();
   auto group2 = std::make_shared<geo::Group>();
   
-  group1->add_child(group2.get());
-  group2->add_child(sphere.get());
+  group1->add_child(group2);
+  group2->add_child(sphere);
 
   auto group3 = std::make_shared<geo::Group>();
   auto group4 = std::make_shared<geo::Group>();
   
-  group3->add_child(group4.get());
-  group4->add_child(sphere.get());
+  group3->add_child(group4);
+  group4->add_child(sphere);
 
   EXPECT_EQ(*group1, *group3);
 
@@ -944,7 +944,7 @@ TEST(GeoTest, GroupShapeAddChild) {
   // Adding a child to a Group
   auto group = std::make_shared<geo::Group>();
   auto shape = std::make_shared<geo::TestShape>();
-  group->add_child(shape.get());
+  group->add_child(shape);
   
   EXPECT_NE(group->shapes.size(), 0);
 
@@ -975,9 +975,9 @@ TEST(GeoTest, GroupRayIntersectsNotEmpty) {
   sphere2->transform = math::translation(0, 0, -3);
   sphere3->transform = math::translation(5, 0, 0);
 
-  group->add_child(sphere1.get());
-  group->add_child(sphere2.get());
-  group->add_child(sphere3.get());
+  group->add_child(sphere1);
+  group->add_child(sphere2);
+  group->add_child(sphere3);
 
   ray::Ray ray(math::Point(0, 0, -5), math::Vector(0, 0, 1));
   auto xs = group->local_intersects(ray);
@@ -996,7 +996,7 @@ TEST(GeoTest, GroupTransforms) {
   group->transform = math::scaling(2, 2, 2);
   auto sphere = std::make_shared<geo::Sphere>();
   sphere->transform = math::translation(5, 0, 0);
-  group->add_child(sphere.get());
+  group->add_child(sphere);
 
   ray::Ray ray(math::Point(10, 0, -10), math::Vector(0, 0, 1));
   auto xs = group->intersects(ray);
@@ -1010,10 +1010,10 @@ TEST(GeoTest, GroupWorldPointToObjectPoint) {
   group1->transform = math::rotation_y(M_PI / 2);
   auto group2 = std::make_shared<geo::Group>();
   group2->transform = math::scaling(2, 2, 2);
-  group1->add_child(group2.get());
+  group1->add_child(group2);
   auto sphere = std::make_shared<geo::Sphere>();
   sphere->transform = math::translation(5, 0, 0);
-  group2->add_child(sphere.get());
+  group2->add_child(sphere);
 
   auto point = sphere->world_to_object(math::Point(-2, 0, -10));
   ASSERT_NE(sphere->parent.lock(), nullptr);
@@ -1033,10 +1033,10 @@ TEST(GeoTest, GroupANormalVectorFromObjectToWorldSpace) {
   group1->transform = math::rotation_y(M_PI / 2);
   auto group2 = std::make_shared<geo::Group>();
   group2->transform = math::scaling(1, 2, 3);
-  group1->add_child(group2.get());
+  group1->add_child(group2);
   auto sphere = std::make_shared<geo::Sphere>();
   sphere->transform = math::translation(5, 0, 0);
-  group2->add_child(sphere.get());
+  group2->add_child(sphere);
 
   auto normal = sphere->normal_to_world(math::Vector(sqrt(3)/3, sqrt(3)/3, sqrt(3)/3));
   EXPECT_EQ(normal, math::Vector(0.28571, 0.42857, -0.85714));
@@ -1049,10 +1049,10 @@ TEST(GeoTest, GroupFindNormalOfObject) {
   group1->transform = math::rotation_y(M_PI / 2);
   auto group2 = std::make_shared<geo::Group>();
   group2->transform = math::scaling(1, 2, 3);
-  group1->add_child(group2.get());
+  group1->add_child(group2);
   auto sphere = std::make_shared<geo::Sphere>();
   sphere->transform = math::translation(5, 0, 0);
-  group2->add_child(sphere.get());
+  group2->add_child(sphere);
 
   auto normal = sphere->normal_at(math::Point(1.7321, 1.1547, -5.5774));
   EXPECT_EQ(normal, math::Vector(0.285704, 0.428543, -0.857161));
@@ -1472,8 +1472,8 @@ TEST(GeoTest, BoundingBoxGroup) {
   cyl->transform = math::translation(-4, -1, 4) * math::scaling(0.5, 1, 0.5);
 
   auto group = std::make_shared<geo::Group>();
-  group->add_child(sphere.get());
-  group->add_child(cyl.get());
+  group->add_child(sphere);
+  group->add_child(cyl);
 
   auto box = group->get_bounds();
   EXPECT_EQ(box.minimum, math::Point(-4.5, -3, -5));
@@ -1554,7 +1554,7 @@ TEST(GeoTest, GroupIntersectsIfBoundingBoxMissedNoTestChildren) {
 
   auto child = std::make_shared<geo::TestShape>();
   auto group = std::make_shared<geo::Group>();
-  group->add_child(child.get());
+  group->add_child(child);
   ray::Ray r(math::Point(0, 0, -5), math::Vector(0, 1, 0));
   auto xs = group->intersects(r);
   EXPECT_EQ(child->saved_ray, ray::Ray(math::Point(0, 0, 0), math::Vector(0, 0, 0)));
@@ -1564,7 +1564,7 @@ TEST(GeoTest, GroupIntersectsIfBoundingBoxHitTestChildren) {
   
   auto child = std::make_shared<geo::TestShape>();
   auto group = std::make_shared<geo::Group>();
-  group->add_child(child.get());
+  group->add_child(child);
   ray::Ray r(math::Point(0, 0, -5), math::Vector(0, 0, 1));
   auto xs = group->intersects(r);
   EXPECT_NE(child->saved_ray, ray::Ray(math::Point(0, 0, 0), math::Vector(0, 0, 0)));  
@@ -1615,9 +1615,9 @@ TEST(GeoTest, GroupPartitionChildren) {
   sphere2->transform = math::translation(2, 0, 0);
   auto sphere3 = std::make_shared<geo::Sphere>();
   auto group = std::make_shared<geo::Group>();
-  group->add_child(sphere1.get());
-  group->add_child(sphere2.get());
-  group->add_child(sphere3.get());
+  group->add_child(sphere1);
+  group->add_child(sphere2);
+  group->add_child(sphere3);
 
   auto [left, right] = group->partition_children();
   ASSERT_EQ(group->shapes.size(), 1);
@@ -1633,7 +1633,7 @@ TEST(GeoTest, SubGroupFromListOfChildren) {
   auto sphere1 = std::make_shared<geo::Sphere>();
   auto sphere2 = std::make_shared<geo::Sphere>();
   auto group = std::make_shared<geo::Group>();
-  group->make_subgroup(std::vector<geo::Shape*>{sphere1.get(), sphere2.get()});
+  group->make_subgroup(std::vector<std::shared_ptr<geo::Shape>>{sphere1, sphere2});
 
   ASSERT_EQ(group->shapes.size(), 1);
   // the only child of this Group is another Group
@@ -1661,9 +1661,9 @@ TEST(GeoTest, SubdividingGroupPartitionsItsChildren) {
   auto sphere3 = std::make_shared<geo::Sphere>();
   sphere3->transform = math::scaling(4, 4, 4);
   auto group = std::make_shared<geo::Group>();
-  group->add_child(sphere1.get());
-  group->add_child(sphere2.get());
-  group->add_child(sphere3.get());
+  group->add_child(sphere1);
+  group->add_child(sphere2);
+  group->add_child(sphere3);
 
   group->divide(1);
   EXPECT_EQ(*group->shapes[0], *sphere3);
@@ -1691,13 +1691,13 @@ TEST(GeoTest, SubdividingGroupWithTooFewChildren) {
   auto sphere3 = std::make_shared<geo::Sphere>();
   sphere3->transform = math::translation(2, -1, 0);
   auto subgroup = std::make_shared<geo::Group>();
-  subgroup->add_child(sphere1.get());
-  subgroup->add_child(sphere2.get());
-  subgroup->add_child(sphere3.get());
+  subgroup->add_child(sphere1);
+  subgroup->add_child(sphere2);
+  subgroup->add_child(sphere3);
   auto sphere4 = std::make_shared<geo::Sphere>();
   auto group = std::make_shared<geo::Group>();
-  group->add_child(subgroup.get());
-  group->add_child(sphere4.get());
+  group->add_child(subgroup);
+  group->add_child(sphere4);
   group->divide(3);
 
   EXPECT_EQ(*group->shapes[0], *subgroup);

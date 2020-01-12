@@ -35,9 +35,9 @@ namespace parser {
 	auto triangles = fan_triangulation(vertices_idx);
 	for (const auto triangle : triangles) {
 	  if (last_group_added != "")
-	    get_group_by_name(last_group_added)->add_child(triangle.get());
+	    get_group_by_name(last_group_added)->add_child(triangle);
 	  else
-	    default_group->add_child(triangle.get());
+	    default_group->add_child(triangle);
 	}
 	
       } else if (std::regex_search(line, matches, RE_NAMED_GROUP)) {
@@ -52,18 +52,17 @@ namespace parser {
 
     std::cout << "Found " << vertices.size() << " vertices\n";
     std::cout << "Found " << faces_count << " faces\n";
-    std::cout << "For a total of " << all_triangles.size() << " triangles\n";    
   }
 
-  geo::Group* ObjParser::get_group_by_name(const std::string& name) {
+    std::shared_ptr<geo::Group> ObjParser::get_group_by_name(const std::string& name) {
 
-    return named_groups[name].get();
+    return named_groups[name];
   }
 
   std::shared_ptr<geo::Group> ObjParser::to_group() const {
 
     for (const auto& group : named_groups)
-      default_group->add_child(group.second.get());
+      default_group->add_child(group.second);
 
     return default_group;
   }
@@ -78,7 +77,6 @@ namespace parser {
       const math::Tuple& c = vertices[vertices_idx[i] - 1];
       auto triangle = std::make_shared<geo::Triangle>(a, b, c);
       triangles.push_back(triangle);
-      all_triangles.push_back(triangle);
     }
 
     return triangles;

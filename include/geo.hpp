@@ -314,11 +314,11 @@ namespace geo {
 
     math::Tuple local_normal_at(const math::Tuple& local_point) const override;
 
-    /*! \fn void add_child(Shape* shape)
+    /*! \fn void add_child(std::shared_ptr<Shape> shape)
      *  \brief Add the shape to the group of Shapes 
      *  \param shape the Shape to add to the Group
      */
-    void add_child(Shape* shape); // [CG:R.30] -> Take smart pointers as parameters only to explicitly express lifetime semantics => simple pointer is enough
+    void add_child(std::shared_ptr<Shape> shape);
 
     bool local_equality_predicate(const Shape* shape) const override;
 
@@ -328,17 +328,16 @@ namespace geo {
      */
     BoundingBox get_bounds() const override;
 
-    /*! \fn std::pair<std::vector<Shape*>, std::vector<Shape*>> partition_children()
+    /*! \fn std::pair<std::vector<std::shared_ptr<Shape>>, std::vector<std::shared_ptr<Shape>>> partition_children()
      *  \brief Splits the shapes betwen two vector, one for the left sided objects, another one for the right sided shapes. Shapes that are not entirely in one sub BB stays in this Group
      *  \return a pair of vector of shapes ([left, right])
      */
-    std::pair<std::vector<Shape*>, std::vector<Shape*>> partition_children();
-
-    /*! \fn void make_subgroup(const std::vector<Shape*> shape_vec)
+    std::pair<std::vector<std::shared_ptr<Shape>>, std::vector<std::shared_ptr<Shape>>> partition_children();
+    /*! \fn void make_subgroup(const std::vector<std::shared_ptr<Shape>> shape_vec)
      *  \brief Create a child Group and add the elements of shape_vec to it
      *  \param shape_vec
      */ 
-    void make_subgroup(const std::vector<Shape*> shape_vec);
+    void make_subgroup(const std::vector<std::shared_ptr<Shape>> shape_vec);
 
     /*! \fn void divide(const int threshold) override
      *  \brief recursively splits a group and its children. 

@@ -71,8 +71,8 @@ TEST(ParserTest, ParserProcessTriangulatePolygonalData) {
 TEST(ParserTest, NamedGroupInObjFiles) {
 
   parser::ObjParser parser(std::string{TEST_DIR} + "triangles.obj");
-  geo::Group* g1 = parser.get_group_by_name("FirstGroup");
-  geo::Group* g2 = parser.get_group_by_name("SecondGroup");
+  auto g1 = parser.get_group_by_name("FirstGroup");
+  auto g2 = parser.get_group_by_name("SecondGroup");
   auto s1ptr = g1->shapes.at(0);
   auto s2ptr = g2->shapes.at(0);
   auto t1 = dynamic_cast<const geo::Triangle*>(s1ptr.get());
@@ -90,8 +90,8 @@ TEST(ParserTest, NamedGroupInObjFiles) {
 TEST(ParserTest, ConvertObjFileToGroup) {
 
   parser::ObjParser parser(std::string{TEST_DIR} + "triangles.obj");
-  geo::Group* g1 = parser.get_group_by_name("FirstGroup");
-  geo::Group* g2 = parser.get_group_by_name("SecondGroup");  
+  auto g1 = parser.get_group_by_name("FirstGroup");
+  auto g2 = parser.get_group_by_name("SecondGroup");  
   auto group = parser.to_group();
   // Check FirstGroup and SecondGroup are present in the group we got from to_group
   auto g1_in_group = std::find_if(group->shapes.begin(), group->shapes.end(),
