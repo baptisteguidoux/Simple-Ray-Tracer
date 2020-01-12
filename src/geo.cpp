@@ -502,7 +502,7 @@ namespace geo {
     return (pow(x, 2) + pow(z, 2)) <= radius; // The radius of the Cylinder is 1
   }
 
-  Triangle::Triangle(const math::Point& p1_, const math::Point& p2_, const math::Point& p3_) {
+  Triangle::Triangle(const math::Tuple& p1_, const math::Tuple& p2_, const math::Tuple& p3_) {
 
     p1 = p1_;
     p2 = p2_;

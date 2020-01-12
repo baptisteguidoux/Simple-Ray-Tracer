@@ -279,14 +279,14 @@ namespace geo {
   class Triangle : public Shape {
   public:
 
-    math::Point p1;
-    math::Point p2;
-    math::Point p3;
+    math::Tuple p1;
+    math::Tuple p2;
+    math::Tuple p3;
     math::Vector e1; /// edge vector
     math::Vector e2;
     math::Vector normal;    
 
-    Triangle(const math::Point& p1_, const math::Point& p2_, const math::Point& p3_);
+    Triangle(const math::Tuple& p1_, const math::Tuple& p2_, const math::Tuple& p3_);
 
     ~Triangle() override;
     

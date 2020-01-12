@@ -24,6 +24,9 @@ file(GLOB SOURCES "src/*.cpp")
 
 add_library(RayLib SHARED ${SOURCES})
 
+# compile time definitions
+add_compile_definitions(RAY_TEST_DIR="${PROJECT_SOURCE_DIR}/tests/")
+
 install(TARGETS RayLib LIBRARY DESTINATION ${PROJECT_SOURCE_DIR}/lib)
 target_link_libraries(RayLib Threads::Threads)
 
