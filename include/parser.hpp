@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <regex>
+#include <unordered_map>
 
 #include "tuple.hpp"
 #include "geo.hpp"
@@ -17,8 +18,12 @@ namespace parser {
     int ignored_lines = 0;
     std::vector<math::Tuple> vertices; /// store the parsed vertices in order
     std::shared_ptr<geo::Group> default_group = std::make_shared<geo::Group>(); /// to receive geometry
+    std::unordered_map<std::string, std::shared_ptr<geo::Group>> named_groups;
+    std::string last_group_added;
 
     ObjParser(const std::string_view filepath);
+
+    geo::Group* get_group_by_name(const std::string& name);
 
   private:
     /*! \fn std::vector<std::shared_ptr<geo::Triangle>> fan_triangulation(const std::vector<int>& vertices_idx) const
@@ -52,11 +57,13 @@ namespace parser {
 
 namespace parser {
 
-  static const std::regex RE_VERTEX_PATTERN {R"(v\s(-?\d(?:\.\d+)?)\s(-?\d(?:\.\d+)?)\s(-?\d(?:\.\d+)?))"}; /// a 'v' followed by three int or floats
+  static const std::regex RE_VERTEX_PATTERN {R"(^v\s(-?\d(?:\.\d+)?)\s(-?\d(?:\.\d+)?)\s(-?\d(?:\.\d+)?))"}; /// a 'v' followed by three int or floats
 
-  static const std::regex RE_FACE_PATTERN {R"(f(\s\d){3,})"}; /// a 'f' followed by three or more int
+  static const std::regex RE_FACE_PATTERN {R"(^f(\s\d){3,})"}; /// a 'f' followed by three or more int
 
   static const std::regex RE_FACE_IDX {R"((\d))"};
+
+  static const std::regex RE_NAMED_GROUP {R"(^g\s(\w+))"};
 }
 
 #endif

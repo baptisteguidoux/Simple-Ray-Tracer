@@ -32,14 +32,28 @@ namespace parser {
 	  vertices_idx.push_back(string_to_int((*p)[1]));
 
 	auto triangles = fan_triangulation(vertices_idx);
-	for (const auto triangle : triangles)
-	  default_group->add_child(triangle.get());
+	for (const auto triangle : triangles) {
+	  if (last_group_added != "")
+	    get_group_by_name(last_group_added)->add_child(triangle.get());
+	  else
+	    default_group->add_child(triangle.get());
+	}
 	
-      }else {
+      } else if (std::regex_search(line, matches, RE_NAMED_GROUP)) {
+
+	auto group_name = matches[1];
+	named_groups[group_name] = std::make_shared<geo::Group>();
+	last_group_added = group_name;
+      } else {
 	ignored_lines++;
       }
     }
       
+  }
+
+  geo::Group* ObjParser::get_group_by_name(const std::string& name) {
+
+    return named_groups[name].get();
   }
 
   std::vector<std::shared_ptr<geo::Triangle>> ObjParser::fan_triangulation(const std::vector<int>& vertices_idx) const {
