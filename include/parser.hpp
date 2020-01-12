@@ -23,7 +23,18 @@ namespace parser {
 
     ObjParser(const std::string_view filepath);
 
+    /*! \fn geo::Group* get_group_by_name(const std::string& name)
+     *  \brief Look for a Obj Group by its name
+     *  \param name group's name
+     *  \return a pointer to the Group
+     */ 
     geo::Group* get_group_by_name(const std::string& name);
+
+    /*! \fn std::shared_ptr<geo::Group> to_group() const
+     *  \brief Convert the OBJ file as a Group
+     *  \return a Group containing all shapes and subgroups
+     */
+    std::shared_ptr<geo::Group> to_group() const;
 
   private:
     /*! \fn std::vector<std::shared_ptr<geo::Triangle>> fan_triangulation(const std::vector<int>& vertices_idx) const

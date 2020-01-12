@@ -87,3 +87,20 @@ TEST(ParserTest, NamedGroupInObjFiles) {
   EXPECT_EQ(t2->p3, parser.vertices[3]);
 }
 
+TEST(ParserTest, ConvertObjFileToGroup) {
+
+  parser::ObjParser parser(std::string{TEST_DIR} + "triangles.obj");
+  geo::Group* g1 = parser.get_group_by_name("FirstGroup");
+  geo::Group* g2 = parser.get_group_by_name("SecondGroup");  
+  auto group = parser.to_group();
+  // Check FirstGroup and SecondGroup are present in the group we got from to_group
+  auto g1_in_group = std::find_if(group->shapes.begin(), group->shapes.end(),
+				  [&](const std::shared_ptr<geo::Shape> shpptr)
+				  {return *shpptr == *g1;});
+  EXPECT_NE(g1_in_group, group->shapes.end());
+  auto g2_in_group = std::find_if(group->shapes.begin(), group->shapes.end(),
+				  [&](const std::shared_ptr<geo::Shape> shpptr)
+				  {return *shpptr == *g2;});
+  EXPECT_NE(g2_in_group, group->shapes.end());  
+}
+

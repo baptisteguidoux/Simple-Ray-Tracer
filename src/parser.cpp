@@ -56,6 +56,14 @@ namespace parser {
     return named_groups[name].get();
   }
 
+  std::shared_ptr<geo::Group> ObjParser::to_group() const {
+
+    for (const auto& group : named_groups)
+      default_group->add_child(group.second.get());
+
+    return default_group;
+  }
+
   std::vector<std::shared_ptr<geo::Triangle>> ObjParser::fan_triangulation(const std::vector<int>& vertices_idx) const {
     
     std::vector<std::shared_ptr<geo::Triangle>> triangles;
