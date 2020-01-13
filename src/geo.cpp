@@ -537,7 +537,7 @@ namespace geo {
 
     auto t = f * math::dot(e2, origin_cross_e1);
     
-    return Intersections {Intersection(t, this)};
+    return Intersections {Intersection(t, this, u, v)};
   }
 
   math::Tuple Triangle::local_normal_at(const math::Tuple& local_point, const Intersection& ix) const {
@@ -566,47 +566,12 @@ namespace geo {
     return bounds;
   }
 
-  SmoothTriangle::SmoothTriangle(const math::Tuple& p1_, const math::Tuple& p2_, const math::Tuple& p3_,
-				 const math::Tuple& n1_, const math::Tuple& n2_, const math::Tuple& n3_) {
-
-    p1 = p1_;
-    p2 = p2_;
-    p3 = p3_;
-    n1 = n1_;
-    n2 = n2_;
-    n3 = n3_;
-    e1 = p2 - p1;
-    e2 = p3 - p1;
-    normal = math::normalize(math::cross(e2, e1));
-  }
+  SmoothTriangle::SmoothTriangle(const math::Tuple& p1_, const math::Tuple& p2_,
+				 const math::Tuple& p3_, const math::Tuple& n1_,
+				 const math::Tuple& n2_, const math::Tuple& n3_)
+    : Triangle(p1_, p2_ ,p3_), n1 {n1_}, n2 {n2_}, n3 {n3_} {}
 
   SmoothTriangle::~SmoothTriangle() {}
-
-  Intersections SmoothTriangle::local_intersects(const ray::Ray& local_ray) {
-
-    // If the ray is parallel to the Triangleit misses
-    auto dir_cross_e2 = math::cross(local_ray.direction, e2);
-    auto determinant = math::dot(e1, dir_cross_e2);
-    if (std::abs(determinant) < math::EPSILON)
-      return Intersections {};
-
-    // Check the p1-p3 edge
-    auto p1_to_origin = local_ray.origin - p1;
-    auto f = 1.0 / determinant;
-    auto u = f * math::dot(p1_to_origin, dir_cross_e2);
-    if (u < 0 || u > 1)
-      return Intersections {};
-
-    // Check the p1-p2 and p2-p3 edges
-    auto origin_cross_e1 = math::cross(p1_to_origin, e1);
-    auto v = f * math::dot(local_ray.direction, origin_cross_e1);
-    if (v < 0 || (u + v) > 1)
-      return Intersections{};
-
-    auto t = f * math::dot(e2, origin_cross_e1);
-    
-    return Intersections {Intersection(t, this, u, v)};
-  }
 
   math::Tuple SmoothTriangle::local_normal_at(const math::Tuple& local_point, const Intersection& ix) const {
 
@@ -622,17 +587,6 @@ namespace geo {
 	    other->n1 == n1 && other->n2 == n2 && other->n3 == n3);
     
     return false;
-  }
-
-  BoundingBox SmoothTriangle::get_bounds() const  {
-
-    BoundingBox bounds;
-
-    bounds.include(p1);
-    bounds.include(p2);
-    bounds.include(p3);
-
-    return bounds;
   }
     
   Group::~Group() {}
