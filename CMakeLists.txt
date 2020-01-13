@@ -11,7 +11,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib/static)
 # INPUTS
 set(RAY_BUILD_EXAMPLES False CACHE BOOL "Build examples, default False")
 
-SET(CMAKE_CXX_COMPILER /usr/bin/clang++)
+#SET(CMAKE_CXX_COMPILER /usr/bin/clang++)
 set(CMAKE_CXX_FLAGS "-Wall -g")
 
 find_package(GTest REQUIRED)
