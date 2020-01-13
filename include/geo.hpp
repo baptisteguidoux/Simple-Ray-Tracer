@@ -54,19 +54,21 @@ namespace geo {
      */
     virtual Intersections local_intersects(const ray::Ray& local_ray) = 0;
 
-    /*! \fn math::Tuple normal_at(const math::Tuple& world_point)
+    /*! \fn math::Tuple normal_at(const math::Tuple& world_point, const Intersection& ix)
      *  \brief Calculates the normal on the Shape at the given point (in world space)
      *  \param world_point
+     *  \param ix Intersection data struct
      *  \return a Tuple, the normal Vector (wolrd space)
      */    
-    math::Tuple normal_at(const math::Tuple& world_point);
+    math::Tuple normal_at(const math::Tuple& world_point, const Intersection& ix);
 
-    /*! \fn virtual math::Tuple local_normal_at(const math::Tuple& local_point) const = 0
+    /*! \fn virtual math::Tuple local_normal_at(const math::Tuple& local_point, const Intersection& ix) const = 0
      *  \brief Shape dereived classes must implement this function to locally calculate the normal on the Shape
      *  \param local_point the point in local space
+     *  \param ix Intersection data struct     
      *  \return a Tuple, the normal Vector (local space)
      */     
-    virtual math::Tuple local_normal_at(const math::Tuple& local_point) const = 0;
+    virtual math::Tuple local_normal_at(const math::Tuple& local_point, const Intersection& ix) const = 0;
 
     /*! \fn color::Color pattern_at(const math::Tuple& world_point) const
      *  \brief Use this on Shape with a Pattern, to retrive the Color at the given Point
@@ -154,7 +156,7 @@ namespace geo {
 
     Intersections local_intersects(const ray::Ray& local_ray) override;
 
-    math::Tuple local_normal_at(const math::Tuple& local_point) const override;
+    math::Tuple local_normal_at(const math::Tuple& local_point, const Intersection& ix) const override;
 
     bool local_equality_predicate(const Shape* shape) const override;
 
@@ -171,7 +173,7 @@ namespace geo {
     
     Intersections local_intersects(const ray::Ray& local_ray) override;
 
-    math::Tuple local_normal_at(const math::Tuple& local_point) const override;
+    math::Tuple local_normal_at(const math::Tuple& local_point, const Intersection& ix) const override;
 
     bool local_equality_predicate(const Shape* shape) const override;
 
@@ -190,7 +192,7 @@ namespace geo {
     
     Intersections local_intersects(const ray::Ray& local_ray) override;
 
-    math::Tuple local_normal_at(const math::Tuple& local_point) const override;
+    math::Tuple local_normal_at(const math::Tuple& local_point, const Intersection& ix) const override;
 
     bool local_equality_predicate(const Shape* shape) const override;
 
@@ -207,7 +209,7 @@ namespace geo {
     
     Intersections local_intersects(const ray::Ray& local_ray) override;
 
-    math::Tuple local_normal_at(const math::Tuple& local_point) const override;
+    math::Tuple local_normal_at(const math::Tuple& local_point, const Intersection& ix) const override;
 
     bool local_equality_predicate(const Shape* shape) const override;
 
@@ -228,7 +230,7 @@ namespace geo {
     
     Intersections local_intersects(const ray::Ray& local_ray) override;
 
-    math::Tuple local_normal_at(const math::Tuple& local_point) const override;
+    math::Tuple local_normal_at(const math::Tuple& local_point, const Intersection& ix) const override;
 
     /*! \fn Intersections intersects_caps(const ray::Ray& ray, Intersections ixs)
      *  \brief Checks if the Ray intersects with the end caps of the Cylinder
@@ -258,7 +260,7 @@ namespace geo {
     
     Intersections local_intersects(const ray::Ray& local_ray) override;
 
-    math::Tuple local_normal_at(const math::Tuple& local_point) const override;
+    math::Tuple local_normal_at(const math::Tuple& local_point, const Intersection& ix) const override;
 
     /*! \fn Intersections intersects_caps(const ray::Ray& ray, Intersections ixs)
      *  \brief Checks if the Ray intersects with the end caps of the DoubleCone
@@ -292,7 +294,7 @@ namespace geo {
     
     Intersections local_intersects(const ray::Ray& local_ray) override;
 
-    math::Tuple local_normal_at(const math::Tuple& local_point) const override;
+    math::Tuple local_normal_at(const math::Tuple& local_point, const Intersection& ix) const override;
 
     bool local_equality_predicate(const Shape* shape) const override;
 
@@ -321,7 +323,7 @@ namespace geo {
     
     Intersections local_intersects(const ray::Ray& local_ray) override;
 
-    math::Tuple local_normal_at(const math::Tuple& local_point) const override;
+    math::Tuple local_normal_at(const math::Tuple& local_point, const Intersection& ix) const override;
 
     bool local_equality_predicate(const Shape* shape) const override;
 
@@ -341,7 +343,7 @@ namespace geo {
     
     Intersections local_intersects(const ray::Ray& local_ray) override;
 
-    math::Tuple local_normal_at(const math::Tuple& local_point) const override;
+    math::Tuple local_normal_at(const math::Tuple& local_point, const Intersection& ix) const override;
 
     /*! \fn void add_child(std::shared_ptr<Shape> shape)
      *  \brief Add the shape to the group of Shapes 
@@ -409,12 +411,14 @@ namespace geo {
 
     float t;
     std::shared_ptr<geo::Shape> geometry;
+    float u; /// Only useful for smooth triangle, to help identify where the intersections occured on a triangle
+    float v;
 
     /*! Intersection constructor
      *  \param t_ the t value of the intersection, "when" the ray intersects the geo
      *  \param geo the object that's been intersected
      */   
-    Intersection(const float t_, geo::Shape* geo);
+    Intersection(const float t_, geo::Shape* geo, const float u_ = 0, const float v_ = 0);
 
     Intersection() = default;
 

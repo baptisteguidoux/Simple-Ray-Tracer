@@ -127,6 +127,14 @@ TEST(GeoTest, IntersectionsCopyConstructor) {
 
 }
 
+TEST(GeoTest, IntersectionMayHaveUAndVProperties) {
+
+  auto triangle = std::make_shared<geo::Triangle>(math::Point(0, 1, 0), math::Point(-1, 0, 0), math::Point(1, 0, 0));
+  auto ixs_with_uv = geo::Intersection(3.5, triangle.get(), 0.2, 0.4);
+  EXPECT_TRUE(math::almost_equal(ixs_with_uv.u, 0.2));
+  EXPECT_TRUE(math::almost_equal(ixs_with_uv.v, 0.4));
+}
+
 TEST(GeoTest, SphereEquality) {
 
   auto sphere1 = std::make_shared<geo::Sphere>();
@@ -271,19 +279,19 @@ TEST(GeoTest, CalculateNormalOnSphere) {
   auto sphere = std::make_shared<geo::Sphere>();
 
   // Normal on a sphere at a point on the x axis
-  auto normal1 = sphere->normal_at(math::Point(1.0, 0.0, 0.0));
+  auto normal1 = sphere->normal_at(math::Point(1.0, 0.0, 0.0), geo::Intersection(INFINITY, sphere.get()));
   EXPECT_EQ(normal1, math::Vector(1.0, 0.0, 0.0));
 
   // Normal on a sphere at a point on the y axis
-  auto normal2 = sphere->normal_at(math::Point(0.0, 1.0, 0.0));
+  auto normal2 = sphere->normal_at(math::Point(0.0, 1.0, 0.0), geo::Intersection(INFINITY, sphere.get()));
   EXPECT_EQ(normal2, math::Vector(0.0, 1.0, 0.0));
 
   // Normal on a sphere at a point on the z axis
-  auto normal3 = sphere->normal_at(math::Point(0.0, 0.0, 1.0));
+  auto normal3 = sphere->normal_at(math::Point(0.0, 0.0, 1.0), geo::Intersection(INFINITY, sphere.get()));
   EXPECT_EQ(normal3, math::Vector(0.0, 0.0, 1.0));
 
   // The normal on a sphere at a nonaxial point
-  auto normal4 = sphere->normal_at(math::Point(sqrt(3) / 3, sqrt(3) / 3, sqrt(3) / 3));
+  auto normal4 = sphere->normal_at(math::Point(sqrt(3) / 3, sqrt(3) / 3, sqrt(3) / 3), geo::Intersection(INFINITY, sphere.get()));
   EXPECT_EQ(normal4, math::Vector(sqrt(3) / 3, sqrt(3) / 3, sqrt(3) / 3));
 
   // A surface normal should always be normalized
@@ -292,13 +300,13 @@ TEST(GeoTest, CalculateNormalOnSphere) {
   // Computing the normal on a translated shape
   auto shape = std::make_shared<geo::TestShape>();
   shape->transform = math::translation(0, 1, 0);
-  auto normal7 = shape->normal_at(math::Point(0, 1.70711, -0.70711));
+  auto normal7 = shape->normal_at(math::Point(0, 1.70711, -0.70711), geo::Intersection(INFINITY, shape.get()));
   EXPECT_EQ(normal7, math::Vector(0, 0.70711, -0.70711));
 
   // Computing the normal on a transformed shape
   shape = std::make_shared<geo::TestShape>();
   shape->transform = math::scaling(1, 0.5, 1) * math::rotation_z(M_PI / 5);
-  auto normal8 = shape->normal_at(math::Point(0, sqrt(2) / 2, -sqrt(2) / 2));
+  auto normal8 = shape->normal_at(math::Point(0, sqrt(2) / 2, -sqrt(2) / 2), geo::Intersection(INFINITY, shape.get()));
   EXPECT_EQ(normal8, math::Vector(0, 0.97014, -0.24254));
 }
 
@@ -310,9 +318,9 @@ TEST(GeoTest, NormalOnPlane) {
   // Check it is subclass of Shape
   EXPECT_NE(dynamic_cast<geo::Shape*>(plane.get()), nullptr);
   
-  auto norm1 = plane->local_normal_at(math::Point(0, 0, 0));
-  auto norm2 = plane->local_normal_at(math::Point(10, 0, -10));
-  auto norm3 = plane->local_normal_at(math::Point(-5, 0, 150));
+  auto norm1 = plane->local_normal_at(math::Point(0, 0, 0), geo::Intersection(INFINITY, plane.get()));
+  auto norm2 = plane->local_normal_at(math::Point(10, 0, -10), geo::Intersection(INFINITY, plane.get()));
+  auto norm3 = plane->local_normal_at(math::Point(-5, 0, 150), geo::Intersection(INFINITY, plane.get()));
 
   EXPECT_EQ(norm1, math::Vector(0, 1, 0));
   EXPECT_EQ(norm2, math::Vector(0, 1, 0));
@@ -439,7 +447,7 @@ TEST(GeoTest, NormalOnCube) {
   
   for (const auto& input : inputs){
     auto p = input.point;
-    auto normal = c->local_normal_at(p);
+    auto normal = c->local_normal_at(p, geo::Intersection(INFINITY, c.get()));
     EXPECT_EQ(normal, input.normal);
   }
  
@@ -533,10 +541,10 @@ TEST(GeoTest, CylinderNormalVector) {
   // Normal vector on a cylinder
   auto cyl = std::make_shared<geo::Cylinder>();
   
-  EXPECT_EQ(cyl->local_normal_at(math::Point(1, 0, 0)), math::Vector(1, 0, 0));
-  EXPECT_EQ(cyl->local_normal_at(math::Point(0, 5, -1)), math::Vector(0, 0, -1));
-  EXPECT_EQ(cyl->local_normal_at(math::Point(0, -2, 1)), math::Vector(0, 0, 1));
-  EXPECT_EQ(cyl->local_normal_at(math::Point(-1, -1, 0)), math::Vector(-1, 0, 0));
+  EXPECT_EQ(cyl->local_normal_at(math::Point(1, 0, 0), geo::Intersection(INFINITY, cyl.get())), math::Vector(1, 0, 0));
+  EXPECT_EQ(cyl->local_normal_at(math::Point(0, 5, -1), geo::Intersection(INFINITY, cyl.get())), math::Vector(0, 0, -1));
+  EXPECT_EQ(cyl->local_normal_at(math::Point(0, -2, 1), geo::Intersection(INFINITY, cyl.get())), math::Vector(0, 0, 1));
+  EXPECT_EQ(cyl->local_normal_at(math::Point(-1, -1, 0), geo::Intersection(INFINITY, cyl.get())), math::Vector(-1, 0, 0));
 }
 
 TEST(GeoTest, CylinderMaximumMinimumBounds) {
@@ -645,7 +653,7 @@ TEST(GeoTest, ClosedCylinderNormalAt) {
   };
 
   for (const auto& input : test_inputs) {
-    auto vec = cyl->local_normal_at(input.point);
+    auto vec = cyl->local_normal_at(input.point, geo::Intersection(INFINITY, cyl.get()));
     EXPECT_EQ(input.normal, vec);
   }
   
@@ -776,7 +784,7 @@ TEST(GeoTest, DoubleConeNormalVector) {
   };
 
   for (const auto& input : test_inputs) {
-    auto norm = cone->local_normal_at(input.point);
+    auto norm = cone->local_normal_at(input.point, geo::Intersection(INFINITY, cone.get()));
     EXPECT_EQ(norm, input.normal);
   }
 
@@ -803,9 +811,9 @@ TEST(GeoTest, TriangleNormalVector) {
 
   // The triangle's precomputed normal is used for every point of the triangle
   auto triangle = std::make_shared<geo::Triangle>(math::Point(0, 1, 0), math::Point(-1, 0, 0), math::Point(1, 0, 0));
-  auto n1 = triangle->local_normal_at(math::Point(0, 0.5, 0));
-  auto n2 = triangle->local_normal_at(math::Point(-0.5, 0.75, 0));
-  auto n3 = triangle->local_normal_at(math::Point(0.5, 0.25, 0));
+  auto n1 = triangle->local_normal_at(math::Point(0, 0.5, 0), geo::Intersection(INFINITY, triangle.get()));
+  auto n2 = triangle->local_normal_at(math::Point(-0.5, 0.75, 0), geo::Intersection(INFINITY, triangle.get()));
+  auto n3 = triangle->local_normal_at(math::Point(0.5, 0.25, 0), geo::Intersection(INFINITY, triangle.get()));
   EXPECT_EQ(n1, triangle->normal);
   EXPECT_EQ(n2, triangle->normal);
   EXPECT_EQ(n3, triangle->normal);  
@@ -886,6 +894,55 @@ TEST(GeoTest, SmoothTriangleConstructor) {
   EXPECT_EQ(smoothtri->n1, n1);
   EXPECT_EQ(smoothtri->n2, n2);
   EXPECT_EQ(smoothtri->n3, n3);
+}
+
+TEST(GeoTest, SmoothTriangleIntersectionStoresUV) {
+
+  math::Point p1(0, 1, 0);
+  math::Point p2(-1, 0, 0);
+  math::Point p3(1, 0, 0);
+  math::Vector n1(0, 1, 0);
+  math::Vector n2(-1, 0, 0);
+  math::Vector n3(1, 0, 0);    
+  auto smoothtri = std::make_shared<geo::SmoothTriangle>(p1, p2, p3, n1, n2, n3);
+  ray::Ray r(math::Point(-0.2, 0.3, -2), math::Vector(0, 0, 1));
+  auto xs = smoothtri->local_intersects(r);
+  ASSERT_EQ(xs.size(), 1);
+  EXPECT_TRUE(math::almost_equal(xs[0].u, 0.45));
+  EXPECT_TRUE(math::almost_equal(xs[0].v, 0.25));
+}
+
+TEST(GeoTest, SmoothTriangleInterpolateNormalUsingUV) {
+
+  math::Point p1(0, 1, 0);
+  math::Point p2(-1, 0, 0);
+  math::Point p3(1, 0, 0);
+  math::Vector n1(0, 1, 0);
+  math::Vector n2(-1, 0, 0);
+  math::Vector n3(1, 0, 0);    
+  auto smoothtri = std::make_shared<geo::SmoothTriangle>(p1, p2, p3, n1, n2, n3);
+
+  geo::Intersection ix(1, smoothtri.get(), 0.45, 0.25);
+  auto n = smoothtri->normal_at(math::Point(0, 0, 0), ix);
+  EXPECT_EQ(n, math::Vector(-0.5547, 0.83205, 0));
+}
+
+TEST(GeoTest, SmoothTrianglePrepareComputationsOnNormal) {
+
+  math::Point p1(0, 1, 0);
+  math::Point p2(-1, 0, 0);
+  math::Point p3(1, 0, 0);
+  math::Vector n1(0, 1, 0);
+  math::Vector n2(-1, 0, 0);
+  math::Vector n3(1, 0, 0);    
+  auto smoothtri = std::make_shared<geo::SmoothTriangle>(p1, p2, p3, n1, n2, n3);
+
+  geo::Intersection ix(1, smoothtri.get(), 0.45, 0.25);
+  ray::Ray r(math::Point(-0.2, 0.3, -2), math::Vector(0, 0, 1));
+  geo::Intersections ixs {ix};
+  auto comps = geo::prepare_computations(ix, r, ixs);
+
+  EXPECT_EQ(comps.normal_vector, math::Vector(-0.5547, 0.83205, 0));
 }
 
 TEST(GeoTest, GroupShape) {
@@ -1072,7 +1129,7 @@ TEST(GeoTest, GroupFindNormalOfObject) {
   sphere->transform = math::translation(5, 0, 0);
   group2->add_child(sphere);
 
-  auto normal = sphere->normal_at(math::Point(1.7321, 1.1547, -5.5774));
+  auto normal = sphere->normal_at(math::Point(1.7321, 1.1547, -5.5774), geo::Intersection(INFINITY, sphere.get()));
   EXPECT_EQ(normal, math::Vector(0.285704, 0.428543, -0.857161));
 }
 

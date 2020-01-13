@@ -27,14 +27,14 @@ namespace geo {
     return local_intersects(local_ray);
   }
 
-  math::Tuple Shape::normal_at(const math::Tuple& world_point) {
+  math::Tuple Shape::normal_at(const math::Tuple& world_point, const Intersection& ix) {
 
     // The vector from the sphere's origin to the point on the sphere is the normal at the point where it intersects (for a sphere centered at origin)
 
     // From world space to object space
     auto local_point = world_to_object(world_point);
     // The object's normal vector we get is in object space
-    auto local_normal = local_normal_at(local_point);
+    auto local_normal = local_normal_at(local_point, ix);
 
     return normal_to_world(local_normal);
   }
@@ -116,7 +116,7 @@ namespace geo {
     return Intersections();
   }
 
-  math::Tuple TestShape::local_normal_at(const math::Tuple& local_point) const {
+  math::Tuple TestShape::local_normal_at(const math::Tuple& local_point, const Intersection& ix) const {
 
     return math::Vector(local_point.x, local_point.y, local_point.z);
   }
@@ -165,7 +165,7 @@ namespace geo {
     return result;      
   }
 
-  math::Tuple Sphere::local_normal_at(const math::Tuple& object_point) const {
+  math::Tuple Sphere::local_normal_at(const math::Tuple& object_point, const Intersection& ix) const {
 
       return object_point - math::Point(0.0, 0.0, 0.0);
   }
@@ -205,7 +205,7 @@ namespace geo {
     return Intersections {Intersection(t, this)};
   }
 
-  math::Tuple Plane::local_normal_at(const math::Tuple& local_point) const {
+  math::Tuple Plane::local_normal_at(const math::Tuple& local_point, const Intersection& ix) const {
 
     static const math::Tuple default_normal = math::Vector(0, 1, 0);
 
@@ -246,7 +246,7 @@ namespace geo {
     return ixs;
   };
   
-  math::Tuple Cube::local_normal_at(const math::Tuple& local_point) const {
+  math::Tuple Cube::local_normal_at(const math::Tuple& local_point, const Intersection& ix) const {
 
     // Find the component with the highest absolute value,
     // then return a vector pointing in that direction
@@ -333,7 +333,7 @@ namespace geo {
     return ixs;    
   }
 
-  math::Tuple Cylinder::local_normal_at(const math::Tuple& local_point) const {
+  math::Tuple Cylinder::local_normal_at(const math::Tuple& local_point, const Intersection& ix) const {
     
     // Compute the square of the distance from the y axis
     auto dist_sq = pow(local_point.x, 2) + pow(local_point.z, 2);
@@ -430,7 +430,7 @@ namespace geo {
     return ixs;    
   }  
 
-  math::Tuple DoubleCone::local_normal_at(const math::Tuple& local_point) const {
+  math::Tuple DoubleCone::local_normal_at(const math::Tuple& local_point, const Intersection& ix) const {
 
     // Compute the square of the distance from the y axis
     auto dist_sq = pow(local_point.x, 2) + pow(local_point.z, 2);
@@ -540,7 +540,7 @@ namespace geo {
     return Intersections {Intersection(t, this)};
   }
 
-  math::Tuple Triangle::local_normal_at(const math::Tuple& local_point) const {
+  math::Tuple Triangle::local_normal_at(const math::Tuple& local_point, const Intersection& ix) const {
 
     return normal;
   }
@@ -605,12 +605,12 @@ namespace geo {
 
     auto t = f * math::dot(e2, origin_cross_e1);
     
-    return Intersections {Intersection(t, this)};
+    return Intersections {Intersection(t, this, u, v)};
   }
 
-  math::Tuple SmoothTriangle::local_normal_at(const math::Tuple& local_point) const {
+  math::Tuple SmoothTriangle::local_normal_at(const math::Tuple& local_point, const Intersection& ix) const {
 
-    return normal;
+    return n2 * ix.u + n3 * ix.v + n1 * (1 - ix.u - ix.v);
   }
 
   bool SmoothTriangle::local_equality_predicate(const Shape* shape) const {
@@ -657,7 +657,7 @@ namespace geo {
     return group_intersections;
   }
 
-  math::Tuple Group::local_normal_at(const math::Tuple& local_point) const {
+  math::Tuple Group::local_normal_at(const math::Tuple& local_point, const Intersection& ix) const {
 
     // In a Group, normals are computed by calling children Shapes local_normal_at
     throw std::runtime_error {"Group.local_normal_at function should not be called"};
@@ -755,8 +755,8 @@ namespace geo {
   }
 
   
-  Intersection::Intersection(const float t_, geo::Shape* geo) :
-    t {t_}, geometry {geo->get_shared_ptr()} {}
+  Intersection::Intersection(const float t_, geo::Shape* geo, const float u_, const float v_) :
+    t {t_}, geometry {geo->get_shared_ptr()}, u {u_}, v {v_} {}
 
   Intersection& Intersection::operator=(const Intersection& source) {
 
@@ -827,7 +827,7 @@ namespace geo {
     // Precompute useful values
     comps.point = r.position(comps.t);
     comps.eye_vector = -r.direction;
-    comps.normal_vector = comps.geometry->normal_at(comps.point);
+    comps.normal_vector = comps.geometry->normal_at(comps.point, ix);
 
     // Find if the normal points away from the eye vector, ie intersection occured inside object
     if (math::dot(comps.eye_vector, comps.normal_vector) < 0) {
