@@ -40,12 +40,21 @@ namespace world {
      */    
     geo::Intersections intersects(const ray::Ray& ry) const;
 
-    /*! \fn bool is_point_shadowed(const math::Tuple& point) const
-     *  \brief Cast a shadow ray between the Intersection and the light to find if the point is in shadow
-     *  \param point the point to check
+    /*! \fn bool is_shadowed(const math::Tuple& light_position, const math::Tuple& point) const
+     *  \brief Cast a shadow ray between the Intersection and the light position to find if the given point is in shadow
+     *  \param point the point to pcheck
+     *  \param light_position the position of the light
      *  \return true if the point is in shadow
+     */      
+    bool is_shadowed(const math::Tuple& light_position, const math::Tuple& point) const;
+
+    /*! \fn float intensity_at(const light::PointLight light, const math::Tuple& point) const
+     *  \brief Evlauates the light intensity at a given point
+     *  \param light the Light for whch the intensity is calculated
+     *  \param point the Point to look intensity
+     *  \return a value between 0 and 1
      */    
-    bool is_point_shadowed(const math::Tuple& point) const;
+    float intensity_at(const light::PointLight light, const math::Tuple& point) const;
 
     /*! \fn color::Color shade_hit(const geo::Computations& comps, const int remaining) const
      *  \brief Find the color at the point, in the World

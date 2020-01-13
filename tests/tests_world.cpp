@@ -140,20 +140,62 @@ TEST(WorldTest, IsShadowedFunction) {
 
   // There is no shadow when nothing is collinear with point and light
   auto w = world::build_default_world();
+  const auto& light_position = w.light->position;
   auto p = math::Point(0, 10, 0);
-  EXPECT_FALSE(w.is_point_shadowed(p));
+  EXPECT_FALSE(w.is_shadowed(light_position, p));
 
   // There is shadow when an object is between the point and the light
   p = math::Point(10, -10, 10);
-  EXPECT_TRUE(w.is_point_shadowed(p));
+  EXPECT_TRUE(w.is_shadowed(light_position, p));
 
   // There is no shadow when an object is behind the light
   p = math::Point(-20, 20, -20);
-  EXPECT_FALSE(w.is_point_shadowed(p));
+  EXPECT_FALSE(w.is_shadowed(light_position, p));
 
   // The same
   p = math::Point(-2, 2, -2);
-  EXPECT_FALSE(w.is_point_shadowed(p));
+  EXPECT_FALSE(w.is_shadowed(light_position, p));
+}
+
+TEST(WorldTest, IsShadowedForOcclusionBetweenTwoPoints) {
+
+  auto world = world::build_default_world();
+  math::Point light_position(-10, -10, -10);
+
+  EXPECT_EQ(world.is_shadowed(light_position, math::Point(-10, -10, 10)), false);
+  EXPECT_EQ(world.is_shadowed(light_position, math::Point(10, 10, 10)), true);
+  EXPECT_EQ(world.is_shadowed(light_position, math::Point(-20, -20, -20)), false);
+  EXPECT_EQ(world.is_shadowed(light_position, math::Point(-5, -5, -5)), false);  
+}
+
+TEST(WorldTest, EvaluatesIntensityAtGivenPoint) {
+
+  struct TestInput {
+
+    math::Tuple point;
+    float result;
+
+    TestInput(const math::Tuple p, const float r) : point {p}, result {r} {}
+  };
+
+  std::vector<TestInput> test_inputs {
+				      TestInput(math::Point(0, 1.0001, 0), 1.0),
+				      TestInput(math::Point(-1.0001, 0, 0), 1.0),
+				      TestInput(math::Point(0, 0, -1.0001), 1.0),
+				      TestInput(math::Point(0, 0, 1.0001), 0.0),
+				      TestInput(math::Point(1.0001, 0, 0), 0.0),
+				      TestInput(math::Point(0, -1.0001, 0), 0.0),
+				      TestInput(math::Point(0, 0, 0), 0.0)
+  };
+  
+  auto world = world::build_default_world();
+  const auto& light= world.light;
+
+  for (const auto& input : test_inputs) {
+    float intensity = world.intensity_at(*light, input.point);
+    EXPECT_EQ(intensity, input.result);
+  }
+  
 }
 
 TEST(WorldTest, IsShadowedFunctionMaterialDoesNotCastShadow) {
@@ -165,10 +207,10 @@ TEST(WorldTest, IsShadowedFunctionMaterialDoesNotCastShadow) {
   w.objects.push_back(plane);
   
   auto point = math::Point(20, 0, 0);
-  EXPECT_TRUE(w.is_point_shadowed(point));
+  EXPECT_TRUE(w.is_shadowed(w.light->position, point));
 
   w.objects[0]->material.cast_shadow = false;
-  EXPECT_FALSE(w.is_point_shadowed(point));
+  EXPECT_FALSE(w.is_shadowed(w.light->position, point));
 }
 
 TEST(WorldTest, ReflectedColor) {

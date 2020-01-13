@@ -53,9 +53,9 @@ namespace world {
     return result;
   }
 
-  bool World::is_point_shadowed(const math::Tuple& point) const {
+  bool World::is_shadowed(const math::Tuple& light_position, const math::Tuple& point) const {
 
-    auto point_light_vec = light->position - point;
+    auto point_light_vec = light_position - point;
     auto point_light_magnitude = math::magnitude(point_light_vec);
     auto point_light_direction = math::normalize(point_light_vec);
     
@@ -81,9 +81,17 @@ namespace world {
     return false;
   }
 
+  float World::intensity_at(const light::PointLight light, const math::Tuple& point) const {
+
+    if (is_shadowed(light.position, point))
+      return 0.0;
+
+    return 1.0;
+  }
+  
   color::Color World::shade_hit(const geo::Computations& comps, const int remaining) const {
 
-    bool is_shadowed = is_point_shadowed(comps.over_point);
+    bool shadowed = is_shadowed(light->position, comps.over_point);
 
     // If we want several lights, we should iterate over lights and sum the resulting Color
     auto surface = light::lighting(comps.geometry.get(),
@@ -91,7 +99,7 @@ namespace world {
   				   comps.over_point, // ensure we are just above the surface, not below (floating point rounding errors...)
   				   comps.eye_vector,
   				   comps.normal_vector,
-  				   is_shadowed);
+  				   shadowed);
     
     auto reflected = reflected_color(comps, remaining);
     auto refracted = refracted_color(comps, remaining);
