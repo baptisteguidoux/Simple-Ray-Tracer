@@ -91,7 +91,8 @@ namespace world {
   
   color::Color World::shade_hit(const geo::Computations& comps, const int remaining) const {
 
-    bool shadowed = is_shadowed(light->position, comps.over_point);
+    //bool shadowed = is_shadowed(light->position, comps.over_point);
+    float intensity = intensity_at(*light, comps.over_point);
 
     // If we want several lights, we should iterate over lights and sum the resulting Color
     auto surface = light::lighting(comps.geometry.get(),
@@ -99,7 +100,7 @@ namespace world {
   				   comps.over_point, // ensure we are just above the surface, not below (floating point rounding errors...)
   				   comps.eye_vector,
   				   comps.normal_vector,
-  				   shadowed);
+  				   intensity);
     
     auto reflected = reflected_color(comps, remaining);
     auto refracted = refracted_color(comps, remaining);

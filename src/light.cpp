@@ -24,7 +24,7 @@ namespace light {
   }    
 
   color::Color lighting(geo::Shape* object, const PointLight light, const math::Tuple& position,
-  			const math::Tuple& eye_vector, const math::Tuple& normal_vector, const bool in_shadow) {
+  			const math::Tuple& eye_vector, const math::Tuple& normal_vector, const float intensity) {
 
     // Use material or pattern as color    
     auto color = color::Color();
@@ -43,7 +43,7 @@ namespace light {
     color::Color ambient = effective_color * object->material.ambient;
 
     // When the point is in shadow, the color is simply the ambient
-    if (in_shadow)
+    if (math::almost_equal(intensity, 0.0))
       return ambient;
 
     color::Color diffuse;
@@ -56,7 +56,7 @@ namespace light {
       specular = color::Color(0, 0, 0);
     } else {
       // Difuse contribution
-      diffuse = effective_color * object->material.diffuse * light_dot_normal;
+      diffuse = effective_color * object->material.diffuse * light_dot_normal * intensity;
 
       // reflect_dot_eye represents the cosine of the angle between the reflection vector and the eye vector
       // A negative number means the light reflects away from the eye
@@ -68,7 +68,7 @@ namespace light {
       else {
         // Specular contribution
         double factor = pow(reflect_dot_eye, double{object->material.shininess});
-  	specular = light.intensity * object->material.specular * factor;
+  	specular = light.intensity * object->material.specular * factor * intensity;
       }
     }
   
