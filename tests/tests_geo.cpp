@@ -87,7 +87,7 @@ TEST(GeoTest, IntersectionsCopyOperator) {
 
   auto intersections2 = intersections1;
 
-  for (auto i = 0; i < intersections1.size(); i++) {
+  for (size_t i = 0; i < intersections1.size(); i++) {
     EXPECT_EQ(intersections1[i], intersections2[i]);
     EXPECT_EQ(*intersections1[i].geometry, *intersections2[i].geometry);
     EXPECT_EQ(intersections1[i].geometry->transform, intersections2[i].geometry->transform);
@@ -118,7 +118,7 @@ TEST(GeoTest, IntersectionsCopyConstructor) {
 
   geo::Intersections intersections2 {intersections1};
 
-  for (auto i = 0; i < intersections1.size(); i++) {
+  for (size_t i = 0; i < intersections1.size(); i++) {
     EXPECT_EQ(intersections1[i], intersections2[i]);
     EXPECT_EQ(*intersections1[i].geometry, *intersections2[i].geometry);
     EXPECT_EQ(intersections1[i].geometry->transform, intersections2[i].geometry->transform);

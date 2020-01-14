@@ -71,7 +71,7 @@ namespace parser {
     
     std::vector<std::shared_ptr<geo::Triangle>> triangles;
     
-    for (int i = 2; i < vertices_idx.size(); i++) {
+    for (size_t i = 2; i < vertices_idx.size(); i++) {
       const math::Tuple& a = vertices[vertices_idx[0] - 1]; // obj file vertices index start at 1
       const math::Tuple& b = vertices[vertices_idx[i-1] - 1];
       const math::Tuple& c = vertices[vertices_idx[i] - 1];

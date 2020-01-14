@@ -82,7 +82,7 @@ namespace geo {
     return weak_from_this();
   }
 
-  void Shape::divide(const int threshold) {
+  void Shape::divide(const size_t threshold) {
     // Nothing happens for primitive Shapes. Group overrides this function
   }
 
@@ -659,7 +659,7 @@ namespace geo {
     return box;
   }
 
-  void Group::divide(const int threshold) {
+  void Group::divide(const size_t threshold) {
 
     if (threshold <= shapes.size()) {
       auto [left, right] = partition_children();

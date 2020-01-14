@@ -125,7 +125,7 @@ namespace geo {
      *  \brief Nothing happens for primitive Shape. Overriden by Group
      *  \param threshold minimum number of children to have before it will be divided
      */ 
-    virtual void divide(const int threshold);
+    virtual void divide(const size_t threshold);
 
   };
   
@@ -366,7 +366,7 @@ namespace geo {
      *  \brief recursively splits a group and its children. 
      *  \param threshold minimum number of children to have before it will be divided
      */ 
-    void divide(const int threshold) override;    
+    void divide(const size_t threshold) override;
   };
   
   /*! \fn math::Tuple reflect(const math::Tuple& vec, const math::Tuple& normal)
