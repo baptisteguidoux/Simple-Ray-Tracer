@@ -104,3 +104,31 @@ TEST(ParserTest, ConvertObjFileToGroup) {
   EXPECT_NE(g2_in_group, group->shapes.end());  
 }
 
+TEST(ParserTest, ParseVertexNormalsInObj) {
+
+  parser::ObjParser parser(std::string{TEST_DIR} + "vertex_normal.obj");
+  ASSERT_EQ(parser.normals.size(), 3);
+  EXPECT_EQ(parser.normals[0], math::Vector(0, 0, 1));
+  EXPECT_EQ(parser.normals[1], math::Vector(0.707, 0, -0.707));
+  EXPECT_EQ(parser.normals[2], math::Vector(1, 2, 3));
+}
+
+TEST(ParserTest, ParserAssociatesVertexNormalWithFacesInObj) {
+ 
+  parser::ObjParser parser(std::string{TEST_DIR} + "faces_and_vertex_normal.obj");
+
+  ASSERT_EQ(parser.default_group->shapes.size(), 2);
+  auto t1 = dynamic_cast<geo::SmoothTriangle*>(parser.default_group->shapes[0].get());
+  auto t2 = dynamic_cast<geo::SmoothTriangle*>(parser.default_group->shapes[1].get());
+  ASSERT_EQ(parser.vertices.size(), 3);
+  EXPECT_EQ(t1->p1, parser.vertices[0]);
+  EXPECT_EQ(t1->p2, parser.vertices[1]);  
+  EXPECT_EQ(t1->p3, parser.vertices[2]);
+  ASSERT_EQ(parser.normals.size(), 3);
+  EXPECT_EQ(t1->n1, parser.normals[2]);
+  EXPECT_EQ(t1->n2, parser.normals[0]);  
+  EXPECT_EQ(t1->n3, parser.normals[1]);
+  EXPECT_EQ(*t1, *t2);
+}
+
+

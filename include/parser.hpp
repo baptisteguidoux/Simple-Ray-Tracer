@@ -20,6 +20,7 @@ namespace parser {
     std::shared_ptr<geo::Group> default_group = std::make_shared<geo::Group>(); /// to receive geometry
     std::unordered_map<std::string, std::shared_ptr<geo::Group>> named_groups;
     std::string last_group_added;
+    std::vector<math::Tuple> normals; /// store the vertex normals ("vn")
 
     ObjParser(const std::string_view filepath);
 
@@ -42,7 +43,9 @@ namespace parser {
      *  \param vertices_idx vector of int, representing the position of the vertex in vertices member var
      *  \return a vector of triangles
      */
-    std::vector<std::shared_ptr<geo::Triangle>> fan_triangulation(const std::vector<int>& vertices_idx);
+    std::vector<std::shared_ptr<geo::Shape>> fan_triangulation(const std::vector<int>& vertices_idx);
+
+    std::vector<std::shared_ptr<geo::Shape>> fan_smoothtriangulation(const std::vector<int>& vertices_idx, const std::vector<int>& normals_idx);
   };
 
   /*! \fn double string_to_double(const std::string& s)
@@ -68,13 +71,19 @@ namespace parser {
 
 namespace parser {
 
-  static const std::regex RE_VERTEX_PATTERN {R"(^v\s(-?\d(?:\.\d+)?)\s(-?\d(?:\.\d+)?)\s(-?\d(?:\.\d+)?))"}; /// a 'v' followed by three int or floats
+  static const std::regex RE_VERTEX_PATTERN {R"(^v\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?))"}; /// a 'v' followed by three int or floats
 
-  static const std::regex RE_FACE_PATTERN {R"(^f(\s\d+){3,})"}; /// a 'f' followed by three or more int
+  static const std::regex RE_FACE_PATTERN {R"(^f(\s+\d+){3,})"}; /// a 'f' followed by three or more int
+
+  static const std::regex RE_FACE_COMPLEX_PATTERN {R"(f(\s(\d+)\/(\d+)?+\/(\d+)?){3,})"}; /// a 'f' followed by three group or more following: num/num?/num?
+
+  static const std::regex RE_FACE_COMPLEX_IDX {R"(\s+(\d+)\/(\d+)?\/(\d+)?)"};
+
+  static const std::regex RE_VERTEX_NORMAL_PATTERN {R"(^vn\s+(-?\d(?:\.\d+)?)\s+(-?\d(?:\.\d+)?)\s+(-?\d(?:\.\d+)?))"}; /// a 'vn' followed by three int or floats
 
   static const std::regex RE_FACE_IDX {R"((\d+))"};
 
-  static const std::regex RE_NAMED_GROUP {R"(^g\s(\w+))"};
+  static const std::regex RE_NAMED_GROUP {R"(^g\s+(\w+))"};
 }
 
 #endif

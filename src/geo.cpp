@@ -555,7 +555,7 @@ namespace geo {
     return false;
   }
 
-  BoundingBox Triangle::get_bounds() const  {
+  BoundingBox Triangle::get_bounds() const {
 
     BoundingBox bounds;
 
@@ -569,7 +569,7 @@ namespace geo {
   SmoothTriangle::SmoothTriangle(const math::Tuple& p1_, const math::Tuple& p2_,
 				 const math::Tuple& p3_, const math::Tuple& n1_,
 				 const math::Tuple& n2_, const math::Tuple& n3_)
-    : Triangle(p1_, p2_ ,p3_), n1 {n1_}, n2 {n2_}, n3 {n3_} {}
+    : Triangle(p1_, p2_ , p3_), n1 {n1_}, n2 {n2_}, n3 {n3_} {}
 
   SmoothTriangle::~SmoothTriangle() {}
 
