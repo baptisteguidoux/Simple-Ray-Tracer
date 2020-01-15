@@ -50,7 +50,6 @@ namespace geo {
 
     // It the Shape has a parent, first convert the point to its parent space
     if (auto parentptr = parent.lock()) {
-      //if (parent != nullptr) {
       auto parent_point = parentptr->world_to_object(world_point);
       return math::inverse(transform) * parent_point;
     }
@@ -65,7 +64,6 @@ namespace geo {
     normal.w = 0;
     normal = math::normalize(normal);
 
-    //if (parent != nullptr)
     if (auto parentptr = parent.lock())
       normal = parentptr->normal_to_world(normal);
 
@@ -597,15 +595,14 @@ namespace geo {
 
     if (get_bounds().intersects(local_ray)) {
       // Call intersects for each Shape of the Group
-      for (const auto& shrd_shape_ptr : shapes)
-	if (shrd_shape_ptr != nullptr) {
+      for (const auto& shrd_shape_ptr : shapes) {
 	  auto shape_intersections = shrd_shape_ptr->intersects(local_ray);
 	  group_intersections.insert(group_intersections.end(), shape_intersections.begin(), shape_intersections.end());
 	}    
 
       // sort intersections
       std::sort(group_intersections.begin(), group_intersections.end(),
-		[&](const Intersection& inter1, const Intersection& inter2){return inter1.t < inter2.t;});      
+		[&](const Intersection& inter1, const Intersection& inter2){return inter1.t < inter2.t;});
     }
     
     return group_intersections;
@@ -619,7 +616,7 @@ namespace geo {
 
   void Group::add_child(std::shared_ptr<Shape> shape) {
 
-    shapes.push_back(shape->get_shared_ptr());
+    shapes.push_back(shape);
     shape->parent = get_weak_ptr();
   }
 
@@ -669,7 +666,7 @@ namespace geo {
 	make_subgroup(right);
     }
 
-    for (const auto& child : shapes)
+    for (auto child : shapes)
       child->divide(threshold);
   }
 
@@ -686,14 +683,14 @@ namespace geo {
     for (const auto& shape : shapes) {
       auto shape_bounds = shape->get_parent_space_bounds();
       if (left_box.contains(shape_bounds))
-	  left_shapes.push_back(shape);
+	left_shapes.push_back(shape);
       else if (right_box.contains(shape_bounds))
-	right_shapes.push_back(shape);
+      	right_shapes.push_back(shape);
       else
-	group_shapes.push_back(std::move(shape));
+	group_shapes.push_back(shape);
     }
 
-    shapes = std::move(group_shapes);
+    shapes = group_shapes;
 
     return std::make_pair(left_shapes, right_shapes);
   }
@@ -708,7 +705,6 @@ namespace geo {
     shapes.push_back(std::move(subgroup));
   }
 
-  
   Intersection::Intersection(const float t_, geo::Shape* geo, const float u_, const float v_) :
     t {t_}, geometry {geo->get_shared_ptr()}, u {u_}, v {v_} {}
 
@@ -918,14 +914,20 @@ namespace geo {
     auto z1 = maximum.z;    
     // Adjust Points so that they lie on the dividing plane
     if (greatest == dx) {
-      x0 = x0 + dx / 2.0;
-      x1 = x0;
+      x1 = x0 + dx / 2.0;
+      x0 = x1;
+      // x0 = x0 + dx / 2.0;
+      // x1 = x0;
     } else if (greatest == dy) {
-      y0 = y0 + dy / 2.0;
-      y1 = y0;
+      y1 = y0 + dy / 2.0;
+      y0 = y1;
+      // y0 = y0 + dy / 2.0;
+      // y1 = y0;
     } else {
-      z0 = z0 + dz / 2.0;
-      z1 = z0;
+      z1 = z0 + dz / 2.0;
+      z0 = z1;
+      // z0 = z0 + dz / 2.0;
+      // z1 = z0;
     }
     
     auto mid_min = math::Point(x0, y0, z0);
