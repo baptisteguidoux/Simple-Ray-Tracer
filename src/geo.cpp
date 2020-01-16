@@ -80,11 +80,6 @@ namespace geo {
     return weak_from_this();
   }
 
-  void Shape::divide(const size_t threshold) {
-    // Nothing happens for primitive Shapes. Group overrides this function
-  }
-
-
   BoundingBox Shape::get_parent_space_bounds() const {
 
     return get_bounds().transform(transform);
@@ -598,7 +593,7 @@ namespace geo {
       for (const auto& shrd_shape_ptr : shapes) {
 	  auto shape_intersections = shrd_shape_ptr->intersects(local_ray);
 	  group_intersections.insert(group_intersections.end(), shape_intersections.begin(), shape_intersections.end());
-	}    
+	}
 
       // sort intersections
       std::sort(group_intersections.begin(), group_intersections.end(),
@@ -654,55 +649,6 @@ namespace geo {
       box.add(child->get_parent_space_bounds());
 
     return box;
-  }
-
-  void Group::divide(const size_t threshold) {
-
-    if (threshold <= shapes.size()) {
-      auto [left, right] = partition_children();
-      if (left.size() > 0)
-	make_subgroup(left);
-      if (right.size() > 0)
-	make_subgroup(right);
-    }
-
-    for (auto child : shapes)
-      child->divide(threshold);
-  }
-
-  std::pair<std::vector<std::shared_ptr<Shape>>, std::vector<std::shared_ptr<Shape>>> Group::partition_children() {
-
-    auto [left_box, right_box] = get_bounds().split();
-    // containers for the shapes that can be contain in the lef tor right BB
-    std::vector<std::shared_ptr<Shape>> left_shapes;
-    std::vector<std::shared_ptr<Shape>> right_shapes;
-    // the shapes remaining in this group (they do not fit entirely in a sub BB)
-    std::vector<std::shared_ptr<Shape>> group_shapes;
-    
-    // Check the Shapes that can be contain in either sub BB
-    for (const auto& shape : shapes) {
-      auto shape_bounds = shape->get_parent_space_bounds();
-      if (left_box.contains(shape_bounds))
-	left_shapes.push_back(shape);
-      else if (right_box.contains(shape_bounds))
-      	right_shapes.push_back(shape);
-      else
-	group_shapes.push_back(shape);
-    }
-
-    shapes = group_shapes;
-
-    return std::make_pair(left_shapes, right_shapes);
-  }
-
-  void Group::make_subgroup(const std::vector<std::shared_ptr<Shape>> shape_vec) {
-
-    auto subgroup = std::make_shared<Group>();
-    for (const auto& shapeptr : shape_vec) {
-      subgroup->add_child(shapeptr);
-    }
-
-    shapes.push_back(std::move(subgroup));
   }
 
   Intersection::Intersection(const float t_, geo::Shape* geo, const float u_, const float v_) :
@@ -896,47 +842,6 @@ namespace geo {
       return false;
 
     return true;
-  }
-
-  std::pair<BoundingBox, BoundingBox> BoundingBox::split() const {
-
-    // Find largest dimension
-    auto dx = maximum.x - minimum.x;
-    auto dy = maximum.y - minimum.y;
-    auto dz = maximum.z - minimum.z;
-    auto greatest = std::max(dx, std::max(dy, dz));
-
-    auto x0 = minimum.x;
-    auto y0 = minimum.y;
-    auto z0 = minimum.z;
-    auto x1 = maximum.x;
-    auto y1 = maximum.y;
-    auto z1 = maximum.z;    
-    // Adjust Points so that they lie on the dividing plane
-    if (greatest == dx) {
-      x1 = x0 + dx / 2.0;
-      x0 = x1;
-      // x0 = x0 + dx / 2.0;
-      // x1 = x0;
-    } else if (greatest == dy) {
-      y1 = y0 + dy / 2.0;
-      y0 = y1;
-      // y0 = y0 + dy / 2.0;
-      // y1 = y0;
-    } else {
-      z1 = z0 + dz / 2.0;
-      z0 = z1;
-      // z0 = z0 + dz / 2.0;
-      // z1 = z0;
-    }
-    
-    auto mid_min = math::Point(x0, y0, z0);
-    auto mid_max = math::Point(x1, y1, z1);    
-
-    BoundingBox left(minimum, mid_max);
-    BoundingBox right(mid_min, maximum);
-
-    return std::make_pair(left, right);
   }
       
 }

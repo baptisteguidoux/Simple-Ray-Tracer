@@ -121,12 +121,6 @@ namespace geo {
      */    
     BoundingBox get_parent_space_bounds() const;
 
-    /*! \fn virtual void divide(const int threshold)
-     *  \brief Nothing happens for primitive Shape. Overriden by Group
-     *  \param threshold minimum number of children to have before it will be divided
-     */ 
-    virtual void divide(const size_t threshold);
-
   };
   
   /*! \fn bool operator==(const Shape& first, const Shape& second)
@@ -351,22 +345,6 @@ namespace geo {
      */
     BoundingBox get_bounds() const override;
 
-    /*! \fn std::pair<std::vector<std::shared_ptr<Shape>>, std::vector<std::shared_ptr<Shape>>> partition_children()
-     *  \brief Splits the shapes betwen two vector, one for the left sided objects, another one for the right sided shapes. Shapes that are not entirely in one sub BB stays in this Group
-     *  \return a pair of vector of shapes ([left, right])
-     */
-    std::pair<std::vector<std::shared_ptr<Shape>>, std::vector<std::shared_ptr<Shape>>> partition_children();
-    /*! \fn void make_subgroup(const std::vector<std::shared_ptr<Shape>> shape_vec)
-     *  \brief Create a child Group and add the elements of shape_vec to it
-     *  \param shape_vec
-     */ 
-    void make_subgroup(const std::vector<std::shared_ptr<Shape>> shape_vec);
-
-    /*! \fn void divide(const int threshold) override
-     *  \brief recursively splits a group and its children. 
-     *  \param threshold minimum number of children to have before it will be divided
-     */ 
-    void divide(const size_t threshold) override;
   };
   
   /*! \fn math::Tuple reflect(const math::Tuple& vec, const math::Tuple& normal)
@@ -538,11 +516,6 @@ namespace geo {
      */
     bool intersects(const ray::Ray& r) const;
 
-    /*! \fn std::pair<BoundingBox, BoundingBox> split() const
-     *  \brief Split the BoundingBox on the longest axis
-     *  \return a pair of BoundingBox
-     */    
-    std::pair<BoundingBox, BoundingBox> split() const;
   };
   
 }
