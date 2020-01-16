@@ -797,9 +797,9 @@ namespace geo {
 
   bool BoundingBox::contains(const math::Tuple& point) const {
 
-    return (minimum.x <= point.x && maximum.x >= point.x &&
-	    minimum.y <= point.y && maximum.y >= point.y &&
-	    minimum.z <= point.z && maximum.z >= point.z);
+    return (minimum.x <= point.x && point.x <= maximum.x &&
+	    minimum.y <= point.y && point.y <= maximum.y &&
+	    minimum.z <= point.z && point.z <= maximum.z);
   }
 
   bool BoundingBox::contains(const BoundingBox& box) const {

@@ -1481,15 +1481,15 @@ TEST(GeoTest, BoundingBoxContainsPointFunc) {
     TestInput(math::Point(5, -2, 0), true),
     TestInput(math::Point(11, 4, 7), true),
     TestInput(math::Point(8, 1, 3), true),
-    TestInput(math::Point(3, 0, 3), true),
+    TestInput(math::Point(3, 0, 3), false),
     TestInput(math::Point(8, -4, 3), false),
     TestInput(math::Point(8, 1, -1), false),
     TestInput(math::Point(13, 1, 3), false),
     TestInput(math::Point(8, 5, 3), false),
-    TestInput(math::Point(8, 1, 8), false),      
+    TestInput(math::Point(8, 1, 8), false),
   };
   
-  auto box = geo::BoundingBox(math::Point(-5, -2, 0), math::Point(11, 4, 7));
+  auto box = geo::BoundingBox(math::Point(5, -2, 0), math::Point(11, 4, 7));
   for (const auto& input : inputs)
     EXPECT_EQ(box.contains(input.point), input.result);
 }
@@ -1512,7 +1512,7 @@ TEST(GeoTest, BoundingBoxContainsAnotherBoundingBoxFunc) {
     TestInput(math::Point(6, -1, 1), math::Point(12, 5, 8), false),
   };
 
-  auto box = geo::BoundingBox(math::Point(-5, -2, 0), math::Point(11, 4, 7));
+  auto box = geo::BoundingBox(math::Point(5, -2, 0), math::Point(11, 4, 7));
   for (const auto& input : inputs)
     EXPECT_EQ(box.contains(geo::BoundingBox(input.min, input.max)), input.result);
 }
