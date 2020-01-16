@@ -80,19 +80,11 @@ namespace world {
     // No hit, no shadow
     return false;
   }
-
-  float World::intensity_at(const light::PointLight light, const math::Tuple& point) const {
-
-    if (is_shadowed(light.position, point))
-      return 0.0;
-
-    return 1.0;
-  }
   
   color::Color World::shade_hit(const geo::Computations& comps, const int remaining) const {
 
     //bool shadowed = is_shadowed(light->position, comps.over_point);
-    float intensity = intensity_at(*light, comps.over_point);
+    float intensity = light->intensity_at(comps.over_point, *this);
 
     // If we want several lights, we should iterate over lights and sum the resulting Color
     auto surface = light::lighting(comps.geometry.get(),

@@ -5,6 +5,7 @@
 #include "light.hpp"
 #include "geo.hpp"
 #include "color.hpp"
+#include "world.hpp"
 
 
 namespace light {
@@ -12,6 +13,40 @@ namespace light {
   PointLight::PointLight(const math::Tuple& pos, const color::Color& int_) : position{pos}, intensity{int_} {}
 
   PointLight::PointLight() : position{math::Point(0, 0, 0)}, intensity{color::BLACK} {}
+
+  
+  float PointLight::intensity_at(const math::Tuple& point, const world::World& wrld) const {
+
+    if (wrld.is_shadowed(position, point))
+      return 0.0;
+
+    return 1.0;
+  }
+
+  AreaLight::AreaLight(const math::Tuple& corner_, const math::Tuple& uvec_, const uint usteps_,
+		       const math::Tuple& vvec_, const uint vsteps_, const color::Color& intensity_)
+    : corner {corner_}, uvec {uvec_ / usteps_}, usteps {usteps_}, vvec {vvec_ / vsteps_}, vsteps {vsteps_},
+      samples {usteps_ * vsteps_}, position {(uvec_ + vvec_) / 2}, intensity {intensity_} {
+	position.w = 1; // to Point
+      }
+
+  math::Tuple AreaLight::point_at(const uint u, const uint v) const {
+
+    return corner + uvec * (u + 0.5) + vvec * (v + 0.5);
+  }
+
+  float AreaLight::intensity_at(const math::Tuple& point, const world::World& wrld) const {
+
+    float intensity = 0;
+    for (uint u = 0; u < usteps; u++)
+      for (uint v = 0; v < vsteps; v++) {
+	auto light_pos = point_at(u, v);
+	if (! wrld.is_shadowed(light_pos, point))
+	  intensity += 1;
+      }
+
+    return intensity / samples;
+  }
 
   bool operator==(const PointLight& first, const PointLight& second) {
 

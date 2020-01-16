@@ -48,14 +48,6 @@ namespace world {
      */      
     bool is_shadowed(const math::Tuple& light_position, const math::Tuple& point) const;
 
-    /*! \fn float intensity_at(const light::PointLight light, const math::Tuple& point) const
-     *  \brief Evlauates the light intensity at a given point
-     *  \param light the Light for whch the intensity is calculated
-     *  \param point the Point to look intensity
-     *  \return a value between 0 and 1
-     */    
-    float intensity_at(const light::PointLight light, const math::Tuple& point) const;
-
     /*! \fn color::Color shade_hit(const geo::Computations& comps, const int remaining) const
      *  \brief Find the color at the point, in the World
      *  \param comps the Conputations containing the point

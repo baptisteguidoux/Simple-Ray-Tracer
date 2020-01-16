@@ -192,7 +192,7 @@ TEST(WorldTest, EvaluatesIntensityAtGivenPoint) {
   const auto& light= world.light;
 
   for (const auto& input : test_inputs) {
-    float intensity = world.intensity_at(*light, input.point);
+    float intensity = light->intensity_at(input.point, world);
     EXPECT_EQ(intensity, input.result);
   }
   

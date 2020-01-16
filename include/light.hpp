@@ -11,6 +11,11 @@
 #include "color.hpp"
 
 
+// Forward declaration
+namespace world {
+  class World;
+}
+
 /*! \namespace light
  */
 namespace light {
@@ -29,10 +34,53 @@ namespace light {
      */
     PointLight(const math::Tuple& pos, const color::Color& int_);
 
-    /* PointLight constructor
+    /*! PointLight constructor
      */    
     PointLight();
+
+    /*! \fn float intensity_at(const light::PointLight light, const math::Tuple& point) const
+     *  \brief Evaluates the light intensity at a given point
+     *  \param point the Point to look intensity
+     *  \param world the World where the Point is
+     *  \return a value between 0 and 1
+     */    
+    float intensity_at(const math::Tuple& point, const world::World& wrld) const;
     
+  };
+
+  /*! \class AreaLight
+   *  \brief a flat, rectangular light source
+   */
+  class AreaLight {
+  public:
+    
+    math::Tuple corner; /// position of one corner of the light  source
+    math::Tuple uvec; /// u dimension of a single cell
+    uint usteps; // how many points are sampled along the u edge
+    math::Tuple vvec;
+    uint vsteps;
+    uint samples; /// number of cells (samples) in the area light, usteps * vsteps
+    math::Tuple position; /// center of the AreaLight
+    color::Color intensity;
+
+    AreaLight(const math::Tuple& corner_, const math::Tuple& uvec_, const uint usteps_,
+	      const math::Tuple& vvec_, const uint vsteps_, const color::Color& intensity_);
+
+    /*! \fn math::Tuple point_at(const uint u, const uint v)
+     *  \brief get the point in the middle of the cell at the given coordinates
+     *  \param u u coordinate
+     *  \param v v coordinate
+     *  \return the Point at the middle of the cell
+     */
+    math::Tuple point_at(const uint u, const uint v) const;
+
+    /*! \fn float intensity_at(const math::Tuple& point, const world::World& world)
+     *  \brief Evaluates the light intensity at a given point
+     *  \param point the Point to look intensity
+     *  \param world the World where the Point is
+     *  \return a float value between 0 and 1
+     */
+    float intensity_at(const math::Tuple& point, const world::World& wrld) const;
   };
 
   /*! \fn bool operator==(const PointLight& first, const PointLight& second)
