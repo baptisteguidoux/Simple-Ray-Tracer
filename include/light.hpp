@@ -20,13 +20,38 @@ namespace world {
  */
 namespace light {
 
+  /*! \struct SequenceGenerator
+   *  \brief useful to sample a random subset of points on the AreaLight
+   */
+  struct SequenceGenerator {
+    std::vector<float> m_seq;
+    size_t index = 0;
+
+    SequenceGenerator(std::initializer_list<float> float_seq);
+
+    SequenceGenerator() = default;
+
+    float next();
+    
+  };
+
+  /*! \class Light
+   *  \brief Base class for all lights
+   */
+  class Light {
+  public:
+    math::Tuple position;
+    color::Color intensity;
+
+    Light(const math::Tuple& pos, const color::Color& int_);
+
+    virtual ~Light() = 0;
+  };
+
   /*! \class PointLight
    */
-  class PointLight {
+  class PointLight : public Light {
   public:
-
-    math::Tuple position; 
-    color::Color intensity;
 
     /* PointLight constructor
      * \param pos PointLight's position
@@ -37,6 +62,8 @@ namespace light {
     /*! PointLight constructor
      */    
     PointLight();
+
+    ~PointLight();
 
     /*! \fn float intensity_at(const light::PointLight light, const math::Tuple& point) const
      *  \brief Evaluates the light intensity at a given point
@@ -51,7 +78,7 @@ namespace light {
   /*! \class AreaLight
    *  \brief a flat, rectangular light source
    */
-  class AreaLight {
+  class AreaLight : public Light {
   public:
     
     math::Tuple corner; /// position of one corner of the light  source
@@ -60,19 +87,20 @@ namespace light {
     math::Tuple vvec;
     uint vsteps;
     uint samples; /// number of cells (samples) in the area light, usteps * vsteps
-    math::Tuple position; /// center of the AreaLight
-    color::Color intensity;
+    SequenceGenerator jitter_by; /// to randomly select the point in each cell
 
     AreaLight(const math::Tuple& corner_, const math::Tuple& uvec_, const uint usteps_,
 	      const math::Tuple& vvec_, const uint vsteps_, const color::Color& intensity_);
 
+    ~AreaLight();
+    
     /*! \fn math::Tuple point_at(const uint u, const uint v)
      *  \brief get the point in the middle of the cell at the given coordinates
      *  \param u u coordinate
      *  \param v v coordinate
      *  \return the Point at the middle of the cell
      */
-    math::Tuple point_at(const uint u, const uint v) const;
+    math::Tuple point_at(const uint u, const uint v);
 
     /*! \fn float intensity_at(const math::Tuple& point, const world::World& world)
      *  \brief Evaluates the light intensity at a given point
@@ -80,7 +108,7 @@ namespace light {
      *  \param world the World where the Point is
      *  \return a float value between 0 and 1
      */
-    float intensity_at(const math::Tuple& point, const world::World& wrld) const;
+    float intensity_at(const math::Tuple& point, const world::World& wrld);
   };
 
   /*! \fn bool operator==(const PointLight& first, const PointLight& second)

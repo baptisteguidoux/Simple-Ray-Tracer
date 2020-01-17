@@ -29,6 +29,14 @@ TEST(LightTest, PointLightConstructor) {
   EXPECT_EQ(light2.intensity, color::Color(0, 0, 0));
 }
 
+TEST(LightTest, PointLightDerivesFromLight) {
+
+  auto position = math::Point(0.0, 0.0, 0.0);
+  auto intensity = color::Color(1, 1, 1);  
+  auto point_light = std::make_shared<light::PointLight>(position, intensity);
+  EXPECT_NE(dynamic_cast<light::Light*>(point_light.get()), nullptr);  
+}
+
 TEST(LightTest, PointLightEquality) {
 
   auto position = math::Point(0.0, 0.0, 0.0);
@@ -138,6 +146,16 @@ TEST(LightTest, AreaLightConstructor) {
   EXPECT_EQ(light.position, math::Point(1, 0, 0.5));
 }
 
+TEST(LightTest, AreaLightDerivesFromLight) {
+
+  math::Point corner(0, 0, 0);
+  math::Vector v1(2, 0, 0);
+  math::Vector v2(0, 0, 1);  
+
+  auto area_light = std::make_shared<light::AreaLight>(corner, v1, 4, v2, 2, color::WHITE);
+  EXPECT_NE(dynamic_cast<light::Light*>(area_light.get()), nullptr);  
+}
+
 TEST(LightTest, FindSinglePointOnAreaLight) {
 
   struct TestInput {
@@ -189,5 +207,41 @@ TEST(LightTest, AreaLightIntensityFunction) {
 
   for (const auto& input : inputs)
     EXPECT_EQ(light.intensity_at(input.point, w), input.result);
+}
+
+TEST(LightTest, NumberGenerator) {
+
+  auto gen = light::SequenceGenerator{0.1, 0.5, 1.0};
+  EXPECT_TRUE(math::almost_equal(gen.next(), 0.1));
+  EXPECT_TRUE(math::almost_equal(gen.next(), 0.5));
+  EXPECT_TRUE(math::almost_equal(gen.next(), 1.0));
+  EXPECT_TRUE(math::almost_equal(gen.next(), 0.1));  
+}
+
+TEST(LightTest, FindingASinglePointOnAJitteredAreaLight) {
+
+  math::Point corner(0, 0, 0);
+  math::Vector v1(2, 0, 0);
+  math::Vector v2(0, 0, 1);
+  light::AreaLight light(corner, v1, 4, v2, 2, color::WHITE);
+  light.jitter_by = light::SequenceGenerator{0.3, 0.7};
+
+  struct TestInput {
+    uint u;
+    uint v;
+    math::Tuple result;
+    TestInput(const uint u_, const uint v_, const math::Tuple r) : u {u_}, v {v_}, result {r} {}
+  };
+
+  std::vector<TestInput> inputs {
+      TestInput(0, 0, math::Point(0.15, 0, 0.35)),
+      TestInput(1, 0, math::Point(0.65, 0, 0.35)),
+      TestInput(0, 1, math::Point(0.15, 0, 0.85)),
+      TestInput(2, 0, math::Point(1.15, 0, 0.35)),
+      TestInput(3, 1, math::Point(1.65, 0, 0.85)),
+  };
+
+  for (const auto& input : inputs)
+    EXPECT_EQ(light.point_at(input.u, input.v), input.result);
 }
 

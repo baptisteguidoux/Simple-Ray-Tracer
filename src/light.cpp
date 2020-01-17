@@ -9,11 +9,27 @@
 
 
 namespace light {
+
+  SequenceGenerator::SequenceGenerator(std::initializer_list<float> float_seq) : m_seq {float_seq} {}
+
+  float SequenceGenerator::next() {
+    if (index >= m_seq.size())
+      index = 0;
+    
+    index++;
+    
+    return m_seq[index - 1];
+  }
+
+  Light::Light(const math::Tuple& pos, const color::Color& int_) : position{pos}, intensity{int_} {}
+
+  Light::~Light() {}
   
-  PointLight::PointLight(const math::Tuple& pos, const color::Color& int_) : position{pos}, intensity{int_} {}
+  PointLight::PointLight(const math::Tuple& pos, const color::Color& int_) : Light(pos, int_) {}
 
-  PointLight::PointLight() : position{math::Point(0, 0, 0)}, intensity{color::BLACK} {}
+  PointLight::PointLight() : Light(math::Point(0, 0, 0), color::BLACK) {}
 
+  PointLight::~PointLight() {}
   
   float PointLight::intensity_at(const math::Tuple& point, const world::World& wrld) const {
 
@@ -25,17 +41,20 @@ namespace light {
 
   AreaLight::AreaLight(const math::Tuple& corner_, const math::Tuple& uvec_, const uint usteps_,
 		       const math::Tuple& vvec_, const uint vsteps_, const color::Color& intensity_)
-    : corner {corner_}, uvec {uvec_ / usteps_}, usteps {usteps_}, vvec {vvec_ / vsteps_}, vsteps {vsteps_},
-      samples {usteps_ * vsteps_}, position {(uvec_ + vvec_) / 2}, intensity {intensity_} {
+    : Light(((uvec_ + vvec_) / 2), intensity_),  corner {corner_}, uvec {uvec_ / usteps_}, usteps {usteps_}, vvec {vvec_ / vsteps_}, vsteps {vsteps_},
+      samples {usteps_ * vsteps_} {
 	position.w = 1; // to Point
+	jitter_by = SequenceGenerator{0.5}; /// default
       }
 
-  math::Tuple AreaLight::point_at(const uint u, const uint v) const {
+  AreaLight::~AreaLight() {}
 
-    return corner + uvec * (u + 0.5) + vvec * (v + 0.5);
+  math::Tuple AreaLight::point_at(const uint u, const uint v) {
+
+    return corner + uvec * (u + jitter_by.next()) + vvec * (v + jitter_by.next());
   }
 
-  float AreaLight::intensity_at(const math::Tuple& point, const world::World& wrld) const {
+  float AreaLight::intensity_at(const math::Tuple& point, const world::World& wrld) {
 
     float intensity = 0;
     for (uint u = 0; u < usteps; u++)
