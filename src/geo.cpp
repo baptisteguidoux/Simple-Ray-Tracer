@@ -105,10 +105,12 @@ namespace geo {
 
     return ! (first == second);
   }
-
-  TestShape::~TestShape() {
+  
+  TestShape::TestShape() {
     bounds = get_bounds();
   };
+  
+  TestShape::~TestShape() {};
 
   Intersections TestShape::local_intersects(const ray::Ray& local_ray) {
 
@@ -132,10 +134,12 @@ namespace geo {
     return BoundingBox(math::Point(-1, -1, -1),
 		       math::Point(1, 1, 1));
   }
-  
-  Sphere::~Sphere() {
+
+  Sphere::Sphere() {
     bounds = get_bounds();    
-  };
+  };  
+  
+  Sphere::~Sphere() {};
   
   Intersections Sphere::local_intersects(const ray::Ray& local_ray) {
       
@@ -193,9 +197,11 @@ namespace geo {
     return sphere;
   }
 
-  Plane::~Plane() {
+  Plane::Plane() {
     bounds = get_bounds();    
-  };
+  };  
+
+  Plane::~Plane() {};
 
   Intersections Plane::local_intersects(const ray::Ray& local_ray) {
 
@@ -228,9 +234,11 @@ namespace geo {
 		       math::Point(INFINITY, 0, INFINITY));
   }
 
-  Cube::~Cube() {
+  Cube::Cube() {
     bounds = get_bounds();    
   };
+
+  Cube::~Cube() {};
 
   Intersections Cube::local_intersects(const ray::Ray& local_ray) {
 
@@ -281,10 +289,22 @@ namespace geo {
 		       math::Point(1, 1, 1));
   }
 
-  Cylinder::~Cylinder() {
+  Cylinder::Cylinder() {
     bounds = get_bounds();    
-  };
+  };  
+
+  Cylinder::~Cylinder() {};
+
+  void Cylinder::set_minimum(const float min) {
+    minimum = min;
+    bounds = get_bounds(); 
+  }
   
+  void Cylinder::set_maximum(const float max) {
+    maximum = max;
+    bounds = get_bounds(); 
+  }  
+
   Intersections Cylinder::local_intersects(const ray::Ray& local_ray) {
 
     auto a = pow(local_ray.direction.x, 2) + pow(local_ray.direction.z, 2);
@@ -370,10 +390,22 @@ namespace geo {
     return BoundingBox(math::Point(-1, minimum, -1),
 		       math::Point(1, maximum, 1));
   }
-  
-  DoubleCone::~DoubleCone() {
+
+  DoubleCone::DoubleCone() {
     bounds = get_bounds();    
-  };
+  };  
+  
+  DoubleCone::~DoubleCone() {};
+
+  void DoubleCone::set_minimum(const float min) {
+    minimum = min;
+    bounds = get_bounds(); 
+  }
+  
+  void DoubleCone::set_maximum(const float max) {
+    maximum = max;
+    bounds = get_bounds(); 
+  }  
 
   Intersections DoubleCone::local_intersects(const ray::Ray& local_ray) {
 
@@ -521,11 +553,10 @@ namespace geo {
     e1 = p2 - p1;
     e2 = p3 - p1;
     normal = math::normalize(math::cross(e2, e1));
+    bounds = get_bounds(); 
   }
 
-  Triangle::~Triangle() {
-    bounds = get_bounds();    
-  }
+  Triangle::~Triangle() {}
 
   Intersections Triangle::local_intersects(const ray::Ray& local_ray) {
 
@@ -604,9 +635,7 @@ namespace geo {
     return false;
   }
     
-  Group::~Group() {
-    bounds = get_bounds();    
-  }
+  Group::~Group() {}
 
   Intersections Group::local_intersects(const ray::Ray& local_ray) {
 
@@ -636,6 +665,7 @@ namespace geo {
 
   void Group::add_child(std::shared_ptr<Shape> shape) {
 
+    bounds.add(shape->get_parent_space_bounds());
     shapes.push_back(shape);
     shape->parent = get_weak_ptr();
   }
@@ -721,8 +751,10 @@ namespace geo {
     }
 
     *this = *same_group;
-    add_child(left_group);
-    add_child(right_group);
+    if (left_group->shapes.size() > 0)
+      add_child(left_group);
+    if (right_group->shapes.size() > 0)
+      add_child(right_group);
     //shapes = group_shapes;
 
     //return std::make_pair(left_shapes, right_shapes);

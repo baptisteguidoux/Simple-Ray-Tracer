@@ -214,6 +214,8 @@ namespace geo {
   class TestShape : public Shape {
   public:
 
+    TestShape();
+
     ~TestShape() override;
    
     ray::Ray saved_ray = ray::Ray(math::Point(0, 0, 0), math::Vector(0, 0, 0));
@@ -232,6 +234,8 @@ namespace geo {
    */  
   class Sphere : public Shape {
   public:
+
+    Sphere();
 
     ~Sphere() override;
     
@@ -252,6 +256,8 @@ namespace geo {
   class Plane : public Shape {
   public:
 
+    Plane();
+
     ~Plane() override;
     
     Intersections local_intersects(const ray::Ray& local_ray) override;
@@ -268,6 +274,8 @@ namespace geo {
    */
   class Cube : public Shape {
   public:
+
+    Cube();
 
     ~Cube() override;
     
@@ -290,7 +298,21 @@ namespace geo {
     float maximum = INFINITY; /*<! maximum value on the y axis (upper bound) (default not truncated)*/
     bool closed = false; /*<! if the cylinder is capped */
 
+    Cylinder();
+
     ~Cylinder() override;
+
+    /*! \fn  void set_minimum(const float min)
+     *  \brief set the minimum and then update the BoundingBox
+     *  \param min the new minimum value
+     */
+    void set_minimum(const float min);
+
+    /*! \fn  void set_maximum(const float max)
+     *  \brief set the maximum and then update the BoundingBox
+     *  \param max the new maximum value
+     */    
+    void set_maximum(const float max);
     
     Intersections local_intersects(const ray::Ray& local_ray) override;
 
@@ -320,7 +342,21 @@ namespace geo {
     float maximum = INFINITY; /*<! maximum value on the y axis (upper bound) (default not truncated)*/
     bool closed = false; /*<! if the cone is capped */
 
+    DoubleCone();
+
     ~DoubleCone() override;
+
+    /*! \fn  void set_minimum(const float min)
+     *  \brief set the minimum and then update the BoundingBox
+     *  \param min the new minimum value
+     */
+    void set_minimum(const float min);
+
+    /*! \fn  void set_maximum(const float max)
+     *  \brief set the maximum and then update the BoundingBox
+     *  \param max the new maximum value
+     */    
+    void set_maximum(const float max);    
     
     Intersections local_intersects(const ray::Ray& local_ray) override;
 

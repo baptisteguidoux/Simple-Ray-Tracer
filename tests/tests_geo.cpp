@@ -1355,59 +1355,57 @@ TEST(GeoTest, SphereBoundingBox) {
 
   // An untransformed Sphere extends from -1 to 1 on x, y and z axis
   auto sphere = std::make_shared<geo::Sphere>();
-  auto bounds = sphere->get_bounds();
+  //auto bounds = sphere->get_bounds();
 
-  EXPECT_EQ(bounds.minimum, math::Point(-1, -1, -1));
-  EXPECT_EQ(bounds.maximum, math::Point(1, 1, 1));
+  EXPECT_EQ(sphere->bounds.minimum, math::Point(-1, -1, -1));
+  EXPECT_EQ(sphere->bounds.maximum, math::Point(1, 1, 1));
 }
 
 TEST(GeoTest, PlaneBoundingBox) {
   
   // An untransformed Plane stretches to  infinity on x and z, 0 on y
   auto plane = std::make_shared<geo::Plane>();
-  auto bounds = plane->get_bounds();
 
-  EXPECT_EQ(bounds.minimum.x, -INFINITY);
-  EXPECT_EQ(bounds.minimum.y, 0);
-  EXPECT_EQ(bounds.minimum.z, -INFINITY);
+  EXPECT_EQ(plane->bounds.minimum.x, -INFINITY);
+  EXPECT_EQ(plane->bounds.minimum.y, 0);
+  EXPECT_EQ(plane->bounds.minimum.z, -INFINITY);
   
-  EXPECT_EQ(bounds.maximum.x, INFINITY);
-  EXPECT_EQ(bounds.maximum.y, 0);  
-  EXPECT_EQ(bounds.maximum.z, INFINITY);
+  EXPECT_EQ(plane->bounds.maximum.x, INFINITY);
+  EXPECT_EQ(plane->bounds.maximum.y, 0);  
+  EXPECT_EQ(plane->bounds.maximum.z, INFINITY);
 }
 
 TEST(GeoTest, CubeBoundingBox) {
   
   // An untransformed Cube extends from -1 to 1 on x, y and z
   auto cube = std::make_shared<geo::Cube>();
-  auto bounds = cube->get_bounds();
 
-  EXPECT_EQ(bounds.minimum, math::Point(-1, -1, -1));
-  EXPECT_EQ(bounds.maximum, math::Point(1, 1, 1));  
+  EXPECT_EQ(cube->bounds.minimum, math::Point(-1, -1, -1));
+  EXPECT_EQ(cube->bounds.maximum, math::Point(1, 1, 1));  
 }
 
 TEST(GeoTest, CylinderBoundingBox) {
   
   // An untransformed untruncated Cylinder is infinite on y, and extends from -1 to 1 on x and z
   auto cylinder = std::make_shared<geo::Cylinder>();
-  auto bounds = cylinder->get_bounds();
 
-  EXPECT_EQ(bounds.minimum.x, -1);
-  EXPECT_EQ(bounds.minimum.y, -INFINITY);
-  EXPECT_EQ(bounds.minimum.z, -1);
+  EXPECT_EQ(cylinder->bounds.minimum.x, -1);
+  EXPECT_EQ(cylinder->bounds.minimum.y, -INFINITY);
+  EXPECT_EQ(cylinder->bounds.minimum.z, -1);
 
-  EXPECT_EQ(bounds.maximum.x, 1);
-  EXPECT_EQ(bounds.maximum.y, INFINITY);
-  EXPECT_EQ(bounds.maximum.z, 1);  
+  EXPECT_EQ(cylinder->bounds.maximum.x, 1);
+  EXPECT_EQ(cylinder->bounds.maximum.y, INFINITY);
+  EXPECT_EQ(cylinder->bounds.maximum.z, 1);  
 }
 
 TEST(GeoTest, TruncatedCylinderBoundingBox) {
   
   // An untransformed untruncated Truncated_Cylinder is infinite on y, and extends from -1 to 1 on x and z
   auto truncated_cylinder = std::make_shared<geo::Cylinder>();
-  truncated_cylinder->minimum = -5;
-  truncated_cylinder->maximum = 3;
-  auto bounds = truncated_cylinder->get_bounds();
+  // TODO: Add member func to set min and max, updating the boundingbox
+  truncated_cylinder->set_minimum(-5);
+  truncated_cylinder->set_maximum(3);
+  auto bounds = truncated_cylinder->bounds;//truncated_cylinder->get_bounds();
 
   EXPECT_EQ(bounds.minimum.x, -1);
   EXPECT_EQ(bounds.minimum.y, -5);
@@ -1437,9 +1435,9 @@ TEST(GeoTest, TruncatedConeBoundingBox) {
   
   // An untransformed  truncated Cone is infinite on y, and its radius (x, z) extends from -y to y
   auto truncated_cone = std::make_shared<geo::DoubleCone>();
-  truncated_cone->minimum = -5;
-  truncated_cone->maximum = 3;
-  auto bounds = truncated_cone->get_bounds();
+  truncated_cone->set_minimum(-5);
+  truncated_cone->set_maximum(3);
+  auto bounds = truncated_cone->bounds;
 
   EXPECT_EQ(bounds.minimum, math::Point(-5, -5, -5));
   EXPECT_EQ(bounds.maximum, math::Point(5, 3, 5));
@@ -1452,7 +1450,7 @@ TEST(GeoTest, TriangleBoundingBox) {
   math::Point p2(6, 2, -4);
   math::Point p3(2, -1, -1);
   auto triangle = std::make_shared<geo::Triangle>(p1, p2, p3);
-  auto bounds = triangle->get_bounds();
+  auto bounds = triangle->bounds;
 
   EXPECT_EQ(bounds.minimum, math::Point(-3, -1, -4));
   EXPECT_EQ(bounds.maximum, math::Point(6, 7, 2));
@@ -1542,15 +1540,15 @@ TEST(GeoTest, BoundingBoxGroup) {
   sphere->transform = math::translation(2, 5, -3) * math::scaling(2, 2, 2);
 
   auto cyl = std::make_shared<geo::Cylinder>();
-  cyl->minimum = -2;
-  cyl->maximum = 2;
+  cyl->set_minimum(-2);
+  cyl->set_maximum(2);
   cyl->transform = math::translation(-4, -1, 4) * math::scaling(0.5, 1, 0.5);
 
   auto group = std::make_shared<geo::Group>();
   group->add_child(sphere);
   group->add_child(cyl);
 
-  auto box = group->get_bounds();
+  auto box = group->bounds;//nds();
   EXPECT_EQ(box.minimum, math::Point(-4.5, -3, -5));
   EXPECT_EQ(box.maximum, math::Point(4, 7, 4.5));
 }
@@ -1629,7 +1627,9 @@ TEST(GeoTest, GroupIntersectsIfBoundingBoxMissedNoTestChildren) {
 
   auto child = std::make_shared<geo::TestShape>();
   auto group = std::make_shared<geo::Group>();
+  std::cout << group->bounds.minimum << ", " << group->bounds.maximum << std::endl;
   group->add_child(child);
+  std::cout << group->bounds.minimum << ", " << group->bounds.maximum << std::endl;
   ray::Ray r(math::Point(0, 0, -5), math::Vector(0, 1, 0));
   auto xs = group->intersects(r);
   EXPECT_EQ(child->saved_ray, ray::Ray(math::Point(0, 0, 0), math::Vector(0, 0, 0)));

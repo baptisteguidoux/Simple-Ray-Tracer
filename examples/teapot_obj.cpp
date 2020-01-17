@@ -25,11 +25,11 @@ void triangle_iterate(std::vector<std::shared_ptr<geo::Shape>> shapes) {
 int main() {
 
 
-  parser::ObjParser parser("/home/baptiste/dev/Simple-Ray-Tracer/examples/Teapot.obj");
+  parser::ObjParser parser("/datas/guiba/packages/perso/Cpp/Simple-Ray-Tracer/examples/Teapot.obj");
 
   auto teapot = parser.to_group();
   teapot->transform = math::translation(0, -1, 1) * math::scaling(0.05, 0.05, 0.05) * math::rotation_y(M_PI);
-  //teapot->divide(5);
+  teapot->divide(5);
   
   //triangle_iterate(teapot->shapes);
 
@@ -53,7 +53,7 @@ int main() {
   // geo::Group* subchild = dynamic_cast<geo::Group*>(child->shapes[0].get());
   // std::cout << "subobject size: " << subchild->shapes.size() << '\n';
   auto image = camera::render_threaded(camera, wrld);
-  image.write_ppm("/home/baptiste/teapot_test.ppm");
+  image.write_ppm("/datas/guiba/teapot_test.ppm");
   
   return 0;
 }
