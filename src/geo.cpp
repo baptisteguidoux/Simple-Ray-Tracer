@@ -87,7 +87,8 @@ namespace geo {
 
   BoundingBox Shape::get_parent_space_bounds() const {
 
-    return get_bounds().transform(transform);
+    return bounds.transform(transform);
+    //    return get_bounds().transform(transform);
   }
 
   bool operator==(const Shape& first, const Shape& second) {
@@ -105,7 +106,9 @@ namespace geo {
     return ! (first == second);
   }
 
-  TestShape::~TestShape() {};
+  TestShape::~TestShape() {
+    bounds = get_bounds();
+  };
 
   Intersections TestShape::local_intersects(const ray::Ray& local_ray) {
 
@@ -130,7 +133,9 @@ namespace geo {
 		       math::Point(1, 1, 1));
   }
   
-  Sphere::~Sphere() {};
+  Sphere::~Sphere() {
+    bounds = get_bounds();    
+  };
   
   Intersections Sphere::local_intersects(const ray::Ray& local_ray) {
       
@@ -188,7 +193,9 @@ namespace geo {
     return sphere;
   }
 
-  Plane::~Plane() {};
+  Plane::~Plane() {
+    bounds = get_bounds();    
+  };
 
   Intersections Plane::local_intersects(const ray::Ray& local_ray) {
 
@@ -221,7 +228,9 @@ namespace geo {
 		       math::Point(INFINITY, 0, INFINITY));
   }
 
-  Cube::~Cube() {};
+  Cube::~Cube() {
+    bounds = get_bounds();    
+  };
 
   Intersections Cube::local_intersects(const ray::Ray& local_ray) {
 
@@ -272,7 +281,9 @@ namespace geo {
 		       math::Point(1, 1, 1));
   }
 
-  Cylinder::~Cylinder() {};
+  Cylinder::~Cylinder() {
+    bounds = get_bounds();    
+  };
   
   Intersections Cylinder::local_intersects(const ray::Ray& local_ray) {
 
@@ -360,7 +371,9 @@ namespace geo {
 		       math::Point(1, maximum, 1));
   }
   
-  DoubleCone::~DoubleCone() {};
+  DoubleCone::~DoubleCone() {
+    bounds = get_bounds();    
+  };
 
   Intersections DoubleCone::local_intersects(const ray::Ray& local_ray) {
 
@@ -510,7 +523,9 @@ namespace geo {
     normal = math::normalize(math::cross(e2, e1));
   }
 
-  Triangle::~Triangle() {}
+  Triangle::~Triangle() {
+    bounds = get_bounds();    
+  }
 
   Intersections Triangle::local_intersects(const ray::Ray& local_ray) {
 
@@ -567,7 +582,9 @@ namespace geo {
   SmoothTriangle::SmoothTriangle(const math::Tuple& p1_, const math::Tuple& p2_,
 				 const math::Tuple& p3_, const math::Tuple& n1_,
 				 const math::Tuple& n2_, const math::Tuple& n3_)
-    : Triangle(p1_, p2_ , p3_), n1 {n1_}, n2 {n2_}, n3 {n3_} {}
+    : Triangle(p1_, p2_ , p3_), n1 {n1_}, n2 {n2_}, n3 {n3_} {
+      bounds = get_bounds();      
+    }
 
   SmoothTriangle::~SmoothTriangle() {}
 
@@ -587,13 +604,16 @@ namespace geo {
     return false;
   }
     
-  Group::~Group() {}
+  Group::~Group() {
+    bounds = get_bounds();    
+  }
 
   Intersections Group::local_intersects(const ray::Ray& local_ray) {
 
     auto group_intersections = Intersections{};
 
-    if (get_bounds().intersects(local_ray)) {
+    //    if (get_bounds().intersects(local_ray)) {
+    if (bounds.intersects(local_ray)) {    
       // Call intersects for each Shape of the Group
       for (const auto& shrd_shape_ptr : shapes) {
 	  auto shape_intersections = shrd_shape_ptr->intersects(local_ray);
@@ -659,51 +679,64 @@ namespace geo {
   void Group::divide(const size_t threshold) {
 
     if (threshold <= shapes.size()) {
-      auto [left, right] = partition_children();
-      if (left.size() > 0)
-	make_subgroup(left);
-      if (right.size() > 0)
-	make_subgroup(right);
+      //auto [left, right] = partition_children();
+      partition_children();
+      // if (left.size() > 0)
+      // 	make_subgroup(left);
+      // if (right.size() > 0)
+      // 	make_subgroup(right);
     }
 
     for (auto child : shapes)
       child->divide(threshold);
   }
 
-  std::pair<std::vector<std::shared_ptr<Shape>>, std::vector<std::shared_ptr<Shape>>> Group::partition_children() {
+  void Group::partition_children() {
 
-    auto [left_box, right_box] = get_bounds().split();
+    auto [left_box, right_box] = bounds.split();
     // containers for the shapes that can be contain in the lef tor right BB
-    std::vector<std::shared_ptr<Shape>> left_shapes;
-    std::vector<std::shared_ptr<Shape>> right_shapes;
+    auto left_group = std::make_shared<geo::Group>();
+    left_group->bounds = left_box;
+    auto right_group = std::make_shared<geo::Group>();
+    right_group->bounds = right_box;
+    // std::vector<std::shared_ptr<Shape>> left_shapes;
+    // std::vector<std::shared_ptr<Shape>> right_shapes;
     // the shapes remaining in this group (they do not fit entirely in a sub BB)
-    std::vector<std::shared_ptr<Shape>> group_shapes;
+    auto same_group = std::make_shared<geo::Group>();
+    same_group->bounds = bounds;
+    //std::vector<std::shared_ptr<Shape>> group_shapes;
     
     // Check the Shapes that can be contain in either sub BB
     for (const auto& shape : shapes) {
       auto shape_bounds = shape->get_parent_space_bounds();
       if (left_box.contains(shape_bounds))
-	left_shapes.push_back(shape);
+	//left_shapes.push_back(shape);
+	left_group->add_child(shape);
       else if (right_box.contains(shape_bounds))
-      	right_shapes.push_back(shape);
+      	//right_shapes.push_back(shape);
+	right_group->add_child(shape);
       else
-	group_shapes.push_back(shape);
+	same_group->add_child(shape);
+      //group_shapes.push_back(shape);
     }
 
-    shapes = group_shapes;
+    *this = *same_group;
+    add_child(left_group);
+    add_child(right_group);
+    //shapes = group_shapes;
 
-    return std::make_pair(left_shapes, right_shapes);
+    //return std::make_pair(left_shapes, right_shapes);
   }
 
-  void Group::make_subgroup(const std::vector<std::shared_ptr<Shape>> shape_vec) {
+  // void Group::make_subgroup(const std::vector<std::shared_ptr<Shape>> shape_vec) {
 
-    auto subgroup = std::make_shared<Group>();
-    for (const auto& shapeptr : shape_vec) {
-      subgroup->add_child(shapeptr);
-    }
+  //   auto subgroup = std::make_shared<Group>();
+  //   for (const auto& shapeptr : shape_vec) {
+  //     subgroup->add_child(shapeptr);
+  //   }
 
-    shapes.push_back(std::move(subgroup));
-  }
+  //   shapes.push_back(std::move(subgroup));
+  // }
 
   Intersection::Intersection(const float t_, geo::Shape* geo, const float u_, const float v_) :
     t {t_}, geometry {geo->get_shared_ptr()}, u {u_}, v {v_} {}
@@ -861,7 +894,7 @@ namespace geo {
     return (contains(box.minimum) && contains(box.maximum));
   }
 
-  BoundingBox BoundingBox::transform(const math::Matrix& transform) {
+  BoundingBox BoundingBox::transform(const math::Matrix& transform) const {
 
     // Transform the eight points to extend the BoundingBox
     auto p1 = minimum;

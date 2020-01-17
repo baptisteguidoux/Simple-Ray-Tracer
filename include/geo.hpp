@@ -24,8 +24,71 @@ namespace geo {
   struct Intersection;
   typedef std::vector<Intersection> Intersections;
 
-  struct BoundingBox;
 
+ /*! \struct BoundingBox
+   *  \brief Stores the coordinates of a bounding box
+   */
+  struct BoundingBox {
+
+    math::Tuple minimum = math::Point(INFINITY, INFINITY, INFINITY); /// minumum coordinates of the bounding box
+    math::Tuple maximum = math::Point(-INFINITY, -INFINITY, -INFINITY);; /// maximum coordinates of the bounding box
+
+    /*! \fn BoundingBox()
+     *  \brief Constructs a default BoundingBox (min = infinity, max = -infinity)
+     */     
+    BoundingBox() = default;
+    
+    /*! \fn BoundingBox(const math::Tuple& min, const math::Tuple& max)
+     *  \brief Constructs a BoundingBox by passing two Points
+     */    
+    BoundingBox(const math::Tuple& min, const math::Tuple& max);
+
+    /*! \fn void include(const math::Tuple& point)
+     *  \brief Make sure the BoundingBox can include the given Point
+     *  \param point the Point to include
+     */
+    void include(const math::Tuple& point);
+
+    /*! \fn void add(const BoundingBox& box)
+     *  \brief Extend this BoundingBox with another one
+     *  \param box the other BoundingBox
+     */    
+    void add(const BoundingBox& box);
+
+    /*! \fn bool contains(const math::Tuple& point) const
+     *  \brief Check if the BoundingBox contains the given point
+     *  \param point the Point to check if inside
+     */    
+    bool contains(const math::Tuple& point) const;
+
+    /*! \fn bool contains(const BoundingBox& box) const
+     *  \brief Check if the BoundingBox contains the given BoundingBox
+     *  \param point the PBoundingBox to check if inside
+     */        
+    bool contains(const BoundingBox& box) const;
+
+    /*! \fn BoundingBox transform(const math::Matrix& transform)
+     *  \brief Transforms the BoundingBox with the given transformation Matrix
+     *  \param transform A transformation Matrix
+     *  \return a new, transformed, BoundingBox
+     */    
+    BoundingBox transform(const math::Matrix& transform) const;
+
+    /*! \fn bool intersects(const ray::Ray& r) const
+     *  \brief Check if the Ray intersects with the BoundingBox
+     *  \param r the Ray
+     *  \return true if the Ray intersects the box, false otherwise
+     */
+    bool intersects(const ray::Ray& r) const;
+
+    /*! \fn std::pair<BoundingBox, BoundingBox> split() const
+     *  \brief Split the BoundingBox on the longest axis
+     *  \return a pair of BoundingBox
+     */    
+    std::pair<BoundingBox, BoundingBox> split() const;
+  };
+ 
+  
   /*! \class Shape
    *  \brief Base class, with some virtual functions
    */
@@ -39,6 +102,7 @@ namespace geo {
     math::Matrix transform = math::IDENTITY_MATRIX; /*!< default transform*/
     material::Material material = material::Material();
     std::weak_ptr<Shape> parent; /*!< A shape has an optional parent (should be only nullptr or a shared_ptr to a Group)*/
+    BoundingBox bounds;
 
     /*! \fn Intersections intersects(const ray::Ray& ray)
      *  \brief Computes the Intersections of the Ray and Shape, calls local_intersects
@@ -355,12 +419,13 @@ namespace geo {
      *  \brief Splits the shapes betwen two vector, one for the left sided objects, another one for the right sided shapes. Shapes that are not entirely in one sub BB stays in this Group
      *  \return a pair of vector of shapes ([left, right])
      */
-    std::pair<std::vector<std::shared_ptr<Shape>>, std::vector<std::shared_ptr<Shape>>> partition_children();
+    void partition_children();
+     //std::pair<std::vector<std::shared_ptr<Shape>>, std::vector<std::shared_ptr<Shape>>> partition_children();
     /*! \fn void make_subgroup(const std::vector<std::shared_ptr<Shape>> shape_vec)
      *  \brief Create a child Group and add the elements of shape_vec to it
      *  \param shape_vec
      */ 
-    void make_subgroup(const std::vector<std::shared_ptr<Shape>> shape_vec);
+    //void make_subgroup(const std::vector<std::shared_ptr<Shape>> shape_vec);
 
     /*! \fn void divide(const int threshold) override
      *  \brief recursively splits a group and its children. 
@@ -482,68 +547,6 @@ namespace geo {
    */
   Computations prepare_computations(const Intersection& ix, const ray::Ray r, const Intersections& ixs = Intersections{});
 
-  /*! \struct BoundingBox
-   *  \brief Stores the coordinates of a bounding box
-   */
-  struct BoundingBox {
-
-    math::Tuple minimum = math::Point(INFINITY, INFINITY, INFINITY); /// minumum coordinates of the bounding box
-    math::Tuple maximum = math::Point(-INFINITY, -INFINITY, -INFINITY);; /// maximum coordinates of the bounding box
-
-    /*! \fn BoundingBox()
-     *  \brief Constructs a default BoundingBox (min = infinity, max = -infinity)
-     */     
-    BoundingBox() = default;
-    
-    /*! \fn BoundingBox(const math::Tuple& min, const math::Tuple& max)
-     *  \brief Constructs a BoundingBox by passing two Points
-     */    
-    BoundingBox(const math::Tuple& min, const math::Tuple& max);
-
-    /*! \fn void include(const math::Tuple& point)
-     *  \brief Make sure the BoundingBox can include the given Point
-     *  \param point the Point to include
-     */
-    void include(const math::Tuple& point);
-
-    /*! \fn void add(const BoundingBox& box)
-     *  \brief Extend this BoundingBox with another one
-     *  \param box the other BoundingBox
-     */    
-    void add(const BoundingBox& box);
-
-    /*! \fn bool contains(const math::Tuple& point) const
-     *  \brief Check if the BoundingBox contains the given point
-     *  \param point the Point to check if inside
-     */    
-    bool contains(const math::Tuple& point) const;
-
-    /*! \fn bool contains(const BoundingBox& box) const
-     *  \brief Check if the BoundingBox contains the given BoundingBox
-     *  \param point the PBoundingBox to check if inside
-     */        
-    bool contains(const BoundingBox& box) const;
-
-    /*! \fn BoundingBox transform(const math::Matrix& transform)
-     *  \brief Transforms the BoundingBox with the given transformation Matrix
-     *  \param transform A transformation Matrix
-     *  \return a new, transformed, BoundingBox
-     */    
-    BoundingBox transform(const math::Matrix& transform);
-
-    /*! \fn bool intersects(const ray::Ray& r) const
-     *  \brief Check if the Ray intersects with the BoundingBox
-     *  \param r the Ray
-     *  \return true if the Ray intersects the box, false otherwise
-     */
-    bool intersects(const ray::Ray& r) const;
-
-    /*! \fn std::pair<BoundingBox, BoundingBox> split() const
-     *  \brief Split the BoundingBox on the longest axis
-     *  \return a pair of BoundingBox
-     */    
-    std::pair<BoundingBox, BoundingBox> split() const;
-  };
   
 }
 

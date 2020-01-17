@@ -1682,42 +1682,42 @@ TEST(GeoTest, BoundingBoxSplitZWide) {
   EXPECT_EQ(right.maximum, math::Point(5, 3, 7));
 }
 
-TEST(GeoTest, GroupPartitionChildren) {
+// TEST(GeoTest, GroupPartitionChildren) {
 
-  auto sphere1 = std::make_shared<geo::Sphere>();
-  sphere1->transform = math::translation(-2, 0, 0);
-  auto sphere2 = std::make_shared<geo::Sphere>();
-  sphere2->transform = math::translation(2, 0, 0);
-  auto sphere3 = std::make_shared<geo::Sphere>();
-  auto group = std::make_shared<geo::Group>();
-  group->add_child(sphere1);
-  group->add_child(sphere2);
-  group->add_child(sphere3);
+//   auto sphere1 = std::make_shared<geo::Sphere>();
+//   sphere1->transform = math::translation(-2, 0, 0);
+//   auto sphere2 = std::make_shared<geo::Sphere>();
+//   sphere2->transform = math::translation(2, 0, 0);
+//   auto sphere3 = std::make_shared<geo::Sphere>();
+//   auto group = std::make_shared<geo::Group>();
+//   group->add_child(sphere1);
+//   group->add_child(sphere2);
+//   group->add_child(sphere3);
 
-  auto [left, right] = group->partition_children();
-  ASSERT_EQ(group->shapes.size(), 1);
-  EXPECT_EQ(*(group->shapes[0]), *sphere3);
-  ASSERT_EQ(left.size(), 1);
-  EXPECT_EQ(*left[0], *sphere1);
-  ASSERT_EQ(right.size(), 1);
-  EXPECT_EQ(*right[0], *sphere2);
-}
+//   auto [left, right] = group->partition_children();
+//   ASSERT_EQ(group->shapes.size(), 1);
+//   EXPECT_EQ(*(group->shapes[0]), *sphere3);
+//   ASSERT_EQ(left.size(), 1);
+//   EXPECT_EQ(*left[0], *sphere1);
+//   ASSERT_EQ(right.size(), 1);
+//   EXPECT_EQ(*right[0], *sphere2);
+// }
 
-TEST(GeoTest, SubGroupFromListOfChildren) {
+// TEST(GeoTest, SubGroupFromListOfChildren) {
 
-  auto sphere1 = std::make_shared<geo::Sphere>();
-  auto sphere2 = std::make_shared<geo::Sphere>();
-  auto group = std::make_shared<geo::Group>();
-  group->make_subgroup(std::vector<std::shared_ptr<geo::Shape>>{sphere1, sphere2});
+//   auto sphere1 = std::make_shared<geo::Sphere>();
+//   auto sphere2 = std::make_shared<geo::Sphere>();
+//   auto group = std::make_shared<geo::Group>();
+//   group->make_subgroup(std::vector<std::shared_ptr<geo::Shape>>{sphere1, sphere2});
 
-  ASSERT_EQ(group->shapes.size(), 1);
-  // the only child of this Group is another Group
-  geo::Group* subgroupptr = dynamic_cast<geo::Group*>(group->shapes[0].get());
-  ASSERT_NE(subgroupptr, nullptr);
-  ASSERT_EQ(subgroupptr->shapes.size(), 2);
-  EXPECT_EQ(*subgroupptr->shapes[0], *sphere1);
-  EXPECT_EQ(*subgroupptr->shapes[1], *sphere2);
-}
+//   ASSERT_EQ(group->shapes.size(), 1);
+//   // the only child of this Group is another Group
+//   geo::Group* subgroupptr = dynamic_cast<geo::Group*>(group->shapes[0].get());
+//   ASSERT_NE(subgroupptr, nullptr);
+//   ASSERT_EQ(subgroupptr->shapes.size(), 2);
+//   EXPECT_EQ(*subgroupptr->shapes[0], *sphere1);
+//   EXPECT_EQ(*subgroupptr->shapes[1], *sphere2);
+// }
 
 TEST(GeoTest, SubdividingPrimitiveDoesNothing) {
 
