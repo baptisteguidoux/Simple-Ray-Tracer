@@ -87,8 +87,7 @@ namespace world {
     float intensity = light->intensity_at(comps.over_point, *this);
 
     // If we want several lights, we should iterate over lights and sum the resulting Color
-    auto surface = light::lighting(comps.geometry.get(),
-  				   *light, // std::optional
+    auto surface = light->lighting(comps.geometry.get(),
   				   comps.over_point, // ensure we are just above the surface, not below (floating point rounding errors...)
   				   comps.eye_vector,
   				   comps.normal_vector,

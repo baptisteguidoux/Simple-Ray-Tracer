@@ -40,8 +40,8 @@ namespace light {
    */
   class Light {
   public:
-    math::Tuple position;
-    color::Color intensity;
+    math::Tuple m_position;
+    color::Color m_intensity;
 
     Light(const math::Tuple& pos, const color::Color& int_);
 
@@ -72,6 +72,18 @@ namespace light {
      *  \return a value between 0 and 1
      */    
     float intensity_at(const math::Tuple& point, const world::World& wrld) const;
+
+    /*! \fn color::Color lighting(geo::Shape* object, const math::Tuple& position, const math::Tuple& eye_vector, const math::Tuple& normal_vector, const  float intensity) const
+     *  \brief Calculates the Color of the Shape's Material at the given position
+     *  \param object lit Shape
+     *  \param position the position of the point on the object
+     *  \param eye_vector vector surface --> eye
+     *  \param normal_vector object's surface normal
+     *  \param intensity how much light is present
+     *  \return the Color at this point
+     */  
+    color::Color lighting(geo::Shape* object, const math::Tuple& position, const math::Tuple& eye_vector, 
+			  const math::Tuple& normal_vector, const float intensity) const;    
     
   };
 
@@ -127,18 +139,7 @@ namespace light {
    */    
   bool operator!=(const PointLight& first, const PointLight& second);
 
-  /*! \fn color::Color lighting(geo::Shape* object, const PointLight light, const math::Tuple& position, const math::Tuple& eye_vector, const math::Tuple& normal_vector, const  float intensity)
-   *  \brief Calculates the Color of the Shape's Material at the given position
-   *  \param object lit Shape
-   *  \param light the scene's light
-   *  \param position the position of the point on the object
-   *  \param eye_vector vector surface --> eye
-   *  \param normal_vector object's surface normal
-   *  \param intensity how much light is present
-   *  \return the Color at this point
-   */  
-  color::Color lighting(geo::Shape* object, const PointLight light, const math::Tuple& position,
-			const math::Tuple& eye_vector, const math::Tuple& normal_vector, const float intensity);
+
 
 }
 

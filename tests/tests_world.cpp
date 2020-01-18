@@ -140,7 +140,7 @@ TEST(WorldTest, IsShadowedFunction) {
 
   // There is no shadow when nothing is collinear with point and light
   auto w = world::build_default_world();
-  const auto& light_position = w.light->position;
+  const auto& light_position = w.light->m_position;
   auto p = math::Point(0, 10, 0);
   EXPECT_FALSE(w.is_shadowed(light_position, p));
 
@@ -207,10 +207,10 @@ TEST(WorldTest, IsShadowedFunctionMaterialDoesNotCastShadow) {
   w.objects.push_back(plane);
   
   auto point = math::Point(20, 0, 0);
-  EXPECT_TRUE(w.is_shadowed(w.light->position, point));
+  EXPECT_TRUE(w.is_shadowed(w.light->m_position, point));
 
   w.objects[0]->material.cast_shadow = false;
-  EXPECT_FALSE(w.is_shadowed(w.light->position, point));
+  EXPECT_FALSE(w.is_shadowed(w.light->m_position, point));
 }
 
 TEST(WorldTest, ReflectedColor) {

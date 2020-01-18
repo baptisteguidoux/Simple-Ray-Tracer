@@ -21,7 +21,7 @@ namespace light {
     return m_seq[index - 1];
   }
 
-  Light::Light(const math::Tuple& pos, const color::Color& int_) : position{pos}, intensity{int_} {}
+  Light::Light(const math::Tuple& pos, const color::Color& int_) : m_position {pos}, m_intensity {int_} {}
 
   Light::~Light() {}
   
@@ -33,52 +33,15 @@ namespace light {
   
   float PointLight::intensity_at(const math::Tuple& point, const world::World& wrld) const {
 
-    if (wrld.is_shadowed(position, point))
+    if (wrld.is_shadowed(m_position, point))
       return 0.0;
 
     return 1.0;
   }
 
-  AreaLight::AreaLight(const math::Tuple& corner_, const math::Tuple& uvec_, const uint usteps_,
-		       const math::Tuple& vvec_, const uint vsteps_, const color::Color& intensity_)
-    : Light(((uvec_ + vvec_) / 2), intensity_),  corner {corner_}, uvec {uvec_ / usteps_}, usteps {usteps_}, vvec {vvec_ / vsteps_}, vsteps {vsteps_},
-      samples {usteps_ * vsteps_} {
-	position.w = 1; // to Point
-	jitter_by = SequenceGenerator{0.5}; /// default
-      }
+  color::Color PointLight::lighting(geo::Shape* object, const math::Tuple& position,
+  			const math::Tuple& eye_vector, const math::Tuple& normal_vector, const float intensity) const {
 
-  AreaLight::~AreaLight() {}
-
-  math::Tuple AreaLight::point_at(const uint u, const uint v) {
-
-    return corner + uvec * (u + jitter_by.next()) + vvec * (v + jitter_by.next());
-  }
-
-  float AreaLight::intensity_at(const math::Tuple& point, const world::World& wrld) {
-
-    float intensity = 0;
-    for (uint u = 0; u < usteps; u++)
-      for (uint v = 0; v < vsteps; v++) {
-	auto light_pos = point_at(u, v);
-	if (! wrld.is_shadowed(light_pos, point))
-	  intensity += 1;
-      }
-
-    return intensity / samples;
-  }
-
-  bool operator==(const PointLight& first, const PointLight& second) {
-
-    return (first.position == second.position) && (first.intensity == second.intensity);
-  }
-
-  bool operator!=(const PointLight& first, const PointLight& second) {
-
-    return !(first == second);
-  }    
-
-  color::Color lighting(geo::Shape* object, const PointLight light, const math::Tuple& position,
-  			const math::Tuple& eye_vector, const math::Tuple& normal_vector, const float intensity) {
 
     // Use material or pattern as color    
     auto color = color::Color();
@@ -88,10 +51,10 @@ namespace light {
       color = object->material.color;
     
     // Combine the surface color with the light
-    color::Color effective_color = color * light.intensity;
+    color::Color effective_color = color * m_intensity;
 
     // Direction to the light source
-    auto light_vector = math::normalize(light.position - position);
+    auto light_vector = math::normalize(m_position - position);
 
     // Ambient contribution
     color::Color ambient = effective_color * object->material.ambient;
@@ -122,12 +85,52 @@ namespace light {
       else {
         // Specular contribution
         double factor = pow(reflect_dot_eye, double{object->material.shininess});
-  	specular = light.intensity * object->material.specular * factor * intensity;
+  	specular = m_intensity * object->material.specular * factor * intensity;
       }
     }
   
     // Add the three contributions together to get the final shading
     return ambient + diffuse + specular;
-  }  
+  }
+  
+  AreaLight::AreaLight(const math::Tuple& corner_, const math::Tuple& uvec_, const uint usteps_,
+		       const math::Tuple& vvec_, const uint vsteps_, const color::Color& intensity_)
+    : Light(((uvec_ + vvec_) / 2), intensity_),  corner {corner_}, uvec {uvec_ / usteps_}, usteps {usteps_}, vvec {vvec_ / vsteps_}, vsteps {vsteps_},
+      samples {usteps_ * vsteps_} {
+	m_position.w = 1; // to Point
+	jitter_by = SequenceGenerator{0.5}; /// default
+      }
+
+  AreaLight::~AreaLight() {}
+
+  math::Tuple AreaLight::point_at(const uint u, const uint v) {
+    auto result = corner + uvec * (u + jitter_by.next());
+    return result + vvec * (v + jitter_by.next());
+  }
+
+  float AreaLight::intensity_at(const math::Tuple& point, const world::World& wrld) {
+
+    float intensity = 0;
+    for (uint u = 0; u < usteps; u++)
+      for (uint v = 0; v < vsteps; v++) {
+	auto light_pos = point_at(u, v);
+	if (! wrld.is_shadowed(light_pos, point))
+	  intensity += 1;
+      }
+
+    return intensity / samples;
+  }
+
+  bool operator==(const PointLight& first, const PointLight& second) {
+
+    return (first.m_position == second.m_position) && (first.m_intensity == second.m_intensity);
+  }
+
+  bool operator!=(const PointLight& first, const PointLight& second) {
+
+    return !(first == second);
+  }    
+
+
   
 }

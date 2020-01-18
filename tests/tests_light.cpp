@@ -20,13 +20,13 @@ TEST(LightTest, PointLightConstructor) {
   auto intensity = color::Color(1, 1, 1);
 
   auto light = light::PointLight(position, intensity);
-  EXPECT_EQ(light.position, position);
-  EXPECT_EQ(light.intensity, intensity);
+  EXPECT_EQ(light.m_position, position);
+  EXPECT_EQ(light.m_intensity, intensity);
 
   // Default PointLight
   auto light2 = light::PointLight();
-  EXPECT_EQ(light2.position, math::Point(0, 0, 0));
-  EXPECT_EQ(light2.intensity, color::Color(0, 0, 0));
+  EXPECT_EQ(light2.m_position, math::Point(0, 0, 0));
+  EXPECT_EQ(light2.m_intensity, color::Color(0, 0, 0));
 }
 
 TEST(LightTest, PointLightDerivesFromLight) {
@@ -69,7 +69,7 @@ TEST(LightTest, LightingFunction) {
   auto normalv = math::Vector(0.0, 0.0, -1.0);
   auto light = light::PointLight(math::Point(0.0, 0.0, -10.0), color::Color(1, 1, 1));
 
-  auto result = light::lighting(sphere.get(), light, position, eyev, normalv, 1.0);
+  auto result = light.lighting(sphere.get(), position, eyev, normalv, 1.0);
   EXPECT_EQ(result, color::Color(1.9, 1.9, 1.9));
 
   // Lighting with the eye between light and surface, eye offset 45 degrees
@@ -77,21 +77,21 @@ TEST(LightTest, LightingFunction) {
   eyev = math::Vector(0.0, sqrt(2)/2, sqrt(2)/2);
   normalv = math::Vector(0.0, 0.0, -1.0);
   light = light::PointLight(math::Point(0.0, 0.0, -10.0), color::Color(1, 1, 1));
-  result = light::lighting(sphere.get(), light, position, eyev, normalv, 1.0);
+  result = light.lighting(sphere.get(), position, eyev, normalv, 1.0);
   EXPECT_EQ(result, color::Color(1.0, 1.0, 1.0));
 
   // Lighting with eye opposite surface, light offset 45 degrees
   eyev = math::Vector(0.0, 0.0, -1.0);
   normalv = math::Vector(0.0, 0.0, -1.0);
   light = light::PointLight(math::Point(0.0, 10.0, -10.0), color::Color(1, 1, 1));
-  result = light::lighting(sphere.get(), light, position, eyev, normalv, 1.0);
+  result = light.lighting(sphere.get(), position, eyev, normalv, 1.0);
   EXPECT_EQ(result, color::Color(0.7364, 0.7364, 0.7364));
 
   // Lighting with eye in the path of the reflection vector
   eyev = math::Vector(0.0, -sqrt(2)/2.0, -sqrt(2)/2.0);
   normalv = math::Vector(0.0, 0.0, -1.0);
   light = light::PointLight(math::Point(0.0, 10.0, -10.0), color::Color(1, 1, 1));
-  result = light::lighting(sphere.get(), light, position, eyev, normalv, 1.0);
+  result = light.lighting(sphere.get(), position, eyev, normalv, 1.0);
   EXPECT_EQ(result, color::Color(1.6364, 1.6364, 1.6364));
 
   // Lighting with the light behind the surface
@@ -99,7 +99,7 @@ TEST(LightTest, LightingFunction) {
   eyev = math::Vector(0.0, 0.0, -1.0);
   normalv = math::Vector(0.0, 0.0, -1.0);
   light = light::PointLight(math::Point(0.0, 0.0, 10.0), color::Color(1, 1, 1));
-  result = light::lighting(sphere.get(), light, position, eyev, normalv, 1.0);
+  result = light.lighting(sphere.get(), position, eyev, normalv, 1.0);
   EXPECT_EQ(result, color::Color(0.1, 0.1, 0.1));
   
   // Lighting with the surface in shadow
@@ -107,7 +107,7 @@ TEST(LightTest, LightingFunction) {
   normalv = math::Vector(0, 0, -1);
   light = light::PointLight(math::Point(0, 0, -10), color::Color(1, 1, 1));
   float in_shadow = 0.0;
-  result = light::lighting(sphere.get(), light, position, eyev, normalv, in_shadow);
+  result = light.lighting(sphere.get(), position, eyev, normalv, in_shadow);
   EXPECT_EQ(result, color::Color(0.1, 0.1, 0.1));
 }
 
@@ -125,9 +125,9 @@ TEST(LightTest, LightingFunctionUsesLightIntensityToAttenuateColor) {
   math::Vector eyev(0, 0, -1);
   math::Vector normalv(0, 0, -1);
 
-  EXPECT_EQ(light::lighting(shape.get(), *world.light, point, eyev, normalv, 1.0), color::WHITE);
-  EXPECT_EQ(light::lighting(shape.get(), *world.light, point, eyev, normalv, 0.5), color::Color(0.55, 0.55, 0.55));
-  EXPECT_EQ(light::lighting(shape.get(), *world.light, point, eyev, normalv, 0.0), color::Color(0.1, 0.1, 0.1));
+  EXPECT_EQ(world.light->lighting(shape.get(), point, eyev, normalv, 1.0), color::WHITE);
+  EXPECT_EQ(world.light->lighting(shape.get(), point, eyev, normalv, 0.5), color::Color(0.55, 0.55, 0.55));
+  EXPECT_EQ(world.light->lighting(shape.get(), point, eyev, normalv, 0.0), color::Color(0.1, 0.1, 0.1));
 }
 
 TEST(LightTest, AreaLightConstructor) {
@@ -143,7 +143,7 @@ TEST(LightTest, AreaLightConstructor) {
   EXPECT_EQ(light.vvec, math::Vector(0, 0, 0.5));
   EXPECT_EQ(light.vsteps, 2);
   EXPECT_EQ(light.samples, 8);
-  EXPECT_EQ(light.position, math::Point(1, 0, 0.5));
+  EXPECT_EQ(light.m_position, math::Point(1, 0, 0.5));
 }
 
 TEST(LightTest, AreaLightDerivesFromLight) {

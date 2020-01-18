@@ -123,8 +123,8 @@ TEST(PatternTest, MaterialPattern){
   auto normal_v = math::Vector(0, 0, -1);
   auto li = light::PointLight(math::Point(0, 0, -10), color::Color(1, 1, 1));
 
-  auto c1 = lighting(s.get(), li, math::Point(0.9, 0, 0), eye_v, normal_v, false);
-  auto c2 = lighting(s.get(), li, math::Point(1.1, 0, 0), eye_v, normal_v, false);
+  auto c1 = li.lighting(s.get(), math::Point(0.9, 0, 0), eye_v, normal_v, false);
+  auto c2 = li.lighting(s.get(), math::Point(1.1, 0, 0), eye_v, normal_v, false);
   EXPECT_EQ(c1, color::WHITE);
   EXPECT_EQ(c2, color::BLACK);
 }
