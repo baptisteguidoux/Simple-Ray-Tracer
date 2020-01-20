@@ -24,7 +24,7 @@ int main() {
   cam.transform = math::view_transform(math::Point(8, 6, -8), math::Point(0, 3, 0), math::Vector(0, 1, 0));
 
   auto world = world::World();
-  world.light = light::PointLight(math::Point(0, 6.9, -5), color::Color(1, 1, 0.9));
+  world.light = std::make_shared<light::PointLight>(math::Point(0, 6.9, -5), color::Color(1, 1, 0.9));
 
   // floor and ceiling at the same time
   auto floor = std::make_shared<geo::Cube>();

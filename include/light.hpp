@@ -46,6 +46,27 @@ namespace light {
     Light(const math::Tuple& pos, const color::Color& int_);
 
     virtual ~Light() = 0;
+
+    /*! \fn float intensity_at(const math::Tuple& point, const world::World& world)
+     *  \brief Evaluates the light intensity at a given point
+     *  \param point the Point to look intensity
+     *  \param world the World where the Point is
+     *  \return a float value between 0 and 1
+     */
+    virtual float intensity_at(const math::Tuple& point, const world::World& wrld) = 0;
+    
+    /*! \fn color::Color lighting(geo::Shape* object, const math::Tuple& position, const math::Tuple& eye_vector, 
+                                  const math::Tuple& normal_vector, const  float intensity)
+     *  \brief Calculates the Color of the Shape's Material at the given position
+     *  \param object lit Shape
+     *  \param position the position of the point on the object
+     *  \param eye_vector vector surface --> eye
+     *  \param normal_vector object's surface normal
+     *  \param intensity how much light is present
+     *  \return the Color at this point
+     */     
+    virtual color::Color lighting(geo::Shape* object, const math::Tuple& position, const math::Tuple& eye_vector, 
+				  const math::Tuple& normal_vector, const float intensity) = 0;
   };
 
   /*! \class PointLight
@@ -71,19 +92,10 @@ namespace light {
      *  \param world the World where the Point is
      *  \return a value between 0 and 1
      */    
-    float intensity_at(const math::Tuple& point, const world::World& wrld) const;
-
-    /*! \fn color::Color lighting(geo::Shape* object, const math::Tuple& position, const math::Tuple& eye_vector, const math::Tuple& normal_vector, const  float intensity) const
-     *  \brief Calculates the Color of the Shape's Material at the given position
-     *  \param object lit Shape
-     *  \param position the position of the point on the object
-     *  \param eye_vector vector surface --> eye
-     *  \param normal_vector object's surface normal
-     *  \param intensity how much light is present
-     *  \return the Color at this point
-     */  
+    float intensity_at(const math::Tuple& point, const world::World& wrld) override;
+ 
     color::Color lighting(geo::Shape* object, const math::Tuple& position, const math::Tuple& eye_vector, 
-			  const math::Tuple& normal_vector, const float intensity) const;    
+			  const math::Tuple& normal_vector, const float intensity) override;
     
   };
 
@@ -120,7 +132,10 @@ namespace light {
      *  \param world the World where the Point is
      *  \return a float value between 0 and 1
      */
-    float intensity_at(const math::Tuple& point, const world::World& wrld);
+    float intensity_at(const math::Tuple& point, const world::World& wrld) override;
+
+    color::Color lighting(geo::Shape* object, const math::Tuple& position, const math::Tuple& eye_vector, 
+			  const math::Tuple& normal_vector, const float intensity) override;     
   };
 
   /*! \fn bool operator==(const PointLight& first, const PointLight& second)
@@ -129,7 +144,7 @@ namespace light {
    *  \param second another PointLight
    *  \return true if the two PointLight are equal, false otherwise
    */  
-  bool operator==(const PointLight& first, const PointLight& second);
+  bool operator==(const Light& first, const Light& second);
 
   /*! \fn bool operator==(const PointLight& first, const PointLight& second)
    *  \brief Compares the unequality of two PointLight
@@ -137,9 +152,7 @@ namespace light {
    *  \param second another PointLight
    *  \return true if the two PointLight are unequal, false otherwise
    */    
-  bool operator!=(const PointLight& first, const PointLight& second);
-
-
+  bool operator!=(const Light& first, const Light& second);
 
 }
 

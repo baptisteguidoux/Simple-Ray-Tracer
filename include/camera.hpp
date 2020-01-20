@@ -42,12 +42,12 @@ namespace camera {
      */
     ray::Ray ray_for_pixel(const int px, const int py) const;
 
-    /*! \fn canvas::Canvas render(const world::World& wrld) const
+    /*! \fn canvas::Canvas render(world::World& wrld) const
      *  \brief Use the Camera to render an image of the given world
      *  \param wrld World to render
      *  \return the rendered World
      */    
-    canvas::Canvas render(const world::World& wrld) const;
+    canvas::Canvas render(world::World& wrld);
  
   };
 
@@ -59,7 +59,7 @@ namespace camera {
    *  \param to_y end of the vertical fraction
    *  \return the partillay rendered World image
    */     
-  canvas::Canvas render_partial(const Camera& cam, const world::World& wrld, const int from_y, const int to_y);
+  canvas::Canvas render_partial(const Camera& cam, world::World wrld, const int from_y, const int to_y);
       
   /*! \fn canvas::Canvas render_threaded(const Camera& cam, const world::World& wrld)
    *  \brief Use the Camera to render an image of the given world using several threads

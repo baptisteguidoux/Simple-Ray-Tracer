@@ -23,7 +23,7 @@ int main() {
 
   // world
   auto world = world::World();
-  world.light = light::PointLight(math::Point(1, 6.9, -4.9), color::Color(1, 1, 1));
+  world.light = std::make_shared<light::PointLight>(math::Point(1, 6.9, -4.9), color::Color(1, 1, 1));
 
   // objects
   auto floor = std::make_shared<geo::Plane>();

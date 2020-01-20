@@ -12,7 +12,7 @@ namespace world {
   World build_default_world() {
     
     auto wrld = World();
-    wrld.light = light::PointLight(math::Point(-10.0, 10.0, -10.0), color::Color(1, 1, 1));
+    wrld.light = std::make_shared<light::PointLight>(math::Point(-10.0, 10.0, -10.0), color::Color(1, 1, 1));
 
     auto sphere1 = std::make_shared<geo::Sphere>();
     sphere1->material.color = color::Color(0.8, 1.0, 0.6);
@@ -81,21 +81,21 @@ namespace world {
     return false;
   }
   
-  color::Color World::shade_hit(const geo::Computations& comps, const int remaining) const {
+  color::Color World::shade_hit(const geo::Computations& comps, const int remaining) {
 
     //bool shadowed = is_shadowed(light->position, comps.over_point);
     float intensity = light->intensity_at(comps.over_point, *this);
 
-    // If we want several lights, we should iterate over lights and sum the resulting Color
+    //If we want several lights, we should iterate over lights and sum the resulting Color
     auto surface = light->lighting(comps.geometry.get(),
-  				   comps.over_point, // ensure we are just above the surface, not below (floating point rounding errors...)
-  				   comps.eye_vector,
-  				   comps.normal_vector,
-  				   intensity);
+    				   comps.over_point, // ensure we are just above the surface, not below (floating point rounding errors...)
+    				   comps.eye_vector,
+    				   comps.normal_vector,
+    				   intensity);
     
     auto reflected = reflected_color(comps, remaining);
     auto refracted = refracted_color(comps, remaining);
-    
+
     // If the surface's material is both reflective and refractive, use the Schlick approximation to get the reflectance
     if (comps.geometry->material.reflective > 0 && comps.geometry->material.transparency > 0) {
       auto reflectance = comps.schlick();
@@ -104,7 +104,7 @@ namespace world {
       return surface + reflected + refracted;
   }
 
-  color::Color World::color_at(const ray::Ray& ry, const int remaining) const {
+  color::Color World::color_at(const ray::Ray& ry, const int remaining) {
 
     // find the Intersections of the Ray and the World
     auto ixs = intersects(ry);
@@ -120,7 +120,7 @@ namespace world {
     return shade_hit(comps, remaining);
   }  
 
-  color::Color World::reflected_color(const geo::Computations& comps, const int remaining) const {
+  color::Color World::reflected_color(const geo::Computations& comps, const int remaining) {
      
     if (remaining <= 0)
       return color::BLACK;
@@ -134,7 +134,7 @@ namespace world {
     return color_at(reflect_ray, remaining - 1) * comps.geometry->material.reflective;
   }
 
-  color::Color World::refracted_color(const geo::Computations& comps, const int remaining) const {
+  color::Color World::refracted_color(const geo::Computations& comps, const int remaining) {
 
     if (remaining <= 0)
       return color::BLACK;

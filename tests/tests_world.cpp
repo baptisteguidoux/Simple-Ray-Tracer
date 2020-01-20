@@ -16,8 +16,8 @@ TEST(WorldTest, Constructor) {
   // Create an empty world
   auto world = world::World();
   EXPECT_TRUE(world.objects.size() ==  0);
-  // world.light is a std::optional
-  EXPECT_EQ(world.light, std::nullopt);
+  // world.light is a shared_ptr
+  EXPECT_EQ(world.light, nullptr);
 }
 
 TEST(WorldTest, ContainsObjectFunc) {
@@ -39,7 +39,7 @@ TEST(WorldTest, ContainsObjectFunc) {
 TEST(WorldTest, DefaultConstructor) {
 
   // The default world
-  auto light = light::PointLight(math::Point(-10.0, 10.0, -10.0), color::Color(1, 1, 1));
+  auto light = std::make_shared<light::PointLight>(math::Point(-10.0, 10.0, -10.0), color::Color(1, 1, 1));
 
   auto sphere1 = std::make_shared<geo::Sphere>();
   sphere1->material.color = color::Color(0.8, 1.0, 0.6);
@@ -50,7 +50,7 @@ TEST(WorldTest, DefaultConstructor) {
   sphere2->transform = math::scaling(0.5, 0.5, 0.5);
 
   auto default_world = world::build_default_world();
-  EXPECT_EQ(*default_world.light, light); // access optional
+  EXPECT_EQ(*default_world.light, *light);
   EXPECT_TRUE(default_world.contains_object(sphere1.get()));
   EXPECT_TRUE(default_world.contains_object(sphere2.get()));
 }
@@ -83,7 +83,7 @@ TEST(WorldTest, ShadeHit) {
   EXPECT_EQ(col, color::Color(0.38066, 0.47583, 0.2855));
 
   // Shading an intersection from the inside
-  wrld.light = light::PointLight(math::Point(0.0, 0.25, 0.0), color::Color(1, 1, 1));
+  wrld.light = std::make_shared<light::PointLight>(math::Point(0.0, 0.25, 0.0), color::Color(1, 1, 1));
   r = ray::Ray(math::Point(0.0, 0.0, 0.0), math::Vector(0.0, 0.0, 1.0));
   shape = wrld.objects.at(1);
   ixs = geo::Intersection(0.5, shape.get());
@@ -95,7 +95,7 @@ TEST(WorldTest, ShadeHit) {
   // Shading an intersection in shadow
   // sphere 2 is in shadow of sphere 1, so the only reflection is the ambient
   wrld = world::World();
-  wrld.light = light::PointLight(math::Point(0, 0, -10), color::Color(1, 1, 1));
+  wrld.light = std::make_shared<light::PointLight>(math::Point(0, 0, -10), color::Color(1, 1, 1));
   auto s1 = std::make_shared<geo::Sphere>();
   wrld.objects.push_back(s1);
   auto s2 = std::make_shared<geo::Sphere>();
@@ -201,7 +201,7 @@ TEST(WorldTest, EvaluatesIntensityAtGivenPoint) {
 TEST(WorldTest, IsShadowedFunctionMaterialDoesNotCastShadow) {
 
   auto w = world::World();
-  w.light = light::PointLight(math::Point(-10, 5, 0), color::Color(1, 1, 1));
+  w.light = std::make_shared<light::PointLight>(math::Point(-10, 5, 0), color::Color(1, 1, 1));
   auto plane = std::make_shared<geo::Plane>();
   plane->transform = math::rotation_z(M_PI / 2);
   w.objects.push_back(plane);
@@ -267,7 +267,7 @@ TEST(WorldTest, ReflectionAvoidInfiniteRecursion) {
   // Handles infinite recursion
   // Place two reflective planes face to face
   auto w = world::World();
-  w.light = light::PointLight(math::Point(0, 0, 0), color::Color(1, 1, 1));
+  w.light = std::make_shared<light::PointLight>(math::Point(0, 0, 0), color::Color(1, 1, 1));
   auto lower = std::make_shared<geo::Plane>();
   lower->material.reflective = 1;
   lower->transform = math::translation(0, -1, 0);

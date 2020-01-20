@@ -16,7 +16,7 @@ int main() {
   teapot->transform = math::translation(0, -1, 1) * math::scaling(0.05, 0.05, 0.05) * math::rotation_y(M_PI);
 
   auto wrld = world::World();
-  wrld.light = light::PointLight(math::Point(-10, 10, -10), color::Color(1, 1, 1));
+  wrld.light = std::make_shared<light::PointLight>(math::Point(-10, 10, -10), color::Color(1, 1, 1));
 
   wrld.objects.push_back(teapot);
   

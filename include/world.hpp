@@ -6,7 +6,6 @@
 
 #include <vector>
 #include <memory>
-#include <optional>
 
 #include "geo.hpp"
 #include "light.hpp"
@@ -24,7 +23,7 @@ namespace world {
   public:
     
     std::vector<std::shared_ptr<geo::Shape>> objects;
-    std::optional<light::PointLight> light;
+    std::shared_ptr<light::Light> light;
 
     /*! \fn bool contains_object(geo::Shape* object) const
      *  \brief Check if a geometry can be found in the World
@@ -48,13 +47,13 @@ namespace world {
      */      
     bool is_shadowed(const math::Tuple& light_position, const math::Tuple& point) const;
 
-    /*! \fn color::Color shade_hit(const geo::Computations& comps, const int remaining) const
+    /*! \fn color::Color shade_hit(const geo::Computations& comps, const int remaining)
      *  \brief Find the color at the point, in the World
      *  \param comps the Conputations containing the point
      *  \param remaining to avoid infinite recursion
      *  \return the Color at the point
      */
-    color::Color shade_hit(const geo::Computations& comps, const int remaining = 5) const;
+    color::Color shade_hit(const geo::Computations& comps, const int remaining = 5);
 
     /*! \fn color::Color color_at(const ray::Ray& ry, const int remaining) const
      *  \brief Wrapper func: check if the Ray intersects, prepare the Computations and calls shade_hit
@@ -62,23 +61,23 @@ namespace world {
      *  \param remaining to avoid infinite recursion
      *  \return the Color for the Ray
      */    
-    color::Color color_at(const ray::Ray& ry, const int remaining = 5) const;
+    color::Color color_at(const ray::Ray& ry, const int remaining = 5);
 
-    /*! \fn color::Color reflected_color(const geo::Computations& comps, const int remaining = 5) const
+    /*! \fn color::Color reflected_color(const geo::Computations& comps, const int remaining = 5)
      *  \brief Computes the amount of reflected color
      *  \params comps Computations
      *  \param remaining  to avoid infinite recursion
      *  \return the reflected Color
      */    
-    color::Color reflected_color(const geo::Computations& comps, const int remaining = 5) const;
+    color::Color reflected_color(const geo::Computations& comps, const int remaining = 5);
 
-    /*! \fn color::Color refracted_color(const geo::Computations& comps, const int remaining = 5) cons
+    /*! \fn color::Color refracted_color(const geo::Computations& comps, const int remaining = 5)
      *  \brief Computes the amount of refracted Color
      *  \params comps Computations
      *  \param remaining to avoid infinite recursion
      *  \return the refracted Color
      */
-    color::Color refracted_color(const geo::Computations& comps, const int remaining = 5) const;
+    color::Color refracted_color(const geo::Computations& comps, const int remaining = 5);
 
   };
 

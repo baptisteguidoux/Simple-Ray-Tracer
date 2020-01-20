@@ -123,7 +123,7 @@ int main() {
   green_sphere->material.refractive_index = 1.5;
   w.objects.push_back(green_sphere);
 
-  w.light = light::PointLight(math::Point(-4.9, 4.9, -1), color::Color(1, 1, 1));
+  w.light = std::make_shared<light::PointLight>(math::Point(-4.9, 4.9, -1), color::Color(1, 1, 1));
 
   auto camera = camera::Camera(400, 200, 1.152);
   camera.transform = math::view_transform(math::Point(-2.6, 1.5, -3.9), math::Point(-0.6, 1, -0.8), math::Vector(0, 1, 0));

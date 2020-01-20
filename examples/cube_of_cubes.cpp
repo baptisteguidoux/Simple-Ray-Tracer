@@ -36,7 +36,7 @@ int main() {
   cam.transform = math::view_transform(math::Point(0, 1.5, -9), math::Point(0, 1, 0), math::Vector(0, 1, 0));
 
   auto world = world::World();
-  world.light = light::PointLight(math::Point(-10, 10, -10), color::Color(1, 1, 1));
+  world.light = std::make_shared<light::PointLight>(math::Point(-10, 10, -10), color::Color(1, 1, 1));
 
   auto floor = std::make_shared<geo::Plane>();
   floor->material.specular = 0;

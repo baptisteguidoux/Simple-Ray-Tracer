@@ -80,6 +80,14 @@ namespace color {
    */  
   Color operator*(const Color& color, const double scalar);
 
+  /*! \fn Color operator/(const Color& color, const double scalar)
+   *  \brief Divide a Color by a scalar
+   *  \param color a Color
+   *  \param scalar a scalar value
+   *  \return A new Color, each element of the color divided by the scalar
+   */    
+  Color operator/(const Color& color, const double scalar);
+
 }
 
 #endif

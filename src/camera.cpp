@@ -53,7 +53,7 @@ namespace camera {
     return ray::Ray(origin, direction);
   }
 
-  canvas::Canvas Camera::render(const world::World& wrld) const {
+  canvas::Canvas Camera::render(world::World& wrld) {
 
     auto image = canvas::Canvas(hsize, vsize);
 
@@ -67,7 +67,7 @@ namespace camera {
     return image;
   }
   
-  canvas::Canvas render_partial(const Camera& cam, const world::World& wrld, const int from_y, const int to_y) {
+  canvas::Canvas render_partial(const Camera& cam,world::World wrld, const int from_y, const int to_y) {
 
     auto image = canvas::Canvas(cam.hsize, to_y - from_y);
     

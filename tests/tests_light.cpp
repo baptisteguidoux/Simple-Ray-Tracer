@@ -114,7 +114,7 @@ TEST(LightTest, LightingFunction) {
 TEST(LightTest, LightingFunctionUsesLightIntensityToAttenuateColor) {
 
   auto world = world::build_default_world();
-  world.light = light::PointLight(math::Point(0, 0, -10), color::WHITE);
+  world.light = std::make_shared<light::PointLight>(math::Point(0, 0, -10), color::WHITE);
   auto shape = world.objects[0];
   shape->material.ambient = 0.1;
   shape->material.diffuse = 0.9;
@@ -215,7 +215,19 @@ TEST(LightTest, NumberGenerator) {
   EXPECT_TRUE(math::almost_equal(gen.next(), 0.1));
   EXPECT_TRUE(math::almost_equal(gen.next(), 0.5));
   EXPECT_TRUE(math::almost_equal(gen.next(), 1.0));
-  EXPECT_TRUE(math::almost_equal(gen.next(), 0.1));  
+  EXPECT_TRUE(math::almost_equal(gen.next(), 0.1));
+
+  math::Point corner(0, 0, 0);
+  math::Vector v1(2, 0, 0);
+  math::Vector v2(0, 0, 1);
+  auto light = std::make_shared<light::AreaLight>(corner, v1, 4, v2, 2, color::WHITE);
+  light->jitter_by = light::SequenceGenerator{0.7, 0.3, 0.9, 0.1, 0.5};  
+  EXPECT_TRUE(math::almost_equal(light->jitter_by.next(), 0.7));
+  EXPECT_TRUE(math::almost_equal(light->jitter_by.next(), 0.3));
+  EXPECT_TRUE(math::almost_equal(light->jitter_by.next(), 0.9));
+  EXPECT_TRUE(math::almost_equal(light->jitter_by.next(), 0.1));
+  EXPECT_TRUE(math::almost_equal(light->jitter_by.next(), 0.5));
+  EXPECT_TRUE(math::almost_equal(light->jitter_by.next(), 0.7)); 
 }
 
 TEST(LightTest, FindingASinglePointOnAJitteredAreaLight) {
@@ -243,5 +255,57 @@ TEST(LightTest, FindingASinglePointOnAJitteredAreaLight) {
 
   for (const auto& input : inputs)
     EXPECT_EQ(light.point_at(input.u, input.v), input.result);
+}
+
+TEST(LightTest, AreaLightIntensityFunctionWithJittering) {
+
+  auto w = world::build_default_world();
+  math::Point corner(-0.5, -0.5, -5);
+  math::Vector v1(1, 0, 0);
+  math::Vector v2(0, 1, 0);
+  auto light = std::make_shared<light::AreaLight>(corner, v1, 2, v2, 2, color::WHITE);
+  light->jitter_by = light::SequenceGenerator{0.7, 0.3, 0.9, 0.1, 0.5};
+
+  struct TestInput {
+    math::Point point;
+    float result;
+    TestInput(const math::Point p, const float r) : point {p}, result {r} {}
+  };
+  std::vector<TestInput> inputs {
+    TestInput(math::Point(0, 0, 2), 0),
+    TestInput(math::Point(1, -1, 2), 0.5),
+    TestInput(math::Point(1.5, 0, 2), 0.75),
+    TestInput(math::Point(1.25, 1.25, 3), 0.75),
+    TestInput(math::Point(0, 0, -2), 1.0),
+  };
+
+  for (const auto& input : inputs)
+    //EXPECT_TRUE(math::almost_equal(light->intensity_at(input.point, w), input.result));
+    EXPECT_EQ(light->intensity_at(input.point, w), input.result);
+}
+
+TEST(LightTest, AreaLightLightingFunction) {
+
+  auto w = world::build_default_world();
+  math::Point corner(-0.5, -0.5, -5);
+  math::Vector v1(1, 0, 0);
+  math::Vector v2(0, 1, 0);
+  auto light = std::make_shared<light::AreaLight>(corner, v1, 2, v2, 2, color::WHITE);
+  auto sphere = std::make_shared<geo::Sphere>();
+  sphere->material.ambient = 0.1;
+  sphere->material.diffuse = 0.9;
+  sphere->material.specular = 0;
+  sphere->material.color = color::WHITE;
+  math::Point eye(0, 0, -5);
+
+  math::Point p1(0, 0, -1);
+  auto eyevec1 = math::normalize(eye - p1);
+  math::Vector normalvec1(p1.x, p1.y, p1.z);
+  EXPECT_EQ(light->lighting(sphere.get(), p1, eyevec1, normalvec1, 1.0), color::Color(0.9965, 0.9965, 0.9965));
+
+  math::Point p2(0, 0.7071, -0.7071);
+  auto eyevec2 = math::normalize(eye - p2);
+  math::Vector normalvec2(p2.x, p2.y, p2.z);
+  EXPECT_EQ(light->lighting(sphere.get(), p2, eyevec2, normalvec2, 1.0), color::Color(0.6232, 0.6232, 0.6232));  
 }
 

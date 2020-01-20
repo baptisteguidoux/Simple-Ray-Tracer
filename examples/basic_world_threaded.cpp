@@ -50,7 +50,7 @@ int main() {
 
   auto wrld = world::World();
   // white light source, from above and the left
-  wrld.light = light::PointLight(math::Point(-10, 10, -10), color::Color(1, 1, 1));
+  wrld.light = std::make_shared<light::PointLight>(math::Point(-10, 10, -10), color::Color(1, 1, 1));
 
   wrld.objects.push_back(floor);
   wrld.objects.push_back(left_wall);

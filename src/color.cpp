@@ -35,4 +35,8 @@ namespace color {
     return Color(color.red * scalar, color.green * scalar, color.blue * scalar);
   }
 
+  Color operator/(const Color& color, const double scalar) {
+    return Color(color.red / scalar, color.green / scalar, color.blue / scalar);
+  }
+
 }

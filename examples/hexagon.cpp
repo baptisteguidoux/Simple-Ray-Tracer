@@ -39,7 +39,7 @@ int main() {
 
   auto wrld = world::World();
   // white light source, from above and the left
-  wrld.light = light::PointLight(math::Point(0, 7, -1), color::Color(1, 1, 1));
+  wrld.light = std::make_shared<light::PointLight>(math::Point(0, 7, -1), color::Color(1, 1, 1));
 
   auto hexagon = std::make_shared<geo::Group>();
   
