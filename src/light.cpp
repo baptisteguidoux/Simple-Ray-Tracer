@@ -39,10 +39,10 @@ namespace light {
     return 1.0;
   }
 
-  color::Color PointLight::lighting(geo::Shape* object, const math::Tuple& position,
-  			const math::Tuple& eye_vector, const math::Tuple& normal_vector, const float intensity) {
+  color::Color PointLight::lighting(geo::Shape* object, const math::Tuple& position, const math::Tuple& eye_vector,
+				    const math::Tuple& normal_vector, const float intensity) {
 
-    // Use material or pattern as color    
+    // Use material or pattern as color
     auto color = color::Color();
     if (object->material.pattern != nullptr)
       color = object->pattern_at(position);
@@ -52,15 +52,15 @@ namespace light {
     // Combine the surface color with the light
     color::Color effective_color = color * m_intensity;
 
-    // Direction to the light source
-    auto light_vector = math::normalize(m_position - position);
-
     // Ambient contribution
     color::Color ambient = effective_color * object->material.ambient;
 
     // When the point is in shadow, the color is simply the ambient
     if (math::almost_equal(intensity, 0.0))
       return ambient;
+
+    // Direction to the light source
+    auto light_vector = math::normalize(m_position - position);
 
     color::Color diffuse;
     color::Color specular;
@@ -109,7 +109,7 @@ namespace light {
   }
 
   float AreaLight::intensity_at(const math::Tuple& point, const world::World& wrld) {
-    std::cout << point << std::endl;
+
     float intensity = 0;
     for (uint v = 0; v < vsteps; v++) 
       for (uint u = 0; u < usteps; u++) {
@@ -142,14 +142,16 @@ namespace light {
     if (math::almost_equal(intensity, 0.0))
       return ambient;
 
-    color::Color diffuse;
-    color::Color specular;
     auto diffuse_specular_sum = color::BLACK;
     for (uint u = 0; u < usteps; u++)
       for (uint v = 0; v < vsteps; v++) {
 
+	color::Color diffuse = color::BLACK;
+	color::Color specular = color::BLACK;
+
 	// Direction to the light source
 	auto light_sample_pos = point_at(u, v);
+
 	//auto light_vector = math::normalize(m_position - position);
 	auto light_vector = math::normalize(light_sample_pos - position);
 
@@ -175,11 +177,12 @@ namespace light {
 	    double factor = pow(reflect_dot_eye, double{object->material.shininess});
 	    specular = specular + m_intensity * object->material.specular * factor * intensity;
 	}
-      }   
+      }
+	diffuse_specular_sum = diffuse_specular_sum + diffuse + specular;
     }
   
     // Add the three contributions together to get the final shading
-    return ambient + (diffuse + specular) / samples;
+    return ambient + (diffuse_specular_sum) / samples;
   }
 
   bool operator==(const Light& first, const Light& second) {

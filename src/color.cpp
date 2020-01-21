@@ -39,4 +39,9 @@ namespace color {
     return Color(color.red / scalar, color.green / scalar, color.blue / scalar);
   }
 
+  std::ostream& operator<<(std::ostream& os, const Color& color) {
+    os << '(' << color.red << ", " << color.green << ", " << color.blue << ")\n";
+    return os;
+  }
+
 }

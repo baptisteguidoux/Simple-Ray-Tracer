@@ -6,13 +6,14 @@
 
 int main() {
 
-  camera::Camera camera(400, 160, 0.7854);
+  camera::Camera camera(1200, 480, 0.7854);
   camera.transform = math::view_transform(math::Point(-3, 1, 2.5), math::Point(0, 0.5, 0), math::Vector(0, 1, 0));
 
   world::World world;
   
   auto light = std::make_shared<light::AreaLight>(math::Point(-1, 2, 4), math::Vector(2, 0, 0), 10, math::Vector(0, 2, 0), 10, color::Color(1.5, 1.5, 1.5));
   light->jitter_by = light::SequenceGenerator{0.3, 0.7, 0.9, 0.4};
+  world.light = light;
 
   auto cube = std::make_shared<geo::Cube>();
   cube->material.color = color::Color(1.5, 1.5, 1.5);
@@ -48,8 +49,7 @@ int main() {
   sphere2->material.reflective = 0.3;
   world.objects.push_back(sphere2);
 
-  //auto render = camera::render_threaded(camera, world);
-  auto render = camera.render(world);
+  auto render = camera::render_threaded(camera, world);
   render.write_ppm("/home/baptiste/soft_shadow_demo.ppm");
     
   return 0;

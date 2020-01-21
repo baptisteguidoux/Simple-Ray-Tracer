@@ -4,6 +4,8 @@
 #ifndef COLOR_H
 #define COLOR_H
 
+#include <iostream>
+
 /*! \namespace color
  */
 namespace color {
@@ -87,6 +89,14 @@ namespace color {
    *  \return A new Color, each element of the color divided by the scalar
    */    
   Color operator/(const Color& color, const double scalar);
+
+    /*! \fn std::ostream& operator<<(std::ostream& os, const Color& color)
+   *  \brief Format and output a Color
+   *  \param os output stream
+   *  \param color a Color
+   *  \return an output stream
+   */
+  std::ostream& operator<<(std::ostream& os, const Color& color);
 
 }
 

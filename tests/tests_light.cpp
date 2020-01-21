@@ -306,6 +306,6 @@ TEST(LightTest, AreaLightLightingFunction) {
   math::Point p2(0, 0.7071, -0.7071);
   auto eyevec2 = math::normalize(eye - p2);
   math::Vector normalvec2(p2.x, p2.y, p2.z);
-  EXPECT_EQ(light->lighting(sphere.get(), p2, eyevec2, normalvec2, 1.0), color::Color(0.6232, 0.6232, 0.6232));  
+  EXPECT_EQ(light->lighting(sphere.get(), p2, eyevec2, normalvec2, 1.0), color::Color(0.623183, 0.623183, 0.623183));
 }
 
