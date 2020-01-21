@@ -24,23 +24,9 @@ namespace light {
   Light::Light(const math::Tuple& pos, const color::Color& int_) : m_position {pos}, m_intensity {int_} {}
 
   Light::~Light() {}
-  
-  PointLight::PointLight(const math::Tuple& pos, const color::Color& int_) : Light(pos, int_) {}
 
-  PointLight::PointLight() : Light(math::Point(0, 0, 0), color::BLACK) {}
-
-  PointLight::~PointLight() {}
-  
-  float PointLight::intensity_at(const math::Tuple& point, const world::World& wrld) {
-
-    if (wrld.is_shadowed(m_position, point))
-      return 0.0;
-
-    return 1.0;
-  }
-
-  color::Color PointLight::lighting(geo::Shape* object, const math::Tuple& position, const math::Tuple& eye_vector,
-				    const math::Tuple& normal_vector, const float intensity) {
+  color::Color Light::lighting(geo::Shape* object, const math::Tuple& position, const math::Tuple& eye_vector, 
+			       const math::Tuple& normal_vector, const float intensity) {
 
     // Use material or pattern as color
     auto color = color::Color();
@@ -58,6 +44,26 @@ namespace light {
     // When the point is in shadow, the color is simply the ambient
     if (math::almost_equal(intensity, 0.0))
       return ambient;
+
+    return ambient + local_lighting(object, position, eye_vector, normal_vector, intensity, effective_color);
+  }
+  
+  PointLight::PointLight(const math::Tuple& pos, const color::Color& int_) : Light(pos, int_) {}
+
+  PointLight::PointLight() : Light(math::Point(0, 0, 0), color::BLACK) {}
+
+  PointLight::~PointLight() {}
+  
+  float PointLight::intensity_at(const math::Tuple& point, const world::World& wrld) {
+
+    if (wrld.is_shadowed(m_position, point))
+      return 0.0;
+
+    return 1.0;
+  }
+
+  color::Color PointLight::local_lighting(geo::Shape* object, const math::Tuple& position, const math::Tuple& eye_vector,
+					  const math::Tuple& normal_vector, const float intensity, const color::Color& effective_color) {
 
     // Direction to the light source
     auto light_vector = math::normalize(m_position - position);
@@ -89,7 +95,7 @@ namespace light {
     }
   
     // Add the three contributions together to get the final shading
-    return ambient + diffuse + specular;
+    return diffuse + specular;
   }
   
   AreaLight::AreaLight(const math::Tuple& corner_, const math::Tuple& uvec_, const uint usteps_,
@@ -122,26 +128,9 @@ namespace light {
     return intensity / samples;
   }
 
-  color::Color AreaLight::lighting(geo::Shape* object, const math::Tuple& position, const math::Tuple& eye_vector, 
-				   const math::Tuple& normal_vector, const float intensity) {
-
-    // Use material or pattern as color    
-    auto color = color::Color();
-    if (object->material.pattern != nullptr)
-      color = object->pattern_at(position);
-    else
-      color = object->material.color;
-    
-    // Combine the surface color with the light
-    color::Color effective_color = color * m_intensity;
-    
-    // Ambient contribution
-    color::Color ambient = effective_color * object->material.ambient;
-    
-   // When the point is in shadow, the color is simply the ambient
-    if (math::almost_equal(intensity, 0.0))
-      return ambient;
-
+  color::Color AreaLight::local_lighting(geo::Shape* object, const math::Tuple& position, const math::Tuple& eye_vector, 
+					 const math::Tuple& normal_vector, const float intensity, const color::Color& effective_color) {
+   
     auto diffuse_specular_sum = color::BLACK;
     for (uint u = 0; u < usteps; u++)
       for (uint v = 0; v < vsteps; v++) {
@@ -152,7 +141,6 @@ namespace light {
 	// Direction to the light source
 	auto light_sample_pos = point_at(u, v);
 
-	//auto light_vector = math::normalize(m_position - position);
 	auto light_vector = math::normalize(light_sample_pos - position);
 
 	// light_dot_nornal represents the cosine of the angle between the light vector and the normal vector
@@ -182,7 +170,7 @@ namespace light {
     }
   
     // Add the three contributions together to get the final shading
-    return ambient + (diffuse_specular_sum) / samples;
+    return (diffuse_specular_sum) / samples;
   }
 
   bool operator==(const Light& first, const Light& second) {

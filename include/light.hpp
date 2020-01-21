@@ -54,10 +54,11 @@ namespace light {
      *  \return a float value between 0 and 1
      */
     virtual float intensity_at(const math::Tuple& point, const world::World& wrld) = 0;
-    
+
     /*! \fn color::Color lighting(geo::Shape* object, const math::Tuple& position, const math::Tuple& eye_vector, 
                                   const math::Tuple& normal_vector, const  float intensity)
-     *  \brief Calculates the Color of the Shape's Material at the given position
+     *  \brief Calculates the ambient light
+     *  base class Light calculates ambient component of shading before delegating diffuse and specular computing to derived classes
      *  \param object lit Shape
      *  \param position the position of the point on the object
      *  \param eye_vector vector surface --> eye
@@ -65,8 +66,23 @@ namespace light {
      *  \param intensity how much light is present
      *  \return the Color at this point
      */     
-    virtual color::Color lighting(geo::Shape* object, const math::Tuple& position, const math::Tuple& eye_vector, 
-				  const math::Tuple& normal_vector, const float intensity) = 0;
+    color::Color lighting(geo::Shape* object, const math::Tuple& position, const math::Tuple& eye_vector, 
+			  const math::Tuple& normal_vector, const float intensity);
+    
+    /*! \fn virtual color::Color lighting(geo::Shape* object, const math::Tuple& position, const math::Tuple& eye_vector, 
+                                          const math::Tuple& normal_vector, const  float intensity) = 0
+     *  \brief Calculates the diffuse and pecular components
+     *  \param object lit Shape
+     *  \param position the position of the point on the object
+     *  \param eye_vector vector surface --> eye
+     *  \param normal_vector object's surface normal
+     *  \param intensity how much light is present
+     *  \param effective_color the Color at the Point (computed in lighting func)
+     *  \return the Color at this point
+     */     
+    virtual color::Color local_lighting(geo::Shape* object, const math::Tuple& position, const math::Tuple& eye_vector, 
+					const math::Tuple& normal_vector, const float intensity, const color::Color& effective_color) = 0;
+
   };
 
   /*! \class PointLight
@@ -94,8 +110,8 @@ namespace light {
      */    
     float intensity_at(const math::Tuple& point, const world::World& wrld) override;
  
-    color::Color lighting(geo::Shape* object, const math::Tuple& position, const math::Tuple& eye_vector, 
-			  const math::Tuple& normal_vector, const float intensity) override;
+    color::Color local_lighting(geo::Shape* object, const math::Tuple& position, const math::Tuple& eye_vector, 
+				const math::Tuple& normal_vector, const float intensity, const color::Color& effective_color) override;
     
   };
 
@@ -134,22 +150,22 @@ namespace light {
      */
     float intensity_at(const math::Tuple& point, const world::World& wrld) override;
 
-    color::Color lighting(geo::Shape* object, const math::Tuple& position, const math::Tuple& eye_vector, 
-			  const math::Tuple& normal_vector, const float intensity) override;     
+    color::Color local_lighting(geo::Shape* object, const math::Tuple& position, const math::Tuple& eye_vector, 
+				const math::Tuple& normal_vector, const float intensity, const color::Color& effective_color) override;     
   };
 
   /*! \fn bool operator==(const PointLight& first, const PointLight& second)
    *  \brief Compares the equality of two PointLight
-   *  \param first a PointLight
-   *  \param second another PointLight
+   *  \param first a Light
+   *  \param second another Light
    *  \return true if the two PointLight are equal, false otherwise
    */  
   bool operator==(const Light& first, const Light& second);
 
   /*! \fn bool operator==(const PointLight& first, const PointLight& second)
    *  \brief Compares the unequality of two PointLight
-   *  \param first a PointLight
-   *  \param second another PointLight
+   *  \param first a Light
+   *  \param second another Light
    *  \return true if the two PointLight are unequal, false otherwise
    */    
   bool operator!=(const Light& first, const Light& second);
