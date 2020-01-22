@@ -22,9 +22,7 @@ TEST(GeoTest, CSGShapeCreation) {
   EXPECT_EQ(*(cube->parent.lock()), *c);  
 }
 
-TEST(GeoTest, CSGShapeUnionIntersectionAllowed) {
-
-  // A CSG Union preserves all intersection on the exterior of both Shapes
+TEST(GeoTest, CSGShapeIntersectionsRules) {
 
   struct TestInput {
     std::string operation;
@@ -38,6 +36,7 @@ TEST(GeoTest, CSGShapeUnionIntersectionAllowed) {
   };
 
   std::vector<TestInput> test_inputs {
+    // A CSG union preserves all intersection on the exterior of both Shapes
     TestInput("union", true, true, true, false),
     TestInput("union", true, true, false, true), 
     TestInput("union", true, false, true, false),
@@ -46,6 +45,24 @@ TEST(GeoTest, CSGShapeUnionIntersectionAllowed) {
     TestInput("union", false, true, false, false), 
     TestInput("union", false, false, true, true),
     TestInput("union", false, false, false, true),
+      // A CSG intersect preserves all intersections where both Shape overlap
+    TestInput("intersect", true, true, true, true),
+    TestInput("intersect", true, true, false, false), 
+    TestInput("intersect", true, false, true, true),
+    TestInput("intersect", true, false, false, false),
+    TestInput("intersect", false, true, true, true),
+    TestInput("intersect", false, true, false, true),
+    TestInput("intersect", false, false, true, false),
+    TestInput("intersect", false, false, false, false),
+      // A CSG difference preserves all intersections not exclusively inside the right object
+    TestInput("difference", true, true, true, false),
+    TestInput("difference", true, true, false, true), 
+    TestInput("difference", true, false, true, false),
+    TestInput("difference", true, false, false, true),
+    TestInput("difference", false, true, true, true),
+    TestInput("difference", false, true, false, true),
+    TestInput("difference", false, false, true, false),
+    TestInput("difference", false, false, false, false),      
    };
 
   for (const auto& input : test_inputs)

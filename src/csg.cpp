@@ -44,11 +44,16 @@ namespace geo {
 
   bool intersection_allowed(const std::string& operation, const bool left_hit, const bool in_left, const bool in_right) {
 
-    if (operation == "union") {
+    if (operation == "union")
       // We want the Intersections that are not in two Shapes at the same time
       return (left_hit && !in_right) or (!left_hit && !in_left);
-    }
-
+    else if (operation == "intersect") 
+      // We want the Intersections that are where two Shapes overlap
+      return (left_hit && in_right) or (!left_hit && in_left);
+    else if (operation == "difference")
+      // The Intersections on left not inside right, or right inside left
+      return (left_hit && !in_right) or (!left_hit && in_left);
+    
     throw std::runtime_error{"operation " + operation + " is not permit"};
   }
 }
