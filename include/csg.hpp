@@ -47,6 +47,16 @@ namespace geo {
    *  \return a CSG Shape, product of the union of first and second
    */
   std::shared_ptr<geo::CSG> operator|(const std::shared_ptr<geo::Shape> first, const std::shared_ptr<geo::Shape> second);
+
+  /*! \fn bool intersection_allowed(const std::string& operation, const bool left_hit, const bool in_left, const bool in_right, const bool result)
+   *  \brief Find whether an Intersection can occur with this kind of operation, in those parameters. Filter out the Intersections inside two objects
+   *  \param operation a set operation: union, intersection or difference
+   *  \param left_hit true if the left Shape is hit, false if the right Shape is hit
+   *  \param in_left true if the hit occurs in the left shape
+   *  \param in_right true if the hit occurs in the right shape
+   *  \return true if the Intersection is allowed with those parameters
+   */
+  bool intersection_allowed(const std::string& operation, const bool left_hit, const bool in_left, const bool in_right);
   
 }
 

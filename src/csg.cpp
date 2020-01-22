@@ -41,5 +41,15 @@ namespace geo {
     
     return csg;
   }
+
+  bool intersection_allowed(const std::string& operation, const bool left_hit, const bool in_left, const bool in_right) {
+
+    if (operation == "union") {
+      // We want the Intersections that are not in two Shapes at the same time
+      return (left_hit && !in_right) or (!left_hit && !in_left);
+    }
+
+    throw std::runtime_error{"operation " + operation + " is not permit"};
+  }
 }
 
