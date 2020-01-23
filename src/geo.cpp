@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "geo.hpp"
+#include "csg.hpp"
 #include "ray.hpp"
 #include "matrix.hpp"
 #include "tuple.hpp"
@@ -649,6 +650,23 @@ namespace geo {
       box.add(child->get_parent_space_bounds());
 
     return box;
+  }
+
+  bool Group::includes(const Shape* shape) const {
+
+    for (const auto& child : shapes) {
+      // If child is a Group, check its children
+      if (*child == *shape)
+	return true;
+      if (auto group = dynamic_cast<const Group*>(child.get()); group != nullptr)
+	if (group->includes(shape))
+	  return true;
+      if (auto csg = dynamic_cast<const CSG*>(child.get()); csg != nullptr)
+	if (csg->includes(shape))
+	  return true;
+    }
+
+    return false;
   }
 
   Intersection::Intersection(const float t_, geo::Shape* geo, const float u_, const float v_) :

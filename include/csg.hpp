@@ -38,6 +38,20 @@ namespace geo {
      */
     BoundingBox get_bounds() const override;
 
+    /*! \fn bool includes(const Shape* shape) const
+     *  \brief Recusrively check if the CSG contains the passed shape
+     *  \param shape Shape to check if contained
+     *  \return true of the Shape was found
+     */
+    bool includes(const Shape* shape) const;    
+
+    /*! \fn Intersections filter_intersections(const Intersections& ixs)
+     *  \brief Only keep the allowed Intersections
+     *  \param ixs All Intersections occured with children
+     *  \return The filtered Intersections
+     */
+    Intersections filter_intersections(const Intersections& ixs);
+
   };  
 
   /*! \fn std::shared_ptr<geo::CSG> operator|(const std::shared_ptr<geo::Shape> first, const std::shared_ptr<geo::Shape> second)
@@ -47,6 +61,22 @@ namespace geo {
    *  \return a CSG Shape, product of the union of first and second
    */
   std::shared_ptr<geo::CSG> operator|(const std::shared_ptr<geo::Shape> first, const std::shared_ptr<geo::Shape> second);
+
+  /*! \fn std::shared_ptr<geo::CSG> operator&(const std::shared_ptr<geo::Shape> first, const std::shared_ptr<geo::Shape> second)
+   *  \brief Intersection of 2 Shapes
+   *  \param first a Shape
+   *  \param second another Shape
+   *  \return a CSG Shape, product of the union of first and second
+   */  
+  std::shared_ptr<geo::CSG> operator&(const std::shared_ptr<geo::Shape> first, const std::shared_ptr<geo::Shape> second);
+
+  /*! \fn std::shared_ptr<geo::CSG> operator-(const std::shared_ptr<geo::Shape> first, const std::shared_ptr<geo::Shape> second)
+   *  \brief Difference of 2 Shapes
+   *  \param first a Shape
+   *  \param second another Shape
+   *  \return a CSG Shape, product of the union of first and second
+   */  
+  std::shared_ptr<geo::CSG> operator-(const std::shared_ptr<geo::Shape> first, const std::shared_ptr<geo::Shape> second);  
 
   /*! \fn bool intersection_allowed(const std::string& operation, const bool left_hit, const bool in_left, const bool in_right, const bool result)
    *  \brief Find whether an Intersection can occur with this kind of operation, in those parameters. Filter out the Intersections inside two objects

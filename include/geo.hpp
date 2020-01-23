@@ -345,6 +345,13 @@ namespace geo {
      */
     BoundingBox get_bounds() const override;
 
+    /*! \fn bool includes(const Shape* shape) const
+     *  \brief Recusrively check if the Group contains the passed shape
+     *  \param shape Shape to check if contained
+     *  \return true of the Shape was found
+     */
+    bool includes(const Shape* shape) const;
+
   };
   
   /*! \fn math::Tuple reflect(const math::Tuple& vec, const math::Tuple& normal)

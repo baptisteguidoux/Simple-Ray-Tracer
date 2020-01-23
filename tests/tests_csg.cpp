@@ -46,14 +46,14 @@ TEST(GeoTest, CSGShapeIntersectionsRules) {
     TestInput("union", false, false, true, true),
     TestInput("union", false, false, false, true),
       // A CSG intersect preserves all intersections where both Shape overlap
-    TestInput("intersect", true, true, true, true),
-    TestInput("intersect", true, true, false, false), 
-    TestInput("intersect", true, false, true, true),
-    TestInput("intersect", true, false, false, false),
-    TestInput("intersect", false, true, true, true),
-    TestInput("intersect", false, true, false, true),
-    TestInput("intersect", false, false, true, false),
-    TestInput("intersect", false, false, false, false),
+    TestInput("intersection", true, true, true, true),
+    TestInput("intersection", true, true, false, false), 
+    TestInput("intersection", true, false, true, true),
+    TestInput("intersection", true, false, false, false),
+    TestInput("intersection", false, true, true, true),
+    TestInput("intersection", false, true, false, true),
+    TestInput("intersection", false, false, true, false),
+    TestInput("intersection", false, false, false, false),
       // A CSG difference preserves all intersections not exclusively inside the right object
     TestInput("difference", true, true, true, false),
     TestInput("difference", true, true, false, true), 
@@ -67,5 +67,51 @@ TEST(GeoTest, CSGShapeIntersectionsRules) {
 
   for (const auto& input : test_inputs)
     EXPECT_EQ(geo::intersection_allowed(input.operation, input.left_hit, input.in_left, input.in_right), input.result);
+}
+
+TEST(GeoTest, CSGIncludesShape) {
+
+  auto sphere = std::make_shared<geo::Sphere>();
+  auto cube = std::make_shared<geo::Cube>();
+  auto plane = std::make_shared<geo::Plane>();
+  auto cyl = std::make_shared<geo::Cylinder>();
+
+  auto subunion = sphere | cube;
+  auto union_ = subunion | plane;
+
+  EXPECT_TRUE(union_->includes(subunion.get()));
+  EXPECT_TRUE(union_->includes(sphere.get()));
+  EXPECT_TRUE(union_->includes(cube.get()));
+  EXPECT_TRUE(union_->includes(plane.get()));
+  EXPECT_FALSE(union_->includes(cyl.get()));
+}
+
+TEST(GeoTest, FilteringIntersectionsList) {
+
+  auto sphere = std::make_shared<geo::Sphere>();
+  auto cube = std::make_shared<geo::Cube>();
+
+  geo::Intersections ixs{
+    geo::Intersection(1, sphere.get()), geo::Intersection(2, cube.get()),
+    geo::Intersection(3, sphere.get()), geo::Intersection(4, cube.get())
+  };
+  
+  auto csg1 = sphere | cube;
+  auto result1 = csg1->filter_intersections(ixs);
+  ASSERT_EQ(result1.size(), 2);
+  EXPECT_EQ(result1[0], ixs[0]);
+  EXPECT_EQ(result1[1], ixs[3]);  
+
+  auto csg2 = sphere & cube;
+  auto result2 = csg2->filter_intersections(ixs);
+  ASSERT_EQ(result2.size(), 2);
+  EXPECT_EQ(result2[0], ixs[1]);
+  EXPECT_EQ(result2[1], ixs[2]);
+
+  auto csg3 = sphere - cube;
+  auto result3 = csg3->filter_intersections(ixs);
+  ASSERT_EQ(result3.size(), 2);
+  EXPECT_EQ(result3[0], ixs[0]);
+  EXPECT_EQ(result3[1], ixs[1]);  
 }
 

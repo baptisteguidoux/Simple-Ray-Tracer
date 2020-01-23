@@ -1,4 +1,6 @@
 
+#include <algorithm>
+
 #include "csg.hpp"
 #include "tuple.hpp"
 
@@ -31,7 +33,65 @@ namespace geo {
 
     return BoundingBox();
   }
-  
+
+  bool CSG::includes(const Shape* shape) const {
+    
+    if (*left == *shape || *right == *shape)
+	return true;
+    // If left or right is a Group
+    if (auto group = dynamic_cast<const Group*>(left.get()); group != nullptr)
+      if (group->includes(shape))
+	return true;
+    if (auto group = dynamic_cast<const Group*>(right.get()); group != nullptr)
+      if (group->includes(shape))
+	return true;
+    // Same if left or right is a CSG
+    if (auto csg = dynamic_cast<const CSG*>(left.get()); csg != nullptr)
+      if (csg->includes(shape))
+	return true;
+    if (auto csg = dynamic_cast<const CSG*>(right.get()); csg != nullptr)
+      if (csg->includes(shape))
+	return true;
+    
+    return false;
+  }
+
+  Intersections CSG::filter_intersections(const Intersections& ixs) {
+
+    Intersections result;
+
+    // We begin outside both shapes
+    bool in_left = false;
+    bool in_right = false;
+    
+    for (const auto& xs : ixs) {
+      bool left_hit = false;
+      // If left is a Group
+      if (auto group = dynamic_cast<const Group*>(left.get()); group != nullptr) {
+    	// If the Group includes the intersected geometry
+    	if (group->includes(xs.geometry.get()))
+    	  left_hit = true;
+      // If left is a CSG Shape, check the children
+      } else if (auto csg = dynamic_cast<const CSG*>(left.get()); csg != nullptr) {
+	if (csg->includes(xs.geometry.get()))
+	  left_hit = true;
+      } else
+	if (*left == *(xs.geometry))
+	  left_hit = true;
+	
+      if (intersection_allowed(operation, left_hit, in_left, in_right))
+	result.push_back(xs);
+
+      // Keep track of each shape currently inside
+      if (left_hit)
+	in_left = ! in_left;
+      else
+	in_right = ! in_right;
+    }
+
+    return result;
+  }
+
   std::shared_ptr<geo::CSG> operator|(const std::shared_ptr<geo::Shape> first, const std::shared_ptr<geo::Shape> second) {
 
     auto csg = std::make_shared<geo::CSG>("union", first, second);
@@ -42,12 +102,32 @@ namespace geo {
     return csg;
   }
 
+  std::shared_ptr<geo::CSG> operator&(const std::shared_ptr<geo::Shape> first, const std::shared_ptr<geo::Shape> second) {
+
+    auto csg = std::make_shared<geo::CSG>("intersection", first, second);
+    
+    first->parent = csg->get_weak_ptr();
+    second->parent = csg->get_weak_ptr();
+    
+    return csg;    
+  }
+  
+  std::shared_ptr<geo::CSG> operator-(const std::shared_ptr<geo::Shape> first, const std::shared_ptr<geo::Shape> second) {
+    
+    auto csg = std::make_shared<geo::CSG>("difference", first, second);
+    
+    first->parent = csg->get_weak_ptr();
+    second->parent = csg->get_weak_ptr();
+    
+    return csg;        
+  }
+
   bool intersection_allowed(const std::string& operation, const bool left_hit, const bool in_left, const bool in_right) {
 
     if (operation == "union")
       // We want the Intersections that are not in two Shapes at the same time
       return (left_hit && !in_right) or (!left_hit && !in_left);
-    else if (operation == "intersect") 
+    else if (operation == "intersection") 
       // We want the Intersections that are where two Shapes overlap
       return (left_hit && in_right) or (!left_hit && in_left);
     else if (operation == "difference")

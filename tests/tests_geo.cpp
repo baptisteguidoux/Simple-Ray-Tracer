@@ -1133,6 +1133,26 @@ TEST(GeoTest, GroupFindNormalOfObject) {
   EXPECT_EQ(normal, math::Vector(0.285704, 0.428543, -0.857161));
 }
 
+TEST(GeoTest, GroupIncludesOtherShape) {
+
+  auto group = std::make_shared<geo::Group>();
+  auto subgroup = std::make_shared<geo::Group>();
+  auto sphere = std::make_shared<geo::Sphere>();
+  auto cube = std::make_shared<geo::Cube>();
+  auto plane = std::make_shared<geo::Plane>();
+
+  subgroup->add_child(sphere);
+  group->add_child(subgroup);
+  group->add_child(cube);
+
+  EXPECT_TRUE(group->includes(cube.get()));
+  EXPECT_TRUE(group->includes(sphere.get()));
+  EXPECT_TRUE(group->includes(subgroup.get()));
+  EXPECT_TRUE(subgroup->includes(sphere.get()));
+  EXPECT_FALSE(group->includes(plane.get()));
+  EXPECT_FALSE(subgroup->includes(cube.get()));
+}
+
 TEST(GeoTest, BaseReflection){
 
   // Reflect a vector at 45 degrees
