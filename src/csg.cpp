@@ -14,7 +14,14 @@ namespace geo {
 
   Intersections CSG::local_intersects(const ray::Ray& local_ray) {
 
-    return Intersections{};
+    auto ixs = left->intersects(local_ray);
+    auto ixs2 = right->intersects(local_ray);
+
+    // sort intersections by t
+    ixs.insert(ixs.end(), ixs2.begin(), ixs2.end());
+    std::sort(ixs.begin(), ixs.end(), [&](const Intersection& ix1, const Intersection& ix2){return ix1.t < ix2.t;});
+
+    return filter_intersections(ixs);
   }
 
   math::Tuple CSG::local_normal_at(const math::Tuple& local_point, const Intersection& ix) const {

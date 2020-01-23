@@ -1,11 +1,12 @@
 
-#include <string>
 #include <vector>
 
 #include <gtest/gtest.h>
 
 #include "geo.hpp"
 #include "csg.hpp"
+#include "tuple.hpp"
+#include "matrix.hpp"
 
 
 TEST(GeoTest, CSGShapeCreation) {
@@ -113,5 +114,27 @@ TEST(GeoTest, FilteringIntersectionsList) {
   ASSERT_EQ(result3.size(), 2);
   EXPECT_EQ(result3[0], ixs[0]);
   EXPECT_EQ(result3[1], ixs[1]);  
+}
+
+TEST(GeoTest, CSGShapeRayIntersections) {
+
+  // Ray misses CSG Shape
+  auto csg1 = std::make_shared<geo::Sphere>() | std::make_shared<geo::Cube>();
+  ray::Ray r1(math::Point(0, 2, -5), math::Vector(0, 0, 1));
+  auto xs1 = csg1->local_intersects(r1);
+  EXPECT_EQ(xs1.size(), 0);
+
+  // Ray hist CSG Shape
+  auto sphere1 = std::make_shared<geo::Sphere>();
+  auto sphere2 = std::make_shared<geo::Sphere>();
+  sphere2->transform = math::translation(0, 0, 0.5);
+  auto csg2 = sphere1 | sphere2;
+  ray::Ray r2(math::Point(0, 0, -5), math::Vector(0, 0, 1));
+  auto xs2 = csg2->local_intersects(r2);
+  ASSERT_EQ(xs2.size(), 2);
+  EXPECT_EQ(xs2[0].t, 4);
+  EXPECT_EQ(*(xs2[0].geometry), *sphere1);
+  EXPECT_EQ(xs2[1].t, 6.5);
+  EXPECT_EQ(*(xs2[1].geometry), *sphere2);
 }
 

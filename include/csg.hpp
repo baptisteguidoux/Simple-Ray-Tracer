@@ -21,7 +21,6 @@ namespace geo {
   public:
 
     SetOperation operation;
-    //std::string operation; /// the set operation that created this CSG Shape
     std::shared_ptr<geo::Shape> left;
     std::shared_ptr<geo::Shape> right;
 
