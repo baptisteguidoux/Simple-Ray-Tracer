@@ -7,7 +7,7 @@
 
 namespace geo {
 
-  CSG::CSG(const std::string& set_op, const std::shared_ptr<geo::Shape> le, const std::shared_ptr<geo::Shape> ri)
+  CSG::CSG(const SetOperation set_op, const std::shared_ptr<geo::Shape> le, const std::shared_ptr<geo::Shape> ri)
     : operation {set_op}, left {le}, right {ri} {}
 
   CSG::~CSG() {}
@@ -94,7 +94,7 @@ namespace geo {
 
   std::shared_ptr<geo::CSG> operator|(const std::shared_ptr<geo::Shape> first, const std::shared_ptr<geo::Shape> second) {
 
-    auto csg = std::make_shared<geo::CSG>("union", first, second);
+    auto csg = std::make_shared<geo::CSG>(SetOperation::Union, first, second);
     
     first->parent = csg->get_weak_ptr();
     second->parent = csg->get_weak_ptr();
@@ -104,7 +104,7 @@ namespace geo {
 
   std::shared_ptr<geo::CSG> operator&(const std::shared_ptr<geo::Shape> first, const std::shared_ptr<geo::Shape> second) {
 
-    auto csg = std::make_shared<geo::CSG>("intersection", first, second);
+    auto csg = std::make_shared<geo::CSG>(SetOperation::Intersection, first, second);
     
     first->parent = csg->get_weak_ptr();
     second->parent = csg->get_weak_ptr();
@@ -114,7 +114,7 @@ namespace geo {
   
   std::shared_ptr<geo::CSG> operator-(const std::shared_ptr<geo::Shape> first, const std::shared_ptr<geo::Shape> second) {
     
-    auto csg = std::make_shared<geo::CSG>("difference", first, second);
+    auto csg = std::make_shared<geo::CSG>(SetOperation::Difference, first, second);
     
     first->parent = csg->get_weak_ptr();
     second->parent = csg->get_weak_ptr();
@@ -122,19 +122,19 @@ namespace geo {
     return csg;        
   }
 
-  bool intersection_allowed(const std::string& operation, const bool left_hit, const bool in_left, const bool in_right) {
+  bool intersection_allowed(const SetOperation operation, const bool left_hit, const bool in_left, const bool in_right) {
 
-    if (operation == "union")
+    if (operation == SetOperation::Union)
       // We want the Intersections that are not in two Shapes at the same time
       return (left_hit && !in_right) or (!left_hit && !in_left);
-    else if (operation == "intersection") 
+    else if (operation == SetOperation::Intersection) 
       // We want the Intersections that are where two Shapes overlap
       return (left_hit && in_right) or (!left_hit && in_left);
-    else if (operation == "difference")
+    else if (operation == SetOperation::Difference)
       // The Intersections on left not inside right, or right inside left
       return (left_hit && !in_right) or (!left_hit && in_left);
     
-    throw std::runtime_error{"operation " + operation + " is not permit"};
+    throw std::runtime_error{"passed set operation is not permit"};
   }
 }
 

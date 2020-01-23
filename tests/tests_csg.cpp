@@ -15,7 +15,7 @@ TEST(GeoTest, CSGShapeCreation) {
   auto cube = std::make_shared<geo::Cube>();
   auto c = sphere | cube; // union
 
-  EXPECT_EQ(c->operation, "union");
+  EXPECT_EQ(c->operation, geo::SetOperation::Union);
   EXPECT_EQ(*(c->left), *sphere);
   EXPECT_EQ(*(c->right), *cube);
   EXPECT_EQ(*(sphere->parent.lock()), *c);
@@ -25,44 +25,44 @@ TEST(GeoTest, CSGShapeCreation) {
 TEST(GeoTest, CSGShapeIntersectionsRules) {
 
   struct TestInput {
-    std::string operation;
+    geo::SetOperation operation;
     bool left_hit;
     bool in_left;
     bool in_right;
     bool result;
     
-    TestInput(const std::string op, const bool lhit, bool inl, bool inr, bool r)
+    TestInput(const geo::SetOperation op, const bool lhit, bool inl, bool inr, bool r)
       : operation {op}, left_hit {lhit}, in_left {inl}, in_right {inr}, result {r} {}
   };
 
   std::vector<TestInput> test_inputs {
     // A CSG union preserves all intersection on the exterior of both Shapes
-    TestInput("union", true, true, true, false),
-    TestInput("union", true, true, false, true), 
-    TestInput("union", true, false, true, false),
-    TestInput("union", true, false, false, true),
-    TestInput("union", false, true, true, false),
-    TestInput("union", false, true, false, false), 
-    TestInput("union", false, false, true, true),
-    TestInput("union", false, false, false, true),
+    TestInput(geo::SetOperation::Union, true, true, true, false),
+    TestInput(geo::SetOperation::Union, true, true, false, true), 
+    TestInput(geo::SetOperation::Union, true, false, true, false),
+    TestInput(geo::SetOperation::Union, true, false, false, true),
+    TestInput(geo::SetOperation::Union, false, true, true, false),
+    TestInput(geo::SetOperation::Union, false, true, false, false), 
+    TestInput(geo::SetOperation::Union, false, false, true, true),
+    TestInput(geo::SetOperation::Union, false, false, false, true),
       // A CSG intersect preserves all intersections where both Shape overlap
-    TestInput("intersection", true, true, true, true),
-    TestInput("intersection", true, true, false, false), 
-    TestInput("intersection", true, false, true, true),
-    TestInput("intersection", true, false, false, false),
-    TestInput("intersection", false, true, true, true),
-    TestInput("intersection", false, true, false, true),
-    TestInput("intersection", false, false, true, false),
-    TestInput("intersection", false, false, false, false),
+    TestInput(geo::SetOperation::Intersection, true, true, true, true),
+    TestInput(geo::SetOperation::Intersection, true, true, false, false), 
+    TestInput(geo::SetOperation::Intersection, true, false, true, true),
+    TestInput(geo::SetOperation::Intersection, true, false, false, false),
+    TestInput(geo::SetOperation::Intersection, false, true, true, true),
+    TestInput(geo::SetOperation::Intersection, false, true, false, true),
+    TestInput(geo::SetOperation::Intersection, false, false, true, false),
+    TestInput(geo::SetOperation::Intersection, false, false, false, false),
       // A CSG difference preserves all intersections not exclusively inside the right object
-    TestInput("difference", true, true, true, false),
-    TestInput("difference", true, true, false, true), 
-    TestInput("difference", true, false, true, false),
-    TestInput("difference", true, false, false, true),
-    TestInput("difference", false, true, true, true),
-    TestInput("difference", false, true, false, true),
-    TestInput("difference", false, false, true, false),
-    TestInput("difference", false, false, false, false),      
+    TestInput(geo::SetOperation::Difference, true, true, true, false),
+    TestInput(geo::SetOperation::Difference, true, true, false, true), 
+    TestInput(geo::SetOperation::Difference, true, false, true, false),
+    TestInput(geo::SetOperation::Difference, true, false, false, true),
+    TestInput(geo::SetOperation::Difference, false, true, true, true),
+    TestInput(geo::SetOperation::Difference, false, true, false, true),
+    TestInput(geo::SetOperation::Difference, false, false, true, false),
+    TestInput(geo::SetOperation::Difference, false, false, false, false),      
    };
 
   for (const auto& input : test_inputs)

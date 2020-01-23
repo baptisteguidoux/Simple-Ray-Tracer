@@ -12,17 +12,20 @@
 
 namespace geo {
 
+  enum class SetOperation : int {Union, Intersection, Difference};
+
   /*! \class CSG
    *  \brief A Shape that is the result of set operations on two Shapes
    */
   class CSG : public Shape {
   public:
 
-    std::string operation; /// the set operation that created this CSG Shape
+    SetOperation operation;
+    //std::string operation; /// the set operation that created this CSG Shape
     std::shared_ptr<geo::Shape> left;
     std::shared_ptr<geo::Shape> right;
 
-    CSG(const std::string& set_op, const std::shared_ptr<geo::Shape> le, const std::shared_ptr<geo::Shape> ri);
+    CSG(const SetOperation set_op, const std::shared_ptr<geo::Shape> le, const std::shared_ptr<geo::Shape> ri);
     
     ~CSG() override;
     
@@ -78,7 +81,7 @@ namespace geo {
    */  
   std::shared_ptr<geo::CSG> operator-(const std::shared_ptr<geo::Shape> first, const std::shared_ptr<geo::Shape> second);  
 
-  /*! \fn bool intersection_allowed(const std::string& operation, const bool left_hit, const bool in_left, const bool in_right, const bool result)
+  /*! \fn bool intersection_allowed(const SetOperation operation, const bool left_hit, const bool in_left, const bool in_right, const bool result)
    *  \brief Find whether an Intersection can occur with this kind of operation, in those parameters. Filter out the Intersections inside two objects
    *  \param operation a set operation: union, intersection or difference
    *  \param left_hit true if the left Shape is hit, false if the right Shape is hit
@@ -86,7 +89,7 @@ namespace geo {
    *  \param in_right true if the hit occurs in the right shape
    *  \return true if the Intersection is allowed with those parameters
    */
-  bool intersection_allowed(const std::string& operation, const bool left_hit, const bool in_left, const bool in_right);
+  bool intersection_allowed(const SetOperation operation, const bool left_hit, const bool in_left, const bool in_right);
   
 }
 
